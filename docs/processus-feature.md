@@ -48,7 +48,7 @@ Livrable : rubrique « Benchmark » de la fiche. Point d'arrêt : Omar tranche c
 
 ## Étape 3 — Plan d'implémentation et analyse d'impact
 
-Plan : étapes ordonnées ; contrat d'API touché ; entités du modèle créées ou modifiées ; paramètres configurables par club avec valeur par défaut ; écrans.
+Plan : étapes ordonnées ; contrat d'API touché ; entités du modèle créées ou modifiées ; paramètres configurables par club avec valeur par défaut ; permissions introduites, au format `domaine.objet.action` (décision 0028) ; écrans.
 
 Analyse d'impact : un niveau par critère, puis un niveau global.
 

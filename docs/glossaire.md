@@ -123,4 +123,6 @@ Règle : un terme, un nom technique. Si un terme manque, l'ajouter ici avant de 
 | Journal d'audit | Qui a fait quoi, quand, avant/après ; non modifiable (SEC-04). | `AuditLog` |
 | Événement métier | Fait publié une fois sur le bus (inscription créée, paiement reçu…), auquel notifications, tâches et rapports s'abonnent (PLT-04). | `DomainEvent` |
 | Notification | Message produit par une règle à partir d'un événement, via un canal (WhatsApp, SMS, email, in-app) (NOT-01). | `Notification` |
-| Rôle | Gérant, administratif, coach, comptable, parent ; permissions fines (SEC-02). | `Role` |
+| Rôle | Administrateur (titulaire du compte, tous droits), gérant, administratif, coach, comptable, parent ; permissions fines (SEC-02, décision 0028). | `Role` |
+| Administrateur | Titulaire du compte du club : au moins un par club, tous droits non retirables, gère les utilisateurs et leurs permissions. Libellé écran « Administrateur du compte » pour ne pas le confondre avec l'administratif (accueil). (Décision 0028) | `Role` `ACCOUNT_ADMIN` |
+| Permission | Droit nommé `domaine.objet.action`, attaché à un rôle par défaut, ajustable par utilisateur ; peut porter un paramètre (plafond). Un droit par décision sensible et par écran, jamais par champ. (Décision 0028) | `Permission` |

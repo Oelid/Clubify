@@ -56,7 +56,7 @@ Règles de la section 9.8 touchées, avec leur valeur par défaut.
 
 ## Points de sécurité et données sensibles
 
-Données de santé, CIN, argent, remises, dérogations : accès par rôle, audit, chiffrement.
+Données de santé, CIN, argent, remises, dérogations : accès par rôle, audit, chiffrement. Permissions introduites par la feature, nommées `domaine.objet.action` (décision 0028), avec leur rôle par défaut et leur paramètre le cas échéant : une par décision sensible et par écran, jamais par champ.
 
 ## Statut
 
