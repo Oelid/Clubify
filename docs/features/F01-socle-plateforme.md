@@ -28,7 +28,7 @@ Poser une fois, avec des tests, tout ce que le cahier des charges exige « dès 
 
 | Acteur | Ce qu'il fait dans F01 |
 | --- | --- |
-| Éditeur (Clubify) | Crée le club, son site par défaut et le premier compte gérant. Aucun écran en R1 : commande ou jeu de données d'amorçage (l'assistant de démarrage ADM-02 est en R9). **À confirmer** (Q1). |
+| Éditeur (Clubify) | Crée le club, son site par défaut et le premier compte gérant. Aucun écran en R1 : commande d'amorçage versionnée (l'assistant de démarrage ADM-02 est en R9). Tranché (Q1). |
 | GER | Se connecte ; modifie les paramètres du club ; crée, modifie, désactive les utilisateurs et attribue les rôles ; consulte le journal d'audit ; exporte les listes. |
 | ADM | Se connecte ; exporte les listes que son rôle l'autorise à voir. |
 | COA | Se connecte. Ses écrans arrivent en R2 ; le compte existe dès F01. |
@@ -50,15 +50,15 @@ Chaque règle cite sa source. « À confirmer » renvoie aux questions de la sec
 4. Un membre du staff s'authentifie par identifiant et mot de passe. — SEC-01.
 5. Le second facteur est un code temporaire par application (TOTP). Il est **obligatoire pour le rôle gérant** et optionnel pour les autres utilisateurs du staff. Un gérant sans second facteur actif doit l'activer à sa première connexion, avant tout accès. Le gérant peut le réinitialiser pour un utilisateur qui a perdu son téléphone ; l'opération est auditée. — SEC-01 ; écart avec « optionnel » consigné dans la décision 0027 (tranché le 2026-09-20).
 6. Aucun compte n'existe pour un enfant. Les parents n'ont aucun accès avant R8. — Section 5 (Mineurs), APP-01, décision 0023.
-7. Les mots de passe sont hachés (Argon2), jamais stockés ni journalisés en clair. Longueur minimale et règles de complexité : **À confirmer** (Q3). — Décision 0024.
+7. Les mots de passe sont hachés (Argon2), jamais stockés ni journalisés en clair. Longueur minimale de 12 caractères, aucune règle de complexité imposée. — Décision 0024 ; tranché le 2026-09-20 (Q3).
 8. La session est un jeton stateless avec jeton de rafraîchissement révocable ; la déconnexion et la désactivation du compte révoquent. — Décision 0024.
-9. Les tentatives de connexion échouées sont journalisées. Verrouillage après n échecs : **À confirmer** (Q3). — SEC-04, 10.I.
+9. Les tentatives de connexion échouées sont journalisées. Après 5 échecs consécutifs, le compte est verrouillé 15 minutes ; le verrouillage est audité. — SEC-04, 10.I ; tranché le 2026-09-20 (Q3).
 
 ### Rôles et permissions
 
 10. Cinq rôles : gérant, administratif, coach, comptable, parent. — SEC-02.
 11. Les permissions sont fines, en particulier sur les finances, les remises, les dérogations et la santé ; elles sont contrôlées dans la couche service, jamais seulement à l'écran. Chaque feature déclare les permissions qu'elle introduit ; F01 déclare les siennes (paramètres, utilisateurs, audit, exports). — SEC-02, `backend/CLAUDE.md`.
-12. Seul le gérant crée, modifie, désactive un utilisateur et attribue un rôle. — SEC-02 (acteur GER). Le comptable et le parent existent comme rôles sans utilisateur en R1 : **À confirmer** (Q4).
+12. Seul le gérant crée, modifie, désactive un utilisateur et attribue un rôle. — SEC-02 (acteur GER). Les cinq rôles existent dès F01 ; en R1, seuls gérant, administratif et coach ont des utilisateurs ; comptable et parent n'en reçoivent qu'avec les features qui les font entrer (R3 pour les exports comptables, R8 pour le portail parent). Tranché le 2026-09-20 (Q4).
 13. Un utilisateur ne se supprime pas : il se désactive et ne peut plus se connecter. — 9.6 (suppression logique).
 
 ### Données sensibles
@@ -71,7 +71,7 @@ Chaque règle cite sa source. « À confirmer » renvoie aux questions de la sec
 16. Toute action sensible produit une entrée : qui, quoi, quand, état avant, état après, motif quand une règle l'exige. — SEC-04, 9.7.
 17. Le journal est en ajout seul. Aucune modification ni suppression, garanties au niveau de la base (l'utilisateur de base de l'application n'a ni `UPDATE` ni `DELETE` sur la table). — SEC-04 (« non modifiable »), 9.4 point 12, 10.I, décision 0024.
 18. Actions auditées par F01 : connexion réussie et échouée, création, modification et désactivation d'utilisateur, changement de rôle, modification des paramètres du club, export, accès à un fichier privé. — SEC-04, SEC-03, INT-03.
-19. Le gérant consulte le journal. Le comptable aussi ? **À confirmer** (Q5). — SEC-04 (acteur SYS ; lecteur non précisé).
+19. Le gérant seul consulte le journal en R1. — SEC-04 ; tranché le 2026-09-20 (Q5).
 
 ### Événements métier
 
@@ -81,15 +81,15 @@ Chaque règle cite sa source. « À confirmer » renvoie aux questions de la sec
 
 ### Fichiers
 
-23. Un fichier est privé, rattaché à une entité propriétaire et au club, servi par un lien temporaire signé. Durée du lien : **À confirmer** (Q7). — PLT-05.
-24. Types et taille maximale des fichiers sont des paramètres du club. Valeurs par défaut : **À confirmer** (Q7). — PLT-05, 9.8 (par extension).
+23. Un fichier est privé, rattaché à une entité propriétaire et au club, servi par un lien temporaire signé. Durée du lien : 15 minutes par défaut, paramétrable par club. — PLT-05 ; tranché le 2026-09-20 (Q7).
+24. Types et taille maximale des fichiers sont des paramètres du club. Valeurs par défaut : PDF, JPEG, PNG ; 10 Mo. — PLT-05, 9.8 (par extension) ; tranché le 2026-09-20 (Q7).
 25. Un fichier se supprime logiquement ; la purge physique relève des durées de conservation (SEC-06, R4). — 9.6, SEC-06.
 26. Premier fichier livré par F01 : le logo du club (ADM-01). — ADM-01, PLT-05.
-27. Le support de stockage (disque ou stockage objet) dépend du choix d'hébergement, qui doit précéder l'étape 3 de F01. **À confirmer** (Q6). — Section 5 (Hébergement), décision 0018.
+27. Le stockage des fichiers est écrit derrière une interface unique ; cible : stockage objet compatible S3, disque local en développement et en test. Le lieu d'hébergement (Maroc ou Europe) reste à valider avec le juriste du club avant la mise en service (décision 0018) ; il ne bloque pas l'étape 3. — Section 5 (Hébergement), décision 0018 ; approche tranchée le 2026-09-20 (Q6).
 
 ### Paramètres du club
 
-28. Identité du club : nom, adresse, téléphone, courriel, logo, forme juridique, ICE, IF, RC. Le partage avec CPT-02 (F08 : régime fiscal, taux, mentions portées sur la facture) : **À confirmer** (Q8). — ADM-01, CPT-02.
+28. Identité du club : nom, adresse, téléphone, courriel, logo, forme juridique, ICE, IF, RC. F08 (CPT-02) ajoutera le régime fiscal, les taux de taxe et décidera des mentions portées sur la facture ; ces champs d'identité restent en F01. — ADM-01, CPT-02 ; tranché le 2026-09-20 (Q8).
 29. Fuseau horaire du club (défaut `Africa/Casablanca`), devise (défaut MAD), langue par défaut (fr). Les dates sont stockées en UTC ; le fuseau sert à l'affichage et aux règles calendaires. — Section 5, 9.6, `CLAUDE.md` §3.
 30. Numérotation : F01 porte les paramètres de format (préfixes, exercice de départ) des séries de factures et de reçus ; la mécanique de série continue est livrée par F08 et F09. — ADM-01, FAC-01, FAC-07, 9.8 (« numérotation et mentions des documents »).
 31. Registre des règles configurables par club (section 9.8) : chaque règle a une clé, un type, une valeur par défaut documentée, un club. F01 crée le mécanisme ; chaque feature y ajoute ses règles avec leur défaut. Aucune règle de 9.8 n'est codée en dur. — 9.8, 6.3, `CLAUDE.md` §3.
@@ -102,7 +102,7 @@ Chaque règle cite sa source. « À confirmer » renvoie aux questions de la sec
 
 ### Langues et formats
 
-35. Aucun libellé en dur. Le backend renvoie des codes ; les messages sont résolus par langue, FR livré, arabe et anglais en R8 (PLT-08). Chaque utilisateur porte une langue, `fr` par défaut. — PLT-08, section 5 (Langues), `CLAUDE.md` §3, décision 0023.
+35. Aucun libellé en dur. Le backend renvoie des codes ; les messages sont résolus par langue, FR livré, arabe et anglais en R8 (PLT-08). Chaque utilisateur porte une langue, `fr` par défaut ; seule `fr` est proposée à l'écran jusqu'à R8. — PLT-08, section 5 (Langues), `CLAUDE.md` §3, décision 0023 ; tranché le 2026-09-20 (Q10).
 36. Les téléphones sont stockés au format E.164, indicatif +212 par défaut. F01 fournit la validation ; elle s'applique dès le téléphone de l'utilisateur. — Section 5 (Téléphones).
 
 ### Invariants techniques posés par F01
@@ -121,6 +121,7 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C3 | 2 | Création d'un club | — | Un site par défaut existe, portant le nom du club ; toute donnée rattachée à un lieu exige un site |
 | C4 | 3 | Un utilisateur est rattaché à A comme coach et à B comme gérant | Il se connecte sur A | Ses permissions sont celles d'un coach de A ; rien de B n'est accessible |
 | C5 | 4, 7 | Compte créé avec un mot de passe | Connexion avec le bon mot de passe, puis avec un mauvais | Succès puis échec ; la base ne contient qu'un haché Argon2 ; aucun mot de passe dans les logs |
+| C5b | 7 | Création d'un compte | Mot de passe de 11 caractères, puis de 12 | Refus avec un code stable, puis acceptation ; aucune exigence de caractère spécial |
 | C6 | 5 | Second facteur activé sur un compte administratif | Connexion avec mot de passe seul | Refus tant que le code n'est pas fourni |
 | C6b | 5 | Compte gérant créé, second facteur non encore activé | Première connexion | Le seul écran accessible est l'activation du second facteur ; rien d'autre avant |
 | C6c | 5 | Gérant ayant perdu son téléphone | Un autre gérant réinitialise son second facteur | Réinitialisation effective, entrée d'audit avec l'auteur et la cible |
@@ -128,6 +129,7 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C8 | 8 | Utilisateur connecté | Déconnexion, puis réutilisation de l'ancien jeton de rafraîchissement | Refus |
 | C9 | 8, 13 | Utilisateur connecté | La gérante le désactive | Ses jetons sont révoqués ; il ne peut plus se connecter ; sa ligne existe toujours, marquée désactivée |
 | C10 | 9 | Compte existant | Trois connexions échouées | Trois entrées d'audit « connexion échouée » avec l'identifiant tenté, sans le mot de passe |
+| C10b | 9 | Compte existant | Cinq échecs consécutifs, puis le bon mot de passe | Refus pendant 15 minutes même avec le bon mot de passe ; entrée d'audit « compte verrouillé » ; succès après le délai |
 | C11 | 10, 11 | Compte administratif | Il tente de modifier les paramètres du club par l'API, sans passer par l'écran | Refus au niveau service, entrée d'audit « accès refusé » |
 | C12 | 12 | Compte administratif | Il tente de créer un utilisateur | Refus ; la gérante le peut |
 | C13 | 14 | Un fichier privé est déposé | Lecture du fichier sur le support de stockage, hors application | Contenu illisible (chiffré) ; l'application le restitue en clair à un rôle autorisé |
@@ -140,11 +142,11 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C20 | 20, 22 | Événement `user.created` publié dans une transaction qui échoue ensuite | — | Aucun événement consommé, aucune entrée d'audit |
 | C21 | 20 | Un effet externe est en outbox et son traitement échoue une première fois | Rejeu | L'effet est traité une fois et une seule |
 | C22 | 21 | L'abonné audit est rendu défaillant en test | Modification d'un paramètre | Le paramètre est bien modifié ; l'échec de l'abonné est tracé et rejouable |
-| C23 | 23 | Un fichier privé existe | Obtention d'un lien, attente au-delà de la durée, ouverture | Le lien est refusé après expiration ; un lien réémis fonctionne |
+| C23 | 23 | Un fichier privé existe, durée des liens à 15 minutes | Obtention d'un lien, attente de 16 minutes, ouverture | Le lien est refusé après expiration ; un lien réémis fonctionne |
 | C24 | 23 | Un lien valide obtenu par la gérante de A | Un utilisateur de B l'utilise | Refus |
-| C25 | 24 | Taille maximale fixée à 10 Mo | Dépôt d'un fichier de 12 Mo, puis d'un type non autorisé | Deux refus avec un code d'erreur stable |
+| C25 | 24 | Valeurs par défaut du club | Dépôt d'un PDF de 12 Mo, puis d'un fichier `.exe` de 1 Mo, puis d'un PNG de 2 Mo | Deux refus avec un code d'erreur stable, puis acceptation |
 | C26 | 25 | Un fichier existe | Suppression | Le fichier n'est plus servi ; sa ligne reste, marquée supprimée |
-| C27 | 26 | Club sans logo | La gérante dépose un logo | Le logo est un fichier privé du club, affiché dans le backoffice |
+| C27 | 26, 27 | Club sans logo, profil `test` sur disque local | La gérante dépose un logo | Le logo est un fichier privé du club, affiché dans le backoffice ; le même test passe sur un stockage compatible S3 sans changement de code |
 | C28 | 28 | Club sans identité | La gérante renseigne nom, adresse, téléphone, courriel, forme juridique, ICE, IF, RC | Les valeurs sont enregistrées ; le téléphone est normalisé en E.164 ; un ICE mal formé est refusé |
 | C29 | 29 | Club au fuseau `Africa/Casablanca` | Une date est enregistrée à 10 h 00 heure locale | Stockée en UTC ; restituée à 10 h 00 dans le fuseau du club |
 | C30 | 30 | Paramètres de numérotation | La gérante fixe un préfixe de reçu et l'exercice de départ | Enregistré et audité ; aucun numéro n'est encore émis (F09) |
@@ -209,21 +211,21 @@ Les critères C1, C11, C14, C16 et C17 constituent le test d'isolation et le tes
 
 ## Questions
 
-À trancher avant la fin de l'étape 1. Q2 et Q9 sont tranchées ; Q6 est bloquante pour l'étape 3.
+Toutes tranchées le 2026-09-20. Reste ouvert hors F01 : le lieu d'hébergement (Q6), à valider avec le juriste avant la mise en service de R1.
 
 | # | Question | Ce que je propose, faute de mieux |
 | --- | --- | --- |
-| Q1 | Qui crée le club pilote et le premier compte gérant, et comment ? | Nous, par une commande d'amorçage versionnée ; aucun écran de création de club avant R9. |
+| Q1 | Qui crée le club pilote et le premier compte gérant, et comment ? | **Tranché** : Nous, par une commande d'amorçage versionnée ; aucun écran de création de club avant R9. |
 | Q2 | Second facteur : lequel, et obligatoire pour le gérant ? | **Tranché** : TOTP par application, obligatoire pour le gérant, optionnel pour les autres. Décision 0027. |
-| Q3 | Politique de mot de passe et verrouillage : longueur minimale, complexité, nombre d'échecs, durée de blocage. | 12 caractères minimum, pas de règle de complexité ; verrouillage 15 minutes après 5 échecs. |
-| Q4 | Rôles comptable et parent en R1 : on les crée sans aucun utilisateur ? Le comptable du club est externe. | Les cinq rôles existent dès F01 ; seuls gérant, administratif et coach ont des utilisateurs en R1. |
-| Q5 | Qui peut lire le journal d'audit ? | Le gérant seul en R1 ; le comptable en lecture quand il aura un compte. |
-| Q6 | Hébergement et localisation des données (0018) : décidés avant l'étape 3 de F01 ? Ils fixent le support de stockage des fichiers. | Stockage objet compatible S3 chez un hébergeur au Maroc ou en Europe, à valider avec le juriste du club ; le code s'écrit derrière une interface, quel que soit le choix. |
-| Q7 | Durée des liens temporaires, types et taille maximale des fichiers. | 15 minutes ; PDF, JPEG, PNG ; 10 Mo. Le tout paramétrable par club. |
-| Q8 | ICE, IF, RC, forme juridique : dans les paramètres du club (F01) ou avec les taxes (F08, CPT-02) ? | Dans F01, comme identité du club ; F08 y ajoute régime fiscal et taux, et décide de leur affichage sur la facture. |
+| Q3 | Politique de mot de passe et verrouillage : longueur minimale, complexité, nombre d'échecs, durée de blocage. | **Tranché** : 12 caractères minimum, pas de règle de complexité ; verrouillage 15 minutes après 5 échecs. |
+| Q4 | Rôles comptable et parent en R1 : on les crée sans aucun utilisateur ? Le comptable du club est externe. | **Tranché** : Les cinq rôles existent dès F01 ; seuls gérant, administratif et coach ont des utilisateurs en R1. |
+| Q5 | Qui peut lire le journal d'audit ? | **Tranché** : Le gérant seul en R1 ; le comptable en lecture quand il aura un compte. |
+| Q6 | Hébergement et localisation des données (0018) : décidés avant l'étape 3 de F01 ? Ils fixent le support de stockage des fichiers. | **Tranché sur l'approche** : interface unique, cible S3 compatible, disque local en dev et test. Le lieu d'hébergement (Maroc ou Europe) reste à valider avec le juriste avant la mise en service (0018) ; n'est plus bloquant pour l'étape 3. |
+| Q7 | Durée des liens temporaires, types et taille maximale des fichiers. | **Tranché** : 15 minutes ; PDF, JPEG, PNG ; 10 Mo. Le tout paramétrable par club. |
+| Q8 | ICE, IF, RC, forme juridique : dans les paramètres du club (F01) ou avec les taxes (F08, CPT-02) ? | **Tranché** : Dans F01, comme identité du club ; F08 y ajoute régime fiscal et taux, et décide de leur affichage sur la facture. |
 | Q9 | Export des colonnes sensibles : lesquelles, et qui peut les inclure ? | **Tranché** : la liste de SEC-03 telle quelle (santé, CIN, pièces) ; personne en R1. |
-| Q10 | Verrouillage de la langue : FR seule à l'écran en R1, même si le champ « langue » existe ? | Oui ; le champ existe, seule `fr` est proposée jusqu'à R8. |
+| Q10 | Verrouillage de la langue : FR seule à l'écran en R1, même si le champ « langue » existe ? | **Tranché** : Oui ; le champ existe, seule `fr` est proposée jusqu'à R8. |
 
 ## Statut
 
-À cadrer — 2026-09-20.
+À cadrer — 2026-09-20. Questions de l'étape 1 tranchées le 2026-09-20 ; étape 2 (complétude et benchmark) à faire.
