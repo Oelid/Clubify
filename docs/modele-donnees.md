@@ -135,4 +135,4 @@ Les noms techniques sont ceux de `docs/glossaire.md`.
 ## Points ouverts
 
 - Recalcul du rang fratrie après résiliation d'un enfant (décision 0021).
-- Mécanisme technique d'isolation multi-tenant : à définir avec la stack.
+- Mécanisme technique d'isolation multi-tenant : schéma PostgreSQL partagé, colonne `club_id` sur chaque table, discriminant Hibernate `@TenantId` alimenté par le jeton, Row-Level Security en seconde ligne (décision 0024).

@@ -1,6 +1,6 @@
 # Contrats d'API
 
-Ce dossier contient les contrats d'API de Clubify. Il est vide pour l'instant : le format du contrat sera choisi avec la stack.
+Ce dossier contient les contrats d'API de Clubify, au format OpenAPI (décision 0024) : `openapi.yaml` comme index, un fichier par domaine possible, référencé depuis l'index. Le backend génère ses interfaces de contrôleurs depuis ce contrat ; les frontends génèrent leurs clients depuis le même fichier. Il est vide tant que la première feature n'est pas cadrée.
 
 ## Rôle
 
