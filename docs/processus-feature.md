@@ -71,6 +71,6 @@ Récapitulatif remis à Omar :
 - ce qui reste « À définir » ou « À confirmer » ;
 - les écarts avec le cahier des charges, consignés dans `docs/decisions/` ;
 - les régressions couvertes et par quel test ;
-- la ligne de `docs/roadmap.md` passée à « terminée » avec la date.
+- la ligne de `docs/suivi-features.xlsx` passée à « Production » avec sa date.
 
 La feature n'est terminée que sur validation d'Omar (définition de « terminé », `CLAUDE.md` section 6).

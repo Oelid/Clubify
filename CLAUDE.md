@@ -18,13 +18,16 @@ C'est un logiciel d'école d'activités, pas un logiciel de salle de sport.
 | `docs/cahier-des-charges/sources/` | Pièces d'origine ; captures exclues du dépôt (données personnelles) |
 | `docs/glossaire.md` | Termes métier et noms techniques anglais à utiliser dans le code |
 | `docs/modele-donnees.md` | Entités et relations (brouillon, puis tenu à jour feature par feature) |
-| `docs/roadmap.md` | Les quatre lots du MVP et le tableau de suivi des features |
+| `docs/roadmap.md` | Le plan de releases (R1 à R9) : objectif, usage remplacé, fenêtre de mise en service |
+| `docs/couverture-backlog.md` | Affectation des 203 identifiants du backlog aux releases, avec les raisons |
+| `docs/decoupage-features.md` | Découpage des releases en 73 features, avec leurs identifiants |
+| `docs/suivi-features.xlsx` | Suivi de l'avancement : état, dates de cycle, date de production ; régénéré par `tools/generer-suivi.py` |
 | `docs/processus-feature.md` | Les six étapes d'implémentation d'une feature, avec leurs points d'arrêt |
 | `docs/features/` | Une fiche par feature, à partir de `_gabarit.md` |
 | `docs/decisions/` | Une fiche par décision, à partir de `0000-gabarit.md` |
 | `contracts/` | Contrat d'API, modifié en premier dans chaque feature |
 | `backend/CLAUDE.md` | Règles propres au backend, unique pour toutes les interfaces |
-| `backoffice-frontend/CLAUDE.md` | Règles propres à l'interface accueil et gérant ; coach et parent viendront à côté |
+| `frontend/CLAUDE.md` | Règles propres au frontend : workspace Angular unique pour le backoffice (accueil et gérant), le coach et le parent |
 
 ## 3. Invariants non négociables
 
@@ -65,7 +68,7 @@ Une feature est terminée quand :
 - les règles configurables par club le sont, avec une valeur par défaut documentée ;
 - les libellés sont dans les fichiers i18n, aucun en dur ;
 - l'audit et l'isolation par club sont couverts par un test ;
-- la ligne de la feature dans `docs/roadmap.md` est passée à « terminé » avec la date ;
+- la ligne de la feature dans `docs/suivi-features.xlsx` est passée à « Production » avec sa date ;
 - Omar a validé.
 
 ## 7. Données sensibles
