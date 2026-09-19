@@ -31,4 +31,4 @@ OFR-03, GRP-04, 9.4 (point 12), section 11 (même enfant deux fois par semaine).
 
 ## Statut
 
-Acceptée, formulation à confirmer.
+Remplacée par 0020 : ce cas est standard, sans dérogation.

@@ -6,7 +6,7 @@ Le formulaire papier liste 9 activités, la grille tarifaire 6, avec des écarts
 
 ## Décision
 
-Activités ouvertes au club pilote : danses, karaté, boxe, natation, judo, gymnastique, kick-boxing. Ninja Warrior et Genius Club ne sont pas retenus, sauf indication contraire. Ce catalogue est une donnée de configuration du club pilote, pas une liste codée.
+Activités ouvertes au club pilote : danses (trois activités distinctes, voir 0022), karaté, boxe, natation, judo, gymnastique, kick-boxing. Ninja Warrior et Genius Club ne sont pas retenus, sauf indication contraire. Ce catalogue est une donnée de configuration du club pilote, pas une liste codée.
 
 ## Raison
 
@@ -23,7 +23,7 @@ Confirmé par le club pour la saison en cours.
 
 ## Écarts ou points ouverts
 
-- « Danses » est au pluriel ; le formulaire liste Danse classique, Zumba Kids et Afro Dance. Une activité ou trois ? À confirmer avec le club avant le paramétrage du catalogue.
+Aucun. Le détail des danses est tranché par la fiche 0022.
 
 ## Date
 
@@ -31,4 +31,4 @@ Confirmé par le club pour la saison en cours.
 
 ## Statut
 
-Acceptée, point ouvert sur les danses.
+Acceptée. Complétée par 0022.

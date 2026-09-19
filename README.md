@@ -6,7 +6,7 @@ Le cœur du produit : l'inscription d'un enfant dans un groupe récurrent pour u
 
 ## État du projet
 
-Cadrage. Aucune technologie choisie, aucun code écrit. Le cahier des charges v1 est figé.
+Cadrage. Aucune technologie choisie, aucun code écrit. Le cahier des charges (version 1.1) est figé.
 
 ## Par où commencer
 

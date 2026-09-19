@@ -24,7 +24,7 @@ OFR-03, GRP-03, RES-02, UC15, section 11 (forfait, dernière phrase).
 
 ## Écarts ou points ouverts
 
-- OFR-03 (MVP) dit qu'une activité dont tous les groupes sont complets « est proposée en liste d'attente plutôt que masquée », alors que la liste d'attente RES-02 est en V2. Tranché par Omar le 2026-09-19 : au MVP, un groupe complet refuse l'inscription. La liste d'attente viendra avec RES-02.
+- L'incohérence de la v1 (OFR-03 renvoyait à une liste d'attente prévue en V2) est corrigée dans la version 1.1 du cahier des charges : au MVP, un groupe complet refuse l'inscription et l'activité est affichée indisponible, non masquée.
 - Dérogation de capacité (surcapacité autorisée, 9.8) : règle configurable, à cadrer dans la feature Groupes.
 
 ## Date

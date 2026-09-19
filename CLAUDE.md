@@ -14,7 +14,7 @@ C'est un logiciel d'école d'activités, pas un logiciel de salle de sport.
 
 | Chemin | Contenu |
 | --- | --- |
-| `docs/cahier-des-charges/cahier-des-charges-v1.md` | Référence métier, figée, lecture seule |
+| `docs/cahier-des-charges/cahier-des-charges-v1.md` | Référence métier, version 1.1 figée, lecture seule |
 | `docs/cahier-des-charges/sources/` | Pièces d'origine ; captures exclues du dépôt (données personnelles) |
 | `docs/glossaire.md` | Termes métier et noms techniques anglais à utiliser dans le code |
 | `docs/modele-donnees.md` | Entités et relations (brouillon, puis tenu à jour feature par feature) |
@@ -72,7 +72,7 @@ Une feature est terminée quand :
 
 ## 8. Règle de vérité
 
-Le cahier des charges v1 est figé et ne se modifie pas.
+Le cahier des charges (version 1.1) est figé et ne se modifie pas.
 Ensuite, la fiche de feature fait foi.
 Tout écart entre une fiche et le cahier des charges est consigné dans `docs/decisions/`, avec sa raison.
 En cas de doute sur une règle métier : ne rien inventer, écrire « À confirmer » et poser la question.

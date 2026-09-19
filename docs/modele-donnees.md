@@ -134,6 +134,5 @@ Les noms techniques sont ceux de `docs/glossaire.md`.
 
 ## Points ouverts
 
-- Assiette et règle de rang de la remise fratrie (décision 0006).
+- Recalcul du rang fratrie après résiliation d'un enfant (décision 0021).
 - Mécanisme technique d'isolation multi-tenant : à définir avec la stack.
-- Comportement exact d'un groupe complet au MVP sans liste d'attente (décision 0007).

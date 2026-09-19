@@ -23,10 +23,7 @@ TAR-04, UC2, 9.8, section 11 (remises confirmées).
 
 ## Écarts ou points ouverts
 
-À trancher avant la feature de tarification :
-- assiette : le pourcentage porte-t-il sur le total de l'enfant, frais annuels compris ?
-- rang : ordre d'inscription, ou classement du plus cher au moins cher ?
-- cumul avec une remise manuelle : plafond à fixer (TAR-04).
+Assiette et rang tranchés par la fiche 0021. Reste le plafond de cumul avec une remise manuelle (TAR-04).
 
 ## Date
 
@@ -34,4 +31,4 @@ TAR-04, UC2, 9.8, section 11 (remises confirmées).
 
 ## Statut
 
-Acceptée, points ouverts à trancher.
+Acceptée. Complétée par 0021.

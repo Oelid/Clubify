@@ -29,7 +29,7 @@ OFR-02, TAR-01, 7.31, section 11 (forfait « 2 activités / semaine »).
 
 ## Écarts ou points ouverts
 
-- La section 11 présente le mode 2 comme une règle « proposée, à valider » ; OFR-02 le pose comme mode par défaut. Cette décision le fige.
+- Aucun depuis la version 1.1 du cahier des charges : la section 11 et OFR-02 décrivent la cascade retenue.
 - L'affichage de l'économie par rapport au cumul brut se fait comme information, jamais comme remise saisie (OFR-02).
 
 ## Date

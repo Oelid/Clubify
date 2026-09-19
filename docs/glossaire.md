@@ -50,9 +50,9 @@ Règle : un terme, un nom technique. Si un terme manque, l'ajouter ici avant de 
 | Inscription | Un enfant, un ou plusieurs groupes, une saison, une formule, des dates. Statuts : en attente, active, en pause, expirée, résiliée (INS-01). Distincte de la facture. | `Enrollment` |
 | Cours d'essai | Place ponctuelle dans un groupe pour un enfant non inscrit ; nombre limité par enfant, gratuit ou payant (RES-01). | `TrialSession` |
 | Cours privé | Séance avec coach dédié, réservée à l'unité selon la disponibilité du coach et de la salle, tarif propre (RES-06). | `PrivateSession` |
-| Liste d'attente | File ordonnée des demandes pour un groupe complet, avec promotion dans l'ordre (RES-02, V2). Au MVP, un groupe complet n'accepte plus d'inscription (décision 0007). | `WaitlistEntry` |
+| Liste d'attente | File ordonnée des demandes pour un groupe complet, avec promotion dans l'ordre (RES-02, V2). Au MVP, un groupe complet n'accepte plus d'inscription et l'activité est affichée indisponible (OFR-03, décision 0007). | `WaitlistEntry` |
 | Rattrapage | Séance dans un autre groupe après une absence, limitée en nombre et en délai (RES-05, V2). | `MakeupSession` |
-| Dérogation | Exception à une règle (âge, capacité, même activité deux fois par semaine), avec motif, validée par le gérant et journalisée (GRP-04, OFR-03). | `Override` |
+| Dérogation | Exception à une règle d'âge ou de niveau à l'inscription, avec motif, validée par le gérant et journalisée (GRP-04). La même activité deux fois par semaine n'en est pas une (décision 0020). | `Override` |
 | Passage de niveau | Changement de niveau d'un adhérent, individuel ou en masse, prononcé par le coach ; historisé (NIV-05). | `LevelPromotion` |
 | Réinscription | Campagne de saison : place prioritaire jusqu'à une date, puis libération (INS-05, V2). | `Renewal` (saison) |
 
@@ -68,7 +68,7 @@ Règle : un terme, un nom technique. Si un terme manque, l'ajouter ici avant de 
 | Tarif saisonnier | Prix propre à une fenêtre de dates, qui s'applique aux seules inscriptions dont la date de début tombe dans la fenêtre (TAR-02). | `SeasonalRate` |
 | Frais annuels | Assurance et inscription (500 DH au club pilote), une fois par enfant et par saison (TAR-03). | `AnnualFee` |
 | Remise | Réduction sur une ligne ou une facture : automatique (fratrie, TAR-04) ou manuelle avec plafond et motif (TAR-05). | `Discount` |
-| Remise fratrie | Barème par rang d'enfant d'une même famille (5 % sur le 2e, 10 % sur le 3e par défaut), paramétrable (TAR-04). | `SiblingDiscount` |
+| Remise fratrie | Barème par rang d'enfant d'une même famille, rang par ordre d'inscription, assiette hors frais annuels (5 % sur le 2e, 10 % sur le 3e par défaut), paramétrable (TAR-04, décision 0021). | `SiblingDiscount` |
 | Carnet | Pack de crédits de séances (10 séances), avec validité et activités éligibles, débité au pointage (TAR-06, RES-04). | `SessionPack` |
 | Tarif personnalisé | Prix négocié sur une inscription, réservé au gérant (TAR-08). | `CustomPrice` |
 
