@@ -2,6 +2,27 @@
 
 Six étapes, une feature à la fois. Chaque étape produit un livrable et se termine par un point d'arrêt : Omar valide avant de passer à la suivante. Aucun code avant l'étape 4.
 
+## Benchmark de chaîne — une fois, avant la première feature métier
+
+Le benchmark de l'étape 2 est borné au sujet d'une feature. Il ne regarde donc jamais la
+chaîne complète — famille, inscription, facture, paiement, caisse — alors que c'est là que
+se jouent les choix de modèle irréversibles. Une découverte structurante faite au moment de
+l'encaissement obligerait à reprendre la facture déjà livrée.
+
+Avant la première feature métier (F02), un benchmark unique porte sur cette chaîne, sur les
+mêmes applications comparables : comment elles relient une famille à une inscription, à une
+facture et à un paiement, comment elles ventilent un règlement, comment elles suivent un
+reste à payer. Il ne juge pas des écrans ni des fonctionnalités, seulement des structures.
+
+Chaque écart suit les trois mêmes issues que l'étape 2 : intégrer au modèle, mettre au
+backlog, écarter avec la raison. Toute conséquence sur le modèle est reportée dans
+`docs/modele-donnees.md` et, si elle s'écarte du cahier des charges, dans `docs/decisions/`.
+
+Le socle (F01) ne porte aucune entité métier : il peut être cadré et livré avant ce
+benchmark.
+
+Livrable : une note de benchmark de chaîne. Point d'arrêt : Omar tranche chaque écart.
+
 ## Étape 1 — Cadrage
 
 Lire le cahier des charges, les fiches de `docs/decisions/` et les fiches de features déjà livrées qui touchent le sujet.
