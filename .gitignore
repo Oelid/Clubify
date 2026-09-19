@@ -1,0 +1,22 @@
+# Système et éditeurs
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*~
+
+# Secrets et environnement
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Données personnelles : captures d'origine (noms d'enfants, téléphones)
+docs/cahier-des-charges/sources/captures/
+
+# Fichiers temporaires
+*.log
+*.tmp

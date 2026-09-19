@@ -1,0 +1,445 @@
+Périmètre fonctionnel : Application de gestion des clubs
+
+1. Objectif général
+
+Mettre à disposition une application web / mobile permettant :
+
+- la gestion des adhérents,
+
+- le suivi des activités et de la fréquentation,
+
+- la réservation des espaces,
+
+- la communication interne,
+
+- la facturation et le suivi des paiements.
+
+2. Acteurs & Rôles
+
+| **Acteur** | **Accès principaux** |
+| --- | --- |
+| **Personnel administratif** | Tableau de bord global, gestion des membres, facturation |
+| **Entraîneurs / Coachs** | Planning des cours, pointage de présence, suivi des progrès |
+| **Adhérents** | Espace personnel, réservations, paiements en ligne |
+
+3. Exigences fonctionnelles
+
+Modèle de la bdd
+
+https://dbdiagram.io/d/clubify-68b8d43d61a46d388e562ad0
+
+Module gestion des adhérents
+
+Objectif : 
+
+Ce module permet de : 
+
+- Onborder un nouveau client/prospect 
+
+- Lister les adhérents / rechercher un adhérent
+
+- Consulter le profil (les fiches complètes) des adhérents
+
+- Importer / exporter CSV pour faciliter la migration de données.
+
+Fonctionnalités principales
+
+- Onboarding d’un nouveau client/adhérent
+
+Cette fonctionnalité permet d’onboarder un nouveau client ou prospect selon un parcours guidé : 
+
+- Collecte des informations générales
+
+- Contexte : Visiteur, **member**
+
+- Données personnelles : **Titre*, nom* , prénom* , date de naissance*** , **genre*** , Nom sur les factures, numéro de la carte d’abonnement
+
+- Données de contacts : **email*, tel*** ( avec check ne pas envoyer de message),  **adresse*** ( Adresse, code postale, ville, pays)
+
+- Contacts d’urgence* : un ou plusieurs contacts avec les informations suivantes; **nom, prénom,** **description Type de lien **(qui est ce pour l'adhérent père, mère, ami…) , **numéro de téléphone.**
+
+Un bouton envoyer vers le Desk peut être envisagé afin d’afficher le formulaire sur un terminal dédié (Tablette par exemple) et permettre au client de remplir lui-même le formulaire.
+
+- Sélection de l’abonnement
+
+Plusieurs abonnements peuvent être ajoutés. 
+
+- Sélection de l’abonnement
+
+- Arborescence d’ajout d'un abonnement.
+
+- Sélection de l’univers( Sportifs, bien ètre....) 
+
+- Sélection de l’activité ( karaté, natation, box,....)
+
+- Sélection de l’abonnement ( nation junior 2/sem, natation adulte…)[^c11]
+
+Qu en est il pour les abonnements combinés ?
+
+- Tarif & mise en service
+
+- Activation immédiate ou différé (date de debut)
+
+- Prix initial grisé avec la possibilité de modifier le prix et d'apporter une réduction selon un seuil (pourcentage ou tarif fixe)
+
+- Ajout des compléments justificatifs
+
+Ajout des compléments spécifiques/nécessaires en fonction des abonnements sélectionnés (certificat médical ou autres pièces justificatifs)
+
+- Paiement et confirmation
+
+Plusieurs abonnements peuvent être ajoutés. 
+
+- Sélection de l’abonnement
+
+- Modalités de paiement[^c14] ?? 
+
+- Lister les adhérents
+
+- Boutons d’actions
+
+- Ajouter un adherant
+
+- Filtre de recherche multicritère
+
+- Recherche rapide : par **tel**, nom, prénom, email, numéro de carte
+
+- Recherche avancée : statut adhérent, univers, activité, abonnement, 
+
+- Trie sur les colonnes
+
+- Listage des adherants
+
+- Systeme de pagination
+
+- Action pour chaque ligne : voir le détail, suspendre/activer, 
+
+- Consulter/modifier le profil de l'adhérent
+
+- Boutons d’actions
+
+- Envoyer un mail
+
+- Appeler
+
+- Envoyer un message whatsapp
+
+- Black list
+
+- Modifier
+
+- Données générales
+
+- Données personnelles : Titre, nom , prénom , date de naissance , genre , Nom sur les factures, numéro de la carte d’abonnement
+
+- Données de contacts : email, tel ( avec check ne pas envoyer de message modifiable),  adresse ( Adresse, code postale, ville, pays)
+
+- Contacts d’urgence : un ou plusieurs contacts avec les informations suivantes; nom, prénom, description Type de lien (qui est ce pour l'adhérent père, mère, ami…) , numéro de téléphone.
+
+- Derniere connexion (Application mobile)
+
+- Abonnements
+
+- Liste des abonnements actifs / expirés
+
+- Details de l’abonnement (prix, horaire, coach, salle réservé,date dernier paient, date prochain paiement....)
+
+- Possibilité de suspendre temporairement un abonnement pour une période donnée ou forcer sa réactivation
+
+- Possibilité de rembourser un abonnement selon la politique en vigueur 
+
+- Pièces jointes
+
+- Liste des justificatives fournies
+
+- Historiques des paiements
+
+- Liste les paiements effectués : montant, remise appliquée, tva, date , moyen de paiement, info commerciale…
+
+- Téléchargement ou envoi par mail des factures (unitaire ou groupé)
+
+- Communication
+
+- Lister les messages et notes envoyés (canal, date, message)
+
+- Ajouter une note
+
+- Ajouter un message push mobile
+
+**Module gestion des activités ****&**** planning**
+
+Objectif : 
+
+Modéliser l’offre (catalogue), planifier les sessions, contrôler les réservations (capacités, listes d’attente, annulations) et appliquer automatiquement l’éligibilité par âge/plan à la réservation et à la présence.
+
+Permettre au club de :
+
+- Définir types d’activités (cours, coaching, événements, réservations d’espaces) avec contraintes d’âge et d’admissibilité par plan.
+
+- Construire des plannings récurrents/ponctuels, gérer ressources (salles, coachs, matériel) et éviter les conflits.
+
+- Encadrer réservation/annulation, listes d’attente 
+
+- Encadrer réservations, listes d’attente, annulations; suivre présences et performance
+
+Fonctionnalités principales
+
+**1.Catalogue et admissibilité**
+
+**1.1.Créer un modèle d’activité**
+
+- Saisir: intitulé, description, type (cours collectif, coaching, événement, espace), durée, capacité, visibilité back‑office/portail.
+
+- Définir règles d’âge: min_age, max_age, accompagnement requis (si mineur), documents requis (ex. certificat médical).
+
+- Paramétrer admissibilité par plan/forfait: inclus/exclu, quotas par période, réservations simultanées
+
+- Définir tarification: prix unitaire, unité de consommation (inclus, crédit débité, paiement à l’unité).
+
+- Configurer politiques: ouverture/fermeture des réservations, délais d’annulation, pénalités (frais/débit crédit/no‑show), surbooking et places réservées.
+
+**1.2  Consulter la liste des activités**
+
+- Affichage: nom, type, capacité, règles d’âge, admissibilité, statut (Publié/Brouillon), dernière modification, activités liées.
+
+- Actions rapides: cloner, archiver, ouvrir planning lié, exporter la liste en CSV
+
+**2.Ressources (salles, coachs, matériel)**
+**2.1 Déclarer une ressource**
+
+- Saisir: nom, type (salle/coach/matériel), capacité, compétences/qualifications (coach), disponibilités, contraintes (ex. matériel requis).
+
+- Valider la capacité, la disponibilité et la conformité (ex. coach certifié pour type de cours si exigé).
+
+- Résultats: ressource active et disponible pour affectation aux sessions
+
+**2.2 Gérer disponibilités et buffers**
+
+- Définir plages d’ouverture, indisponibilités (maintenance, congés)
+
+- Validation: empêcher la publication si la récurrence empiète sur les indisponibilités
+
+- Résultats: calendrier ressource propre, réduisant retards et conflits.
+
+**2.3 Consulter la liste des ressources**
+
+- Affichage: nom, type, capacité, disponibilité, affectations à venir, indicateur de conflits.
+
+- Actions: éditer, désactiver, exporter la liste des ressources.
+
+**3.Planification des sessions**
+**3.1 Créer une série récurrente**
+
+- Sélectionner modèle, définir récurrence (jours/heures), période (début/fin), assigner salle/coach/matériel, publier.
+
+- Validation: détection et blocage des conflits de salle/coach/matériel, suggestion d’alternatives (créneau, salle, coach).
+
+- Résultats: occurrences générées, visibles au planning et prêtes à la réservation.
+
+**3.2 Créer une occurrence ponctuelle**
+
+- Choisir modèle, spécifier date/heure, assigner ressources, publier.
+
+**3.3 Gérer exceptions et remplacements**
+
+- Ouvrir occurrence, annuler/modifier, remplacer coach/salle, ajouter note, choisir stratégie de notification, republier.
+
+- Validation: respect des délais si annulation club, pas de conflits après remplacement.
+
+**4.Réservations, listes d’attente, annulations**
+**4.1 Réserver une place (back‑office)**
+
+- Ouvrir session, sélectionner adhérent, le système contrôle: âge à la date de session (min/max), admissibilité plan/forfait, quotas, réservations simultanées, fenêtre d’ouverture, capacité/surbooking.
+
+- En cas d’inéligibilité, afficher motif et alternatives (autre plan/session), avec option de dérogation staff avec justification si rôle autorisé.
+
+- Résultats: réservation Confirmée/Attente/Refusée, journalisée avec horodatage et opérateur.
+
+**4.2 Gérer la liste d’attente**
+
+- Activer la liste d’attente sur le modèle/série, paramétrer taille max et mode: auto‑confirmation immédiate ou fenêtre de confirmation.
+
+- Sur libération d’une place, promotion FIFO du prochain éligible, notification SMS/email en temps réel, attribution selon mode choisi.
+
+- Résultats: classes maintenues pleines, réduction des places perdues par annulations tardives.
+
+**4.3 Annuler une réservation et pénalités**
+
+- Ouvrir réservation, cliquer Annuler, le système calcule la pénalité selon la politique (ex. >24h: crédit remis; <12‑24h: frais ou perte de crédit; no‑show: pénalité maximale), confirmer.
+
+- La place libérée est proposée à la liste d’attente selon la règle, avec notifications automatiques.
+
+- Résultats: statut Annulé, pénalité appliquée, traçabilité et mise à jour des soldes/crédits.
+
+**5.Pointage des présences**
+**5.1 Pointer les participants**
+
+- Ouvrir session, scanner/chercher adhérent, marquer Présent/Absent, débiter crédit si forfait, enregistrer.
+
+- Validation: réservation valide ou règle “walk‑in” autorisée par l’activité/plan, avec contrôle d’éligibilité à l’instant du pointage si requis.
+
+- Résultats: présences/no‑shows comptabilisés, soldes/quotas mis à jour, statistiques alimentées.
+
+**5.2 Gérer les no‑shows**
+
+- En fin de session, marquer no‑shows et appliquer pénalité selon politique (débit crédit/frais), notifier si configuré.
+
+- Résultats: indicateurs d’assiduité actualisés et découvrabilité des comportements à risque pour relances.
+
+**6.Reporting et exports**
+**6.1 Tableaux de bord**
+
+- KPIs: taux de remplissage, assiduité par activité/coach, créneaux populaires, annulations tardives, promotions depuis liste d’attente.
+
+- Filtres par période, type, ressource, plan; comparatifs semaine/saison.
+
+**6.2 Exports CSV**
+
+- Export des sessions, réservations, présences, pénalités et listes d’attente pour analyses externes et BI.
+
+- Journalisation des exports avec horodatage et opérateur pour audit.
+
+- Résultats: intégration simple aux outils décisionnels existants.
+
+**7.Paramétrages de politiques**
+**7.1 Fenêtres de réservation**
+
+- Définir ouverture/fermeture (ex. J‑7 à H‑1), par activité/plan, avec exceptions gérées au niveau de la série.
+
+- Résultats: contrôle de la demande et limitations des réservations de dernière minute.
+
+**7.2 Politique d’annulation**
+
+- Définir seuils et effets: standard recommandé 12–24h avec crédits/frais ajustés selon l’objectif d’occupation et l’équité client.
+
+- Résultats: réduction des annulations tardives et remplissage renforcé via liste d’attente.
+
+Règles métier essentielles
+
+- Vérification d’âge à la date de session; 
+
+- Aucun conflit de ressources (salle/coach/matériel) n’est autorisé à la publication; blocage avec propositions d’alternatives.
+
+- La capacité par session est respectée; 
+
+- La liste d’attente suit des règles déterministes (FIFO/priorité) 
+
+- Les annulations et no‑shows appliquent automatiquement les pénalités configurées (frais/débit de crédits), et libèrent la place vers la liste d’attente.
+
+- Toutes les actions sensibles (publication, remplacements, dérogations, annulations post‑cutoff) sont journalisées pour audit et contrôle interne.
+
+**Module gestion des abonnements ****&**** facturation**** **
+
+Objectif : 
+
+Permet au club de
+
+- Définir plans/packs et leurs droits (activités, quotas) avec restrictions d’âge à l’achat/renouvellement pour conformité et ciblage.
+
+- Attribuer des abonnements, émettre des factures, enregistrer les paiements
+
+Fonctionnalités principales
+
+**1. Catalogue d’offres**
+**1.1 Créer un plan récurrent**
+
+- Saisir nom, prix, fréquence (mensuel/annuel), taxes, engagement, et entitlements (activités incluses, quotas, réservations simultanées).
+
+- Définir restrictions d’âge min/max à l’achat/renouvellement et message d’inéligibilité avec alternative suggérée.
+
+**1.2 Créer un pack à crédits**
+
+- Saisir quantité de crédits, règles de consommation (présence/annulation tardive), expiration (date ou durée), prix/taxes et activités éligibles.
+
+**1.3 Gérer promotions simples**
+
+- Créer un code promo (montant/%), période de validité et éligibilité par offre pour application lors de la facturation.
+
+**2.Attribution et cycle de vie**
+**2.1 Attribuer un plan/pack à un adhérent**
+
+- Contrôler éligibilité: âge à la date d’achat, conflits d’offres et éventuels impayés bloquants, puis confirmer l’attribution.
+
+- Générer la facture correspondante en statut “Émise (À payer)” avec échéance et conditions définies par l’offre.
+
+**2.2 Renouveler (manuel/assisté)**
+
+- À l’approche d’échéance, créer une facture de renouvellement et notifier; activer la période suivante après paiement enregistré.
+
+**2.3 Changer de plan (essentiel)**
+
+- Programmer un upgrade/downgrade à date choisie et émettre facture/avoir associé, activation après paiement enregistré.
+
+**2.4 Geler/Suspendre/Résilier**
+
+- Geler une période (pause droits), suspendre sur facture échue au‑delà du seuil, résilier à date d’effet avec facture de clôture si nécessaire.
+
+**Facturation et paiements (traçage)**
+**3.1 Émettre une facture**
+
+- Créer facture liée à l’offre/membre, lignes (plan/pack, remises), TVA, échéance et notes, puis générer PDF/référence exportable.
+
+**3.2 Enregistrer un paiement reçu **
+
+- Renseigner montant, date, mode externe (espèces, virement, TPE), référence/justificatif et solder partiellement ou totalement la facture.
+
+Règles métier essentielles
+
+**Module gestion d’activités**
+
+- Création, modification, archivage d’activités (Pilates, Tennis, **Crossfit**…).
+
+- Classification par section, catégorie d’âge ou niveau (Débutant, Intermédiaire).
+
+**Paramètres d’activité**
+
+- Tarification par activité : forfait saison, carnet de séances, ou paiement à l’unité.
+
+- Conditions d’éligibilité : type d’adhésion requis, certificat médical, niveau sportif.
+
+- Ressources nécessaires : salle par défaut, matériel, nombre minimal/maximal de participants.
+
+**Planification des séances**
+
+- Création de séances ponctuelles ou récurrentes (hebdomadaires, stages).
+
+- Affectation d’un coach et d’une salle; détection de conflits de planning.
+
+- Ouverture automatique des inscriptions à partir d’une date définie
+
+Suivi de présence et activités
+
+- Pointage rapide par code QR ou liste digitale.
+
+- Historique des séances suivies par chaque membre.
+
+- Statistiques : taux de remplissage, nombre de séances annulées, répartition par activité.
+
+**Planning et réservation des salles**
+
+- Calendrier partagé des créneaux disponibles.
+
+- Gestion des conflits de réservation et listes d’attente automatiques
+
+**Facturation et paiements**
+
+- Génération automatique des cotisations + reçus PDF.
+
+- Paiement en ligne (CB, virement, prélèvement SEPA) et mises à jour de statut
+
+**Communication**
+
+- Emails et notifications push pour convocations, rappels, annonces.
+
+- Messages ciblés par groupe/adhérent
+
+Fonctionnalités évolutives
+
+- Application mobile adhérent : réservations, actualités, carte digitale
+
+- Tableau de bord analytique : statistiques de fréquentation, taux d’occupation des salles.
+
+## Comments
+
+[^c11] Omar EL IDRISSI: idetalement, dans le parametrage de l abonnement donner la possiblité de personnaliser le tarif et les options selon l age de l adherant.
+[^c14] Faouzi Mouad: Paiement intégrée dans l'app ? ou c'est géré entre le gérant & l’adhérent ?
