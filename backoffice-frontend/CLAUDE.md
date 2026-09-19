@@ -1,4 +1,6 @@
-# Frontend — règles propres
+# Backoffice frontend — règles propres
+
+Interface de l'accueil et du gérant. L'application coach (APC) et le portail parent (APP) sont des interfaces distinctes, à créer à côté quand la stack sera choisie ; elles consomment le même backend et le même contrat.
 
 Squelette. Complété quand la stack sera choisie. Les règles générales sont dans `../CLAUDE.md` et s'appliquent ici.
 

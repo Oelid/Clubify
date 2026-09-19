@@ -1,5 +1,7 @@
 # Backend — règles propres
 
+Backend unique : il sert le backoffice, l'application coach et le portail parent à travers le même contrat d'API.
+
 Squelette. Complété quand la stack sera choisie. Les règles générales sont dans `../CLAUDE.md` et s'appliquent ici.
 
 ## Stack

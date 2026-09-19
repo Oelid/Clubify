@@ -4,13 +4,13 @@ Ce dossier contient les contrats d'API de Clubify. Il est vide pour l'instant : 
 
 ## Rôle
 
-Le contrat est la source de vérité entre le backend et le frontend.
+Le contrat est la source de vérité entre le backend et les frontends (backoffice, coach, parent).
 
 Ordre de travail pour chaque feature :
 
 1. Le contrat est modifié en premier, dans la même livraison que la fiche de feature.
 2. Le backend l'implémente.
-3. Le frontend le consomme.
+3. Les frontends le consomment.
 
 ## Règles
 

@@ -23,7 +23,8 @@ C'est un logiciel d'école d'activités, pas un logiciel de salle de sport.
 | `docs/features/` | Une fiche par feature, à partir de `_gabarit.md` |
 | `docs/decisions/` | Une fiche par décision, à partir de `0000-gabarit.md` |
 | `contracts/` | Contrat d'API, modifié en premier dans chaque feature |
-| `backend/CLAUDE.md`, `frontend/CLAUDE.md` | Règles propres à chaque partie |
+| `backend/CLAUDE.md` | Règles propres au backend, unique pour toutes les interfaces |
+| `backoffice-frontend/CLAUDE.md` | Règles propres à l'interface accueil et gérant ; coach et parent viendront à côté |
 
 ## 3. Invariants non négociables
 
