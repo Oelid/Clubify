@@ -1,6 +1,6 @@
 # Feature : <nom>
 
-Copier ce fichier sous `docs/features/<identifiant>-<nom-court>.md`. Une fiche par feature. La fiche fait foi une fois validée ; tout écart avec le cahier des charges est consigné dans `docs/decisions/`.
+Copier ce fichier sous `docs/features/<identifiant>-<nom-court>.md`. Une fiche par feature. La fiche fait foi une fois validée ; tout écart avec le cahier des charges est consigné dans `docs/decisions/`. Les rubriques se remplissent dans l'ordre des étapes de `docs/processus-feature.md`.
 
 ## Identifiant(s) du backlog et source
 
@@ -22,6 +22,10 @@ Une règle par ligne, numérotée. Chaque règle cite sa source. Aucune règle i
 
 Cas concrets, un par règle au minimum : situation de départ, action, résultat attendu. Montants et dates fictifs, jamais de nom réel.
 
+## Benchmark
+
+Étape 2 du processus. Trois à cinq applications comparables, sur ce sujet précis. Tableau : écart observé, intérêt pour le club pilote, recommandation (intégrer / backlog / écarter), décision d'Omar.
+
 ## Hors périmètre
 
 Ce que la feature ne fait pas, même si le sujet est proche.
@@ -29,6 +33,14 @@ Ce que la feature ne fait pas, même si le sujet est proche.
 ## Dépendances
 
 Features ou lots requis avant celle-ci.
+
+## Plan d'implémentation
+
+Étape 3. Étapes ordonnées, écrans, ordre contrat → backend → frontend.
+
+## Impacts et régressions
+
+Étape 3. Un niveau par critère (majeur / maîtrisé) et un niveau global, avec les critères de `docs/processus-feature.md`. Puis une ligne par régression possible : feature livrée concernée, cas concret, résultat attendu, test qui la couvre.
 
 ## Impact sur le modèle de données
 

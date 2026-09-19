@@ -19,6 +19,7 @@ C'est un logiciel d'école d'activités, pas un logiciel de salle de sport.
 | `docs/glossaire.md` | Termes métier et noms techniques anglais à utiliser dans le code |
 | `docs/modele-donnees.md` | Entités et relations (brouillon, puis tenu à jour feature par feature) |
 | `docs/roadmap.md` | Les quatre lots du MVP et le tableau de suivi des features |
+| `docs/processus-feature.md` | Les six étapes d'implémentation d'une feature, avec leurs points d'arrêt |
 | `docs/features/` | Une fiche par feature, à partir de `_gabarit.md` |
 | `docs/decisions/` | Une fiche par décision, à partir de `0000-gabarit.md` |
 | `contracts/` | Contrat d'API, modifié en premier dans chaque feature |
@@ -38,10 +39,13 @@ C'est un logiciel d'école d'activités, pas un logiciel de salle de sport.
 
 ## 4. Méthode de travail
 
+Le détail est dans `docs/processus-feature.md` : six étapes, un point d'arrêt à chaque fois.
+
 - Une feature à la fois.
 - Lire la fiche de la feature (`docs/features/`) avant de coder.
-- Proposer un plan et attendre la validation d'Omar avant d'écrire du code.
-- Écrire les tests des règles métier avant le code.
+- Vérifier la complétude et faire le benchmark, borné au sujet, avant le plan.
+- Proposer un plan avec analyse d'impact (majeur ou maîtrisé) et régressions possibles ; attendre la validation d'Omar avant d'écrire du code.
+- Écrire les tests des règles métier et de non-régression avant le code.
 - Livrer ensemble, dans la même livraison : contrat d'API, modèle de données, fiche de feature, code, tests.
 
 ## 5. Ce que tu ne fais jamais sans demander
@@ -55,7 +59,7 @@ C'est un logiciel d'école d'activités, pas un logiciel de salle de sport.
 ## 6. Définition de « terminé »
 
 Une feature est terminée quand :
-- les critères d'acceptation de sa fiche passent, avec des tests automatisés pour chaque règle métier ;
+- les critères d'acceptation de sa fiche passent, avec des tests automatisés pour chaque règle métier et pour chaque régression identifiée ;
 - le contrat d'API, `docs/modele-donnees.md` et la fiche sont à jour ;
 - les règles configurables par club le sont, avec une valeur par défaut documentée ;
 - les libellés sont dans les fichiers i18n, aucun en dur ;
