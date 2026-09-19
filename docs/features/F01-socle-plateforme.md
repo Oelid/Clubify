@@ -9,7 +9,7 @@ Première feature de R1. Elle ne porte aucune entité métier : elle pose les in
 | PLT-01 | Multi-tenant | Club, site, isolation par club sur chaque donnée |
 | PLT-04 | Bus d'événements métier | Publication unique des faits métier, outbox, premier abonné : l'audit |
 | PLT-05 | Gestion documentaire | Fichiers privés rattachés à une entité, liens temporaires ; premier fichier : le logo |
-| SEC-01 | Authentification | Staff : identifiant, mot de passe, second facteur optionnel |
+| SEC-01 | Authentification | Staff : identifiant, mot de passe, second facteur TOTP obligatoire pour le gérant, optionnel pour les autres |
 | SEC-02 | Rôles et permissions | Cinq rôles, permissions fines contrôlées côté service, rôle par club |
 | SEC-03 | Données sensibles | Mécanisme de chiffrement au champ et au fichier, accès journalisé |
 | SEC-04 | Journal d'audit | Journal en ajout seul : qui, quoi, quand, avant, après |
@@ -48,7 +48,7 @@ Chaque règle cite sa source. « À confirmer » renvoie aux questions de la sec
 ### Authentification
 
 4. Un membre du staff s'authentifie par identifiant et mot de passe. — SEC-01.
-5. Un second facteur est proposé en option à chaque utilisateur du staff. Nature du facteur et obligation éventuelle pour le gérant : **À confirmer** (Q2). — SEC-01.
+5. Le second facteur est un code temporaire par application (TOTP). Il est **obligatoire pour le rôle gérant** et optionnel pour les autres utilisateurs du staff. Un gérant sans second facteur actif doit l'activer à sa première connexion, avant tout accès. Le gérant peut le réinitialiser pour un utilisateur qui a perdu son téléphone ; l'opération est auditée. — SEC-01 ; écart avec « optionnel » consigné dans la décision 0027 (tranché le 2026-09-20).
 6. Aucun compte n'existe pour un enfant. Les parents n'ont aucun accès avant R8. — Section 5 (Mineurs), APP-01, décision 0023.
 7. Les mots de passe sont hachés (Argon2), jamais stockés ni journalisés en clair. Longueur minimale et règles de complexité : **À confirmer** (Q3). — Décision 0024.
 8. La session est un jeton stateless avec jeton de rafraîchissement révocable ; la déconnexion et la désactivation du compte révoquent. — Décision 0024.
@@ -97,7 +97,7 @@ Chaque règle cite sa source. « À confirmer » renvoie aux questions de la sec
 
 ### Exports
 
-33. Toute liste est exportable en CSV et en Excel, dans les limites des permissions de l'utilisateur. Les colonnes sensibles (santé, CIN) sont exclues par défaut ; qui peut les inclure : **À confirmer** (Q9). — INT-03, SEC-03.
+33. Toute liste est exportable en CSV et en Excel, dans les limites des permissions de l'utilisateur. Les colonnes sensibles sont celles de SEC-03 — santé, CIN des parents et des personnes autorisées, pièces — et n'entrent dans aucun export en R1, quel que soit le rôle. Si un besoin apparaît, une permission dédiée sera cadrée avec F03. — INT-03, SEC-03 (tranché le 2026-09-20).
 34. Chaque export est journalisé : qui, quelle liste, quels filtres, combien de lignes, quand. — INT-03 (« export journalisé »), SEC-04.
 
 ### Langues et formats
@@ -121,7 +121,9 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C3 | 2 | Création d'un club | — | Un site par défaut existe, portant le nom du club ; toute donnée rattachée à un lieu exige un site |
 | C4 | 3 | Un utilisateur est rattaché à A comme coach et à B comme gérant | Il se connecte sur A | Ses permissions sont celles d'un coach de A ; rien de B n'est accessible |
 | C5 | 4, 7 | Compte créé avec un mot de passe | Connexion avec le bon mot de passe, puis avec un mauvais | Succès puis échec ; la base ne contient qu'un haché Argon2 ; aucun mot de passe dans les logs |
-| C6 | 5 | Second facteur activé sur un compte | Connexion avec mot de passe seul | Refus tant que le second facteur n'est pas fourni |
+| C6 | 5 | Second facteur activé sur un compte administratif | Connexion avec mot de passe seul | Refus tant que le code n'est pas fourni |
+| C6b | 5 | Compte gérant créé, second facteur non encore activé | Première connexion | Le seul écran accessible est l'activation du second facteur ; rien d'autre avant |
+| C6c | 5 | Gérant ayant perdu son téléphone | Un autre gérant réinitialise son second facteur | Réinitialisation effective, entrée d'audit avec l'auteur et la cible |
 | C7 | 6 | Une famille avec un enfant existe (F02) | Recherche d'un compte au nom de l'enfant | Aucun compte n'existe et aucun ne peut être créé pour un adhérent mineur |
 | C8 | 8 | Utilisateur connecté | Déconnexion, puis réutilisation de l'ancien jeton de rafraîchissement | Refus |
 | C9 | 8, 13 | Utilisateur connecté | La gérante le désactive | Ses jetons sont révoqués ; il ne peut plus se connecter ; sa ligne existe toujours, marquée désactivée |
@@ -149,7 +151,7 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C31 | 31 | Registre des règles | Une feature de test déclare une règle avec une valeur par défaut | Sans saisie, la valeur par défaut est lue ; après saisie par la gérante, la valeur du club est lue ; le changement est audité |
 | C32 | 32 | Compte administratif | Il tente de changer le fuseau du club | Refus |
 | C33 | 33 | Liste des utilisateurs de A | La gérante exporte en CSV puis en Excel | Deux fichiers avec les mêmes lignes, en-têtes traduits en FR, aucune ligne de B |
-| C34 | 33 | Une liste comportant une colonne sensible (test) | Export par un rôle sans permission sur cette colonne | La colonne est absente du fichier |
+| C34 | 33 | Une liste comportant une colonne marquée sensible (test) | Export par la gérante | La colonne est absente du fichier ; aucun rôle ne peut l'inclure |
 | C35 | 34 | Export effectué | Lecture du journal | Entrée : utilisateur, liste, filtres, nombre de lignes, horodatage |
 | C36 | 35 | Une erreur de validation survient | Réponse de l'API | Elle porte un code stable et un message en FR ; aucun libellé n'est écrit en dur dans le code |
 | C37 | 36 | Saisie de « 06 12 34 56 78 » | Enregistrement | Stocké « +212612345678 » ; « +33 6 12 34 56 78 » est accepté ; « 1234 » est refusé |
@@ -207,19 +209,19 @@ Les critères C1, C11, C14, C16 et C17 constituent le test d'isolation et le tes
 
 ## Questions
 
-À trancher avant la fin de l'étape 1.
+À trancher avant la fin de l'étape 1. Q2 et Q9 sont tranchées ; Q6 est bloquante pour l'étape 3.
 
 | # | Question | Ce que je propose, faute de mieux |
 | --- | --- | --- |
 | Q1 | Qui crée le club pilote et le premier compte gérant, et comment ? | Nous, par une commande d'amorçage versionnée ; aucun écran de création de club avant R9. |
-| Q2 | Second facteur : lequel, et obligatoire pour le gérant ? | Code temporaire par application (TOTP) ; optionnel pour tous en R1, y compris le gérant. Le SMS attendrait le connecteur de messagerie (R3). |
+| Q2 | Second facteur : lequel, et obligatoire pour le gérant ? | **Tranché** : TOTP par application, obligatoire pour le gérant, optionnel pour les autres. Décision 0027. |
 | Q3 | Politique de mot de passe et verrouillage : longueur minimale, complexité, nombre d'échecs, durée de blocage. | 12 caractères minimum, pas de règle de complexité ; verrouillage 15 minutes après 5 échecs. |
 | Q4 | Rôles comptable et parent en R1 : on les crée sans aucun utilisateur ? Le comptable du club est externe. | Les cinq rôles existent dès F01 ; seuls gérant, administratif et coach ont des utilisateurs en R1. |
 | Q5 | Qui peut lire le journal d'audit ? | Le gérant seul en R1 ; le comptable en lecture quand il aura un compte. |
 | Q6 | Hébergement et localisation des données (0018) : décidés avant l'étape 3 de F01 ? Ils fixent le support de stockage des fichiers. | Stockage objet compatible S3 chez un hébergeur au Maroc ou en Europe, à valider avec le juriste du club ; le code s'écrit derrière une interface, quel que soit le choix. |
 | Q7 | Durée des liens temporaires, types et taille maximale des fichiers. | 15 minutes ; PDF, JPEG, PNG ; 10 Mo. Le tout paramétrable par club. |
 | Q8 | ICE, IF, RC, forme juridique : dans les paramètres du club (F01) ou avec les taxes (F08, CPT-02) ? | Dans F01, comme identité du club ; F08 y ajoute régime fiscal et taux, et décide de leur affichage sur la facture. |
-| Q9 | Export des colonnes sensibles (santé, CIN) : qui peut les inclure ? | Personne en R1 ; une permission dédiée, attribuable par le gérant, sera cadrée avec F03. |
+| Q9 | Export des colonnes sensibles : lesquelles, et qui peut les inclure ? | **Tranché** : la liste de SEC-03 telle quelle (santé, CIN, pièces) ; personne en R1. |
 | Q10 | Verrouillage de la langue : FR seule à l'écran en R1, même si le champ « langue » existe ? | Oui ; le champ existe, seule `fr` est proposée jusqu'à R8. |
 
 ## Statut
