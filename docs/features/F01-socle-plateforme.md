@@ -164,7 +164,61 @@ Les critères C1, C11, C14, C16 et C17 constituent le test d'isolation et le tes
 
 ## Benchmark
 
-Étape 2. Non commencé.
+Étape 2, réalisée le 2026-09-20.
+
+### Complétude
+
+Vérification par rapport au cahier des charges, pas au marché.
+
+| Identifiant | Règles | Critères |
+| --- | --- | --- |
+| PLT-01 | 1, 2, 3 | C1 à C4 |
+| PLT-04 | 20, 21, 22 | C20 à C22 |
+| PLT-05 | 23 à 27 | C13, C14, C23 à C27 |
+| SEC-01 | 4 à 9 | C5 à C10b |
+| SEC-02 | 10 à 13 | C4, C9, C11, C12, C19, C32 |
+| SEC-03 | 14, 15 | C13 à C15, C34 |
+| SEC-04 | 16 à 19 | C10, C14, C16 à C19, C35 |
+| ADM-01 | 28 à 32 | C27 à C32 |
+| INT-03 | 33, 34 | C33 à C35 |
+
+Sections du cahier honorées : 5 (règles 6, 14, 27, 29, 35, 36), 6.3 (20, 21), 9.6 (37), 9.7 (16), 9.8 (31). Aucun cas d'utilisation de la section 8 n'est rattaché à F01.
+
+Un manque relevé et corrigé dans « Hors périmètre » : PLT-05 mentionne « les PDF générés » ; F01 les stocke, mais leur génération appartient aux features qui les produisent (fiche d'inscription F03, reçu F09).
+
+### Benchmark
+
+Borné au socle : rôles et permissions du staff, second facteur, journal d'audit, sessions, exports, paramètres. Cinq applications, sources consultées le 2026-09-20. Les pages d'aide d'iClassPro et de Glofox ont refusé l'accès direct ; leurs lignes s'appuient sur les extraits de recherche, marqués « n.v. » (non vérifié sur la page).
+
+| Sujet | Jackrabbit Class | iClassPro | Gymdesk | Glofox | GymMaster | Clubify (fiche) |
+| --- | --- | --- | --- | --- | --- | --- |
+| Permissions | Par utilisateur, cases à cocher, modèles de rôle à cloner ; mise en garde sur les suppressions et les finances | Groupes d'utilisateurs avec permissions fines ; « Admin Access » total (n.v.) | Par utilisateur, par catégories ; seul le propriétaire modifie le staff | Quatre rôles fixes : Super Admin, Admin, Trainer, Receptionist (n.v.) | Niveaux d'accès par rôle | Cinq rôles, permissions fines par feature (règles 10, 11) |
+| Second facteur | Non documenté ; SSO Google/Facebook | Application TOTP, exigible par portail (n.v.) | Non documenté | Non documenté | Google Authenticator, par utilisateur, demandé sur nouvel appareil ou après un délai ; récupération non documentée | TOTP, obligatoire gérant (règle 5, 0027) |
+| Journal d'audit | Journal d'activité : « toute l'activité n'est pas journalisée », conservé « un temps limité », plus ancien sur sauvegardes via le support ; rapport de recherche par utilisateur avec liens vers famille et transaction | Journal complet : inscriptions, transactions, données famille, actions du staff, des familles et des automatismes ; réservé aux admins (n.v.) | Non documenté | Non documenté | Journal des passages (contrôle d'accès) | Ajout seul, avant/après, garanti en base (règles 16, 17) |
+| Suppressions et clôture | Suppression de transactions possible par permission ; « impossible de clôturer les livres » | — | — | — | — | Aucune suppression ; clôture de période en R3 (CPT-04) |
+| Sessions | « User ID Login Status » : voir qui est connecté | — | — | — | Nouvelle demande de code après un délai | Jeton court, rafraîchissement révocable (règle 8) |
+| Exports | Rapports soumis à permission | — | Aucune permission d'export distincte | Rapports réservés aux Admin (n.v.) | — | Export dans les limites de consultation, journalisé, colonnes sensibles exclues (33, 34) |
+| Multi-site | Restrictions par lieu et catégorie | Portail entreprise multi-sites (n.v.) | Vue franchise | Multi-sites | — | Identifiant de site, écrans écartés (PLT-03) |
+
+Écarts relevés, avec l'intérêt pour le club pilote et la recommandation. La colonne « Décision » est remplie par Omar.
+
+| # | Écart observé | Où | Intérêt pour le pilote | Recommandation | Décision |
+| --- | --- | --- | --- | --- | --- |
+| B1 | Le journal attribue aussi les actions aux familles (portail) et aux automatismes | iClassPro | Fort : les relances automatiques (R3) et le portail parent (R8) touchent l'argent et les dossiers ; sans auteur « système » ou « parent », le journal aura des trous | Intégrer : la règle 16 précise que l'auteur est un utilisateur, un parent (R8) ou le système, avec la règle automatique identifiée | |
+| B2 | Journal conservé « un temps limité », le reste via le support | Jackrabbit | Fort, en négatif : c'est exactement ce qu'il ne faut pas faire pour de l'argent encaissé en espèces | Intégrer : la règle 17 précise que le journal n'est jamais purgé en R1 ; toute durée relève de SEC-06 (R4) et de l'avis du comptable | |
+| B3 | Écran de recherche dans le journal : par utilisateur, période, type d'action, avec lien vers l'entité concernée | Jackrabbit | Fort : un journal sans recherche ne sert pas au gérant qui cherche l'origine d'un écart de caisse (10.I) | Intégrer : règle 19 complétée, critère C19b | |
+| B4 | Second facteur demandé seulement sur un nouvel appareil ou après un délai | GymMaster | Fort pour l'adoption : le gérant se connecte chaque jour sur le même PC ; un code à chaque connexion finirait contourné | Intégrer : « se souvenir de cet appareil » 30 jours, révocable, audité ; règle 5, critère C6d | |
+| B5 | Récupération en cas de téléphone perdu non documentée chez les cinq | Tous | Fort : si l'unique gérant perd son téléphone, la règle 5 (réinitialisation par un gérant) ne suffit pas | Intégrer : codes de secours à usage unique remis à l'activation ; règle 5, critère C6e. Source : pratique standard, aucun des cinq ne la documente | |
+| B6 | Voir les sessions ouvertes d'un utilisateur et les fermer sans le désactiver | Jackrabbit | Moyen : utile après un vol de téléphone ou un départ ; C9 ne couvre que la désactivation | Intégrer : règle 8 complétée, critère C8b | |
+| B7 | Permission d'export distincte de la consultation | Glofox (rapports Admin seulement), par contraste avec Gymdesk | Moyen à fort : un export est un fichier qui quitte l'application (voir Q9) ; consulter une liste et l'emporter ne sont pas le même risque | Intégrer : permission « exporter » par domaine, distincte de « consulter » ; gérant et administratif par défaut, coach non ; règle 33, critère C33b | |
+| B8 | Permissions ajustables utilisateur par utilisateur, à partir d'un modèle de rôle | Jackrabbit, Gymdesk, iClassPro | Faible en R1 : trois ou quatre comptes, des rôles fixes suffisent ; utile quand un administratif tient aussi la caisse et un autre non | Backlog : nouvel identifiant SEC-07 « Permissions ajustées par utilisateur », R9 ; le modèle de F01 attache les permissions au rôle sans empêcher une surcharge par utilisateur plus tard | |
+| B9 | Connexion par compte Google ou Facebook | Jackrabbit | Nul : dépendance à un tiers hors Maroc pour un accès à des données d'enfants ; incompatible avec 0018 et avec le second facteur maîtrisé | Écarter | |
+| B10 | Restrictions d'accès par lieu ou par catégorie d'activité | Jackrabbit | Nul en R1 : un site, une équipe | Écarter, déjà couvert par le retrait de PLT-03 | |
+| B11 | Rôles fixes sans aucune personnalisation | Glofox | — | Écarter comme cible : c'est le point de départ de R1, mais le modèle reste ouvert (B8) | |
+
+Ce que le benchmark confirme sans rien changer : aucune des cinq applications ne va aussi loin que la fiche sur l'audit (ajout seul garanti en base, avant/après), sur l'interdiction de supprimer une transaction, ni sur le traitement des colonnes sensibles à l'export. Ces choix viennent du cahier (9.4 point 12, 9.6, SEC-03) et du contexte marocain (espèces, CNDP), pas du marché.
+
+Sources : [Jackrabbit — permissions](https://help.jackrabbitclass.com/help/user-id-permissions), [Jackrabbit — guide de protection du compte](https://help.jackrabbitclass.com/help/guidelines-user-permissions), [Jackrabbit — suivi d'activité](https://help.jackrabbitclass.com/help/user-id-activity-tracking), [Jackrabbit — contrôles comptables](https://help.jackrabbitclass.com/help/accounting-control-in-jackrabbit), [Jackrabbit — statut de connexion](https://help.jackrabbitclass.com/help/user-id-status), [iClassPro — permissions et groupes](https://support.iclasspro.com/hc/en-us/articles/218569918-How-Do-I-Configure-Staff-Permissions-and-User-Groups), [iClassPro — second facteur](https://support.iclasspro.com/hc/en-us/articles/4416122785687-What-is-Two-Factor-Authentication), [iClassPro — journal d'audit](https://support.iclasspro.com/hc/en-us/articles/218569928-What-is-the-Audit-Log), [Gymdesk — staff](https://docs.gymdesk.com/en/help/docs/managers), [Glofox — rôles et permissions par défaut](https://support.glofox.com/hc/en-us/articles/52585050344852-Staff-Roles-and-Default-Permissions), [GymMaster — sécurité du staff](https://www.gymmaster.com/user-manual/manual_staffmembers_add_staff_details_security/), [GymMaster — second facteur](https://www.gymmaster.com/blog/two-factor-authentication/).
 
 ## Hors périmètre
 
@@ -176,6 +230,7 @@ Les critères C1, C11, C14, C16 et C17 constituent le test d'isolation et le tes
 - Notifications, modèles, connecteurs réels de messagerie : R3. Connecteur de paiement réel : R8.
 - Champs santé et CIN eux-mêmes : F02, F03. F01 livre le mécanisme, pas les champs.
 - Toute entité métier : famille, adhérent, activité, inscription, facture.
+- Génération des PDF (fiche d'inscription, reçu, facture) : F03, F09, F08. F01 les stocke (PLT-05), ne les produit pas.
 - Écrans autres que : connexion, paramètres du club, utilisateurs et rôles, journal d'audit, bouton d'export.
 
 ## Dépendances
