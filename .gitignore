@@ -23,3 +23,7 @@ docs/cahier-des-charges/sources/captures/
 
 # Rapports d'exécution des tests, lus par tools/generer-suivi-tests.py
 reports/
+
+# Caches Python des outils
+__pycache__/
+*.pyc
