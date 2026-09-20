@@ -175,18 +175,14 @@
   font-size: var(--font-size-sm);
 }
 
+/* Le code est rendu par angularx-qrcode ; le cadre lui laisse une marge claire,
+   sans laquelle un lecteur de QR ne le décode pas de façon fiable. */
 .mfa__qr {
-  inline-size: 132px;
-  block-size: 132px;
+  display: inline-block;
+  padding: var(--space-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background-color: var(--color-surface);
-  background-image:
-    repeating-linear-gradient(90deg, var(--color-text) 0 8px, transparent 8px 16px),
-    repeating-linear-gradient(0deg, var(--color-text) 0 8px, transparent 8px 16px);
-  background-size: 16px 16px;
-  background-position: 10px 10px;
-  background-repeat: repeat;
+  background-color: #ffffff;
 }
 
 .mfa__codes {
@@ -199,5 +195,19 @@
   border-radius: var(--radius-md);
   background: var(--color-surface-sunken);
   list-style: none;
+  font-size: var(--font-size-sm);
+}
+
+.champ__erreur {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+}
+
+.champ--case {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
   font-size: var(--font-size-sm);
 }

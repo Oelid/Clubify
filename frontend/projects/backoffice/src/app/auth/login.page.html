@@ -1,46 +1,56 @@
-<div class="auth">
+<div class="auth" *transloco="let t">
   <div class="auth__carte">
     <div class="auth__marque">
       <span class="auth__logo">C</span>
-      <span>Clubify</span>
+      <span>{{ t('app.name') }}</span>
     </div>
 
-    <h1 class="auth__titre">Connexion</h1>
-    <p class="auth__sous-titre">Espace du personnel du club.</p>
+    <h1 class="auth__titre">{{ t('auth.title') }}</h1>
+    <p class="auth__sous-titre">{{ t('auth.subtitle') }}</p>
 
-    <form class="auth__form" (ngSubmit)="$event.preventDefault()">
+    <form class="auth__form" (ngSubmit)="soumettre()">
       <label class="champ">
-        <span class="champ__libelle">Adresse électronique</span>
+        <span class="champ__libelle">{{ t('auth.email') }}</span>
         <input
           class="champ__saisie"
           type="email"
           name="email"
           autocomplete="username"
-          placeholder="prenom.nom@exemple.test"
+          required
+          [placeholder]="t('auth.emailPlaceholder')"
+          [ngModel]="email()"
+          (ngModelChange)="email.set($event)"
           autofocus
         />
       </label>
 
       <label class="champ">
-        <span class="champ__libelle">Mot de passe</span>
+        <span class="champ__libelle">{{ t('auth.password') }}</span>
         <input
           class="champ__saisie"
           type="password"
           name="motDePasse"
           autocomplete="current-password"
-          placeholder="Au moins 12 caractères"
+          required
+          [placeholder]="t('auth.passwordPlaceholder')"
+          [ngModel]="motDePasse()"
+          (ngModelChange)="motDePasse.set($event)"
         />
       </label>
 
-      <a class="auth__oubli" routerLink="/connexion">Mot de passe oublié ?</a>
+      @if (erreur()) {
+        <p class="champ__erreur" role="alert" data-testid="erreur">
+          {{ t('error.' + erreur()) }}
+        </p>
+      }
 
-      <button class="bouton bouton--primaire" type="submit" routerLink="/second-facteur">
-        Se connecter
+      <a class="auth__oubli" routerLink="/connexion">{{ t('auth.forgotten') }}</a>
+
+      <button class="bouton bouton--primaire" type="submit" [disabled]="enCours()">
+        {{ enCours() ? t('auth.submitting') : t('auth.submit') }}
       </button>
     </form>
   </div>
 
-  <p class="auth__pied">
-    Vos données et celles des familles sont chiffrées et leur accès est journalisé.
-  </p>
+  <p class="auth__pied">{{ t('auth.privacy') }}</p>
 </div>

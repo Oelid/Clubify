@@ -1,10 +1,13 @@
 package ma.clubify.platform.controller;
 
+import ma.clubify.common.security.RefreshCookie;
 import ma.clubify.generated.api.ProfileApi;
 import ma.clubify.generated.model.MfaConfirmRequest;
 import ma.clubify.generated.model.MfaSetupResponse;
 import ma.clubify.generated.model.RecoveryCodes;
+import ma.clubify.generated.model.TokenPair;
 import ma.clubify.generated.model.TrustedDevice;
+import ma.clubify.platform.model.dto.Tokens;
 import ma.clubify.platform.model.dto.TrustedDeviceDto;
 import ma.clubify.platform.service.MfaService;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +27,11 @@ import java.util.UUID;
 public class ProfileController implements ProfileApi {
 
     private final MfaService secondFacteur;
+    private final RefreshCookie cookie;
 
-    public ProfileController(MfaService secondFacteur) {
+    public ProfileController(MfaService secondFacteur, RefreshCookie cookie) {
         this.secondFacteur = secondFacteur;
+        this.cookie = cookie;
     }
 
     @Override
@@ -42,9 +47,16 @@ public class ProfileController implements ProfileApi {
 
     @Override
     @PreAuthorize("@perm.authentifie()")
-    public ResponseEntity<Void> confirmMfa(MfaConfirmRequest demande) {
-        secondFacteur.confirmer(demande.getCode());
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<TokenPair> confirmMfa(MfaConfirmRequest demande) {
+        Tokens jetons = secondFacteur.confirmer(demande.getCode());
+
+        TokenPair paire = new TokenPair();
+        paire.setAccessToken(jetons.accessToken());
+        paire.setRefreshToken(jetons.refreshToken());
+        paire.setExpiresInSeconds((int) jetons.expiresInSeconds());
+        return ResponseEntity.ok()
+                .header(cookie.enTete(), cookie.poser(jetons.refreshToken()))
+                .body(paire);
     }
 
     @Override

@@ -9,6 +9,7 @@ import ma.clubify.common.security.PermissionChecker;
 import ma.clubify.common.security.TotpService;
 import ma.clubify.config.AuthenticatedUser;
 import ma.clubify.platform.model.entity.RecoveryCode;
+import ma.clubify.platform.model.dto.Tokens;
 import ma.clubify.platform.model.dto.TrustedDeviceDto;
 import ma.clubify.platform.model.entity.TrustedDevice;
 import ma.clubify.platform.model.entity.UserAccount;
@@ -39,17 +40,20 @@ public class MfaService {
     private final TotpService totp;
     private final PasswordEncoder encodeur;
     private final DomainEvents evenements;
+    private final SessionService sessions;
     private final Clock horloge;
 
     public MfaService(UserAccountRepository comptes, RecoveryCodeRepository codes,
                       TrustedDeviceRepository appareils, TotpService totp,
-                      PasswordEncoder encodeur, DomainEvents evenements, Clock horloge) {
+                      PasswordEncoder encodeur, DomainEvents evenements,
+                      SessionService sessions, Clock horloge) {
         this.comptes = comptes;
         this.codes = codes;
         this.appareils = appareils;
         this.totp = totp;
         this.encodeur = encodeur;
         this.evenements = evenements;
+        this.sessions = sessions;
         this.horloge = horloge;
     }
 
@@ -68,7 +72,7 @@ public class MfaService {
 
     /** Confirme l'activation par un premier code : sans cela, rien n'est activé. */
     @Transactional
-    public void confirmer(String code) {
+    public Tokens confirmer(String code) {
         AuthenticatedUser authentifie = PermissionChecker.requis();
         UserAccount compte = compte(authentifie.userId());
 
@@ -78,6 +82,9 @@ public class MfaService {
         compte.setMfaEnabled(true);
         evenements.publish(DomainEvent.of(authentifie.clubId(), "auth.mfa.enabled",
                 "UserAccount", compte.getId()));
+
+        // Le code saisi vaut second facteur : la session s'ouvre pleinement.
+        return sessions.ouvrirApresActivation(compte.getId());
     }
 
     @Transactional

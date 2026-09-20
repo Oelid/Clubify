@@ -1,75 +1,126 @@
-<header class="page__entete">
-  <div>
-    <h1 class="page__titre">Journal d'audit</h1>
-    <p class="page__sous-titre">
-      En ajout seul : une entrée ne se modifie ni ne se supprime, jamais.
-    </p>
+<ng-container *transloco="let t">
+  <header class="page__entete">
+    <div>
+      <h1 class="page__titre">{{ t('audit.title') }}</h1>
+      <p class="page__sous-titre">{{ t('audit.subtitle') }}</p>
+    </div>
+  </header>
+
+  <div class="filtres">
+    <label class="champ champ--compact">
+      <span class="champ__libelle">{{ t('audit.filterAction') }}</span>
+      <input
+        class="champ__saisie"
+        name="action"
+        placeholder="club.settings.updated"
+        [ngModel]="action()"
+        (ngModelChange)="action.set($event)"
+        (keyup.enter)="filtrer()"
+      />
+    </label>
+    <label class="champ champ--compact">
+      <span class="champ__libelle">{{ t('audit.filterEntity') }}</span>
+      <input
+        class="champ__saisie"
+        name="entityType"
+        placeholder="UserAccount"
+        [ngModel]="typeObjet()"
+        (ngModelChange)="typeObjet.set($event)"
+        (keyup.enter)="filtrer()"
+      />
+    </label>
+    <label class="champ champ--compact">
+      <span class="champ__libelle">{{ t('audit.filterFrom') }}</span>
+      <input
+        class="champ__saisie numeric"
+        type="date"
+        name="from"
+        [ngModel]="depuis()"
+        (ngModelChange)="depuis.set($event)"
+      />
+    </label>
+    <label class="champ champ--compact">
+      <span class="champ__libelle">{{ t('audit.filterTo') }}</span>
+      <input
+        class="champ__saisie numeric"
+        type="date"
+        name="to"
+        [ngModel]="jusqua()"
+        (ngModelChange)="jusqua.set($event)"
+      />
+    </label>
+    <div class="filtres__actions">
+      <button class="bouton bouton--primaire" type="button" (click)="filtrer()">
+        {{ t('audit.filter') }}
+      </button>
+      <button class="bouton bouton--discret" type="button" (click)="reinitialiser()">
+        {{ t('audit.reset') }}
+      </button>
+    </div>
   </div>
-  <button class="bouton bouton--discret" type="button">
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" />
-    </svg>
-    Exporter
-  </button>
-</header>
 
-<div class="filtres">
-  <label class="champ champ--compact">
-    <span class="champ__libelle">Auteur</span>
-    <select class="champ__saisie">
-      <option>Tous</option>
-      <option>Nadia B.</option>
-      <option>Younes T.</option>
-      <option>Système</option>
-    </select>
-  </label>
-  <label class="champ champ--compact">
-    <span class="champ__libelle">Type d'action</span>
-    <select class="champ__saisie">
-      <option>Toutes</option>
-      <option>Authentification</option>
-      <option>Paramètres</option>
-      <option>Utilisateurs</option>
-      <option>Exports</option>
-    </select>
-  </label>
-  <label class="champ champ--compact">
-    <span class="champ__libelle">Du</span>
-    <input class="champ__saisie numeric" value="14/09/2026" />
-  </label>
-  <label class="champ champ--compact">
-    <span class="champ__libelle">Au</span>
-    <input class="champ__saisie numeric" value="20/09/2026" />
-  </label>
-</div>
+  @if (erreur()) {
+    <p class="page__erreur" role="alert">{{ t('error.' + erreur()) }}</p>
+  }
 
-<div class="tableau">
-  <table>
-    <thead>
-      <tr>
-        <th scope="col">Horodatage</th>
-        <th scope="col">Auteur</th>
-        <th scope="col">Type</th>
-        <th scope="col">Action</th>
-        <th scope="col">Détail</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (e of entrees(); track e.heure + e.action) {
+  <div class="tableau">
+    <table>
+      <thead>
         <tr>
-          <td class="tableau__discret numeric">{{ e.heure }}</td>
-          <td class="tableau__fort">{{ e.auteur }}</td>
-          <td>
-            @if (e.type === 'Système') {
-              <span class="puce puce--info">Système</span>
-            } @else {
-              <span class="puce puce--neutre">Utilisateur</span>
-            }
-          </td>
-          <td><code>{{ e.action }}</code></td>
-          <td class="tableau__discret">{{ e.cible }}</td>
+          <th scope="col">{{ t('audit.when') }}</th>
+          <th scope="col">{{ t('audit.actor') }}</th>
+          <th scope="col">{{ t('audit.actorType') }}</th>
+          <th scope="col">{{ t('audit.action') }}</th>
+          <th scope="col">{{ t('audit.target') }}</th>
         </tr>
-      }
-    </tbody>
-  </table>
-</div>
+      </thead>
+      <tbody>
+        @for (e of entrees(); track e.id) {
+          <tr>
+            <td class="tableau__discret numeric">{{ e.occurredAt | clubDate: 'datetime' }}</td>
+            <td class="tableau__fort">{{ e.actorLabel ?? '—' }}</td>
+            <td>
+              @if (e.actorType === 'SYSTEM') {
+                <span class="puce puce--info">{{ t('audit.system') }}</span>
+              } @else {
+                <span class="puce puce--neutre">{{ t('audit.user') }}</span>
+              }
+            </td>
+            <td><code>{{ e.action }}</code></td>
+            <td class="tableau__discret">{{ e.entityType ?? '—' }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="tableau__vide">
+              {{ resultat.isLoading() ? t('app.loading') : t('audit.empty') }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (pages() > 1) {
+    <div class="pagination">
+      <button
+        class="bouton bouton--discret"
+        type="button"
+        [disabled]="page() <= 1"
+        (click)="allerA(page() - 2)"
+      >
+        {{ t('audit.previous') }}
+      </button>
+      <span class="pagination__etat numeric">
+        {{ t('audit.page', { page: page(), total: pages() }) }}
+      </span>
+      <button
+        class="bouton bouton--discret"
+        type="button"
+        [disabled]="page() >= pages()"
+        (click)="allerA(page())"
+      >
+        {{ t('audit.next') }}
+      </button>
+    </div>
+  }
+</ng-container>

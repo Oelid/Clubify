@@ -1,0 +1,25 @@
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { SessionStore } from './session.store';
+
+/**
+ * Garde des écrans du club. Un droit manquant se voit aussi côté backend : la
+ * garde ne fait qu'éviter d'afficher une page vide (décision 0028).
+ */
+export const sessionOuverte: CanActivateFn = () => {
+  const session = inject(SessionStore);
+  const router = inject(Router);
+
+  if (session.authentifie() && !session.secondFacteurAttendu()) {
+    return true;
+  }
+  return router.createUrlTree([session.secondFacteurAttendu() ? '/second-facteur' : '/connexion']);
+};
+
+/** Garde d'un écran qui exige un droit précis. */
+export const exigeDroit = (code: string): CanActivateFn => () => {
+  const session = inject(SessionStore);
+  const router = inject(Router);
+
+  return session.permet(code) ? true : router.createUrlTree(['/utilisateurs']);
+};

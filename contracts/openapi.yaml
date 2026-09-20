@@ -146,7 +146,13 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/MfaConfirmRequest' }
       responses:
-        '204': { description: Second facteur actif }
+        '200':
+          description: >-
+            Second facteur actif. Confirmer le code est une preuve de second
+            facteur : la réponse ouvre la session, sans redemander le mot de passe.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenPair' }
         '422': { $ref: '#/components/responses/UnprocessableEntity' }
 
   /profile/mfa/recovery-codes:

@@ -1,17 +1,25 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideTranslocoDeTest } from './core/transloco.testing';
 import { App } from './app';
 
 /**
  * La coquille de l'application ne porte aucun contenu : elle accueille les
- * écrans de F01, qui arrivent à l'étape 5. Elle doit cependant tenir la langue
- * et la direction, sur lesquelles repose tout le droite-à-gauche (PLT-08).
+ * écrans de F01. Elle tient la langue et la direction, sur lesquelles repose
+ * tout le droite-à-gauche (PLT-08).
  */
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter([])],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        ...provideTranslocoDeTest(),
+      ],
     }).compileComponents();
   });
 
@@ -32,7 +40,7 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
 
-    // FR au MVP ; l'arabe basculera `dir` sans toucher aux écrans (décision 0025).
+    // FR avant connexion ; l'arabe basculera `dir` sans toucher aux écrans (0025).
     expect(document.documentElement.lang).toBe('fr');
     expect(document.documentElement.dir).toBe('ltr');
   });

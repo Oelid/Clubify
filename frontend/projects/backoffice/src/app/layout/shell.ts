@@ -1,5 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { AuthSession } from '../core/auth.service';
+import { SessionStore } from '../core/session.store';
 
 /**
  * Coquille du backoffice : navigation à gauche, identité du club en haut.
@@ -8,17 +11,47 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
  */
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslocoDirective],
   templateUrl: './shell.html',
   styleUrl: './shell.css',
 })
 export class Shell {
-  protected readonly club = signal({ name: 'Club A', user: 'Nadia B.', role: 'Administrateur du compte' });
+  private readonly session = inject(SessionStore);
+  private readonly auth = inject(AuthSession);
 
-  protected readonly sections = [
-    { libelle: 'Tableau de bord', lien: '/club', icone: 'M3 12h4l3 8 4-16 3 8h4' },
-    { libelle: 'Paramètres du club', lien: '/club', icone: 'M12 15a3 3 0 100-6 3 3 0 000 6z' },
-    { libelle: 'Utilisateurs', lien: '/utilisateurs', icone: 'M17 20h5v-2a3 3 0 00-5.36-1.9M17 20H7' },
-    { libelle: "Journal d'audit", lien: '/journal', icone: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5' },
-  ];
+  protected readonly club = computed(() => this.session.current()?.club ?? null);
+  protected readonly nom = this.session.nomComplet;
+  protected readonly initiales = this.session.initiales;
+  protected readonly role = computed(() => this.session.current()?.role ?? null);
+
+  /**
+   * La navigation ne montre que ce que l'utilisateur a le droit d'ouvrir : un
+   * écran inaccessible dans le menu est une promesse non tenue (décision 0028).
+   */
+  protected readonly sections = computed(() =>
+    [
+      {
+        cle: 'nav.club',
+        lien: '/club',
+        droit: 'club.settings.consulter',
+        icone: 'M12 15a3 3 0 100-6 3 3 0 000 6z',
+      },
+      {
+        cle: 'nav.users',
+        lien: '/utilisateurs',
+        droit: 'users.consulter',
+        icone: 'M17 20h5v-2a3 3 0 00-5.36-1.9M17 20H7',
+      },
+      {
+        cle: 'nav.audit',
+        lien: '/journal',
+        droit: 'audit.consulter',
+        icone: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5',
+      },
+    ].filter((section) => this.session.permet(section.droit)),
+  );
+
+  protected async deconnecter(): Promise<void> {
+    await this.auth.deconnecter();
+  }
 }

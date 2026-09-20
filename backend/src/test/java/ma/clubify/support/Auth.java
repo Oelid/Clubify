@@ -76,15 +76,11 @@ public class Auth {
         List<String> codesDeSecours = new ArrayList<>();
         noeud.path("recoveryCodes").forEach(code -> codesDeSecours.add(code.asString()));
 
-        api.send(provisoire, post("/api/v1/profile/mfa/confirm"),
-                Map.of("code", totp.codeCourant(secret)));
-
-        // Une fois activé, une vraie connexion passe par le défi.
-        String defi = defiPour(email);
-        String finale = api.send(null, post("/api/v1/auth/mfa/verify"),
-                        Map.of("mfaChallengeId", defi, "code", totp.codeCourant(secret)))
+        // Confirmer le code ouvre la session : le mot de passe n'est pas redemandé.
+        String activation = api.send(provisoire, post("/api/v1/profile/mfa/confirm"),
+                        Map.of("code", totp.codeCourant(secret)))
                 .andReturn().getResponse().getContentAsString();
-        String jeton = api.json().readTree(finale).path("accessToken").asString();
+        String jeton = api.json().readTree(activation).path("accessToken").asString();
 
         secrets.put(email, secret);
         return new Activation(secret, codesDeSecours, jeton);

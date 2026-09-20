@@ -1,98 +1,179 @@
-<header class="page__entete">
-  <div>
-    <h1 class="page__titre">Paramètres du club</h1>
-    <p class="page__sous-titre">Identité, réglages régionaux et règles configurables.</p>
-  </div>
-  <button class="bouton bouton--primaire" type="button">Enregistrer</button>
-</header>
-
-<div class="grille">
-  <section class="carte">
-    <h2 class="carte__titre">Identité</h2>
-
-    <div class="carte__corps">
-      <label class="champ">
-        <span class="champ__libelle">Nom du club</span>
-        <input class="champ__saisie" value="Club A" />
-      </label>
-
-      <div class="champ__paire">
-        <label class="champ">
-          <span class="champ__libelle">Forme juridique</span>
-          <input class="champ__saisie" value="SARL" />
-        </label>
-        <label class="champ">
-          <span class="champ__libelle">ICE</span>
-          <input class="champ__saisie numeric" value="001234567000089" />
-        </label>
-      </div>
-
-      <div class="champ__paire">
-        <label class="champ">
-          <span class="champ__libelle">Téléphone</span>
-          <input class="champ__saisie numeric" value="+212612345678" />
-          <span class="champ__aide">Normalisé au format international.</span>
-        </label>
-        <label class="champ">
-          <span class="champ__libelle">Adresse électronique</span>
-          <input class="champ__saisie" value="contact@exemple.test" />
-        </label>
-      </div>
+<ng-container *transloco="let t">
+  <header class="page__entete">
+    <div>
+      <h1 class="page__titre">{{ t('club.title') }}</h1>
+      <p class="page__sous-titre">{{ t('club.subtitle') }}</p>
     </div>
-  </section>
+    @if (peutModifier()) {
+      <button
+        class="bouton bouton--primaire"
+        type="button"
+        [disabled]="enCours() || !saisie()"
+        (click)="enregistrer()"
+      >
+        {{ t('club.save') }}
+      </button>
+    }
+  </header>
 
-  <section class="carte">
-    <h2 class="carte__titre">Marque</h2>
-    <div class="carte__corps">
-      <div class="logo">
-        <div class="logo__apercu">CA</div>
-        <div>
-          <button class="bouton bouton--discret" type="button">Changer le logo</button>
-          <p class="champ__aide">PNG ou JPEG, 10 Mo au plus. Fichier privé, servi par lien temporaire.</p>
+  @if (erreur()) {
+    <p class="page__erreur" role="alert" data-testid="erreur">{{ t('error.' + erreur()) }}</p>
+  }
+  @if (enregistre()) {
+    <p class="page__succes" role="status" aria-live="polite">{{ t('club.saved') }}</p>
+  }
+
+  @if (saisie(); as club) {
+    <div class="grille">
+      <section class="carte">
+        <h2 class="carte__titre">{{ t('club.identity') }}</h2>
+
+        <div class="carte__corps">
+          <label class="champ">
+            <span class="champ__libelle">{{ t('club.name') }}</span>
+            <input
+              class="champ__saisie"
+              name="name"
+              [disabled]="!peutModifier()"
+              [ngModel]="club.name"
+              (ngModelChange)="champ('name', $event)"
+            />
+          </label>
+
+          <div class="champ__paire">
+            <label class="champ">
+              <span class="champ__libelle">{{ t('club.legalForm') }}</span>
+              <input
+                class="champ__saisie"
+                name="legalForm"
+                [disabled]="!peutModifier()"
+                [ngModel]="club.legalForm"
+                (ngModelChange)="champ('legalForm', $event)"
+              />
+            </label>
+            <label class="champ">
+              <span class="champ__libelle">{{ t('club.ice') }}</span>
+              <input
+                class="champ__saisie numeric"
+                name="ice"
+                inputmode="numeric"
+                [disabled]="!peutModifier()"
+                [ngModel]="club.ice"
+                (ngModelChange)="champ('ice', $event)"
+              />
+            </label>
+          </div>
+
+          <div class="champ__paire">
+            <label class="champ">
+              <span class="champ__libelle">{{ t('club.phone') }}</span>
+              <input
+                class="champ__saisie numeric"
+                name="phone"
+                inputmode="tel"
+                [disabled]="!peutModifier()"
+                [ngModel]="club.phone"
+                (ngModelChange)="champ('phone', $event)"
+              />
+              <span class="champ__aide">{{ t('club.phoneHelp') }}</span>
+            </label>
+            <label class="champ">
+              <span class="champ__libelle">{{ t('club.email') }}</span>
+              <input
+                class="champ__saisie"
+                name="email"
+                type="email"
+                [disabled]="!peutModifier()"
+                [ngModel]="club.email"
+                (ngModelChange)="champ('email', $event)"
+              />
+            </label>
+          </div>
+
+          <div class="champ__paire">
+            <label class="champ">
+              <span class="champ__libelle">{{ t('club.timezone') }}</span>
+              <input
+                class="champ__saisie"
+                name="timezone"
+                [disabled]="!peutModifier()"
+                [ngModel]="club.timezone"
+                (ngModelChange)="champ('timezone', $event)"
+              />
+            </label>
+            <label class="champ">
+              <span class="champ__libelle">{{ t('club.currency') }}</span>
+              <input
+                class="champ__saisie"
+                name="currency"
+                maxlength="3"
+                [disabled]="!peutModifier()"
+                [ngModel]="club.currency"
+                (ngModelChange)="champ('currency', $event)"
+              />
+            </label>
+          </div>
         </div>
-      </div>
-      <div class="champ__paire">
-        <label class="champ">
-          <span class="champ__libelle">Couleur principale</span>
-          <span class="couleur"><i style="background: #307890"></i> #307890</span>
-        </label>
-        <label class="champ">
-          <span class="champ__libelle">Couleur secondaire</span>
-          <span class="couleur"><i style="background: #f08840"></i> #F08840</span>
-        </label>
-      </div>
+      </section>
+
+      <section class="carte">
+        <h2 class="carte__titre">{{ t('club.brand') }}</h2>
+        <div class="carte__corps">
+          <p class="champ__aide">{{ t('club.brandHelp') }}</p>
+          <div class="champ__paire">
+            <span class="champ">
+              <span class="champ__libelle">{{ t('club.brandPrimary') }}</span>
+              <span class="couleur">
+                <i [style.background]="marquePrincipale() ?? 'transparent'"></i>
+                {{ marquePrincipale() ?? t('club.brandUnset') }}
+              </span>
+            </span>
+            <span class="champ">
+              <span class="champ__libelle">{{ t('club.brandSecondary') }}</span>
+              <span class="couleur">
+                <i [style.background]="marqueSecondaire() ?? 'transparent'"></i>
+                {{ marqueSecondaire() ?? t('club.brandUnset') }}
+              </span>
+            </span>
+          </div>
+        </div>
+      </section>
+    </div>
+  }
+
+  <section class="carte">
+    <h2 class="carte__titre">{{ t('club.settings') }}</h2>
+    <div class="tableau tableau--dans-carte">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ t('club.settingKey') }}</th>
+            <th scope="col">{{ t('club.settingValue') }}</th>
+            <th scope="col">{{ t('club.settingOrigin') }}</th>
+            <th scope="col">{{ t('club.settingSource') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of valeurs(); track r.key) {
+            <tr>
+              <td class="tableau__fort"><code>{{ r.key }}</code></td>
+              <td class="numeric">{{ valeurLisible(r.value) }}</td>
+              <td>
+                @if (r.overridden) {
+                  <span class="puce puce--info">{{ t('club.settingOverridden') }}</span>
+                } @else {
+                  <span class="puce puce--neutre">{{ t('club.settingDefault') }}</span>
+                }
+              </td>
+              <td class="tableau__discret">{{ source().get(r.key)?.source }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4" class="tableau__vide">{{ t('app.loading') }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
   </section>
-</div>
-
-<section class="carte">
-  <h2 class="carte__titre">Règles configurables</h2>
-  <div class="tableau tableau--dans-carte">
-    <table>
-      <thead>
-        <tr>
-          <th scope="col">Règle</th>
-          <th scope="col">Clé</th>
-          <th scope="col">Valeur</th>
-          <th scope="col">Origine</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (r of reglages(); track r.cle) {
-          <tr>
-            <td class="tableau__fort">{{ r.libelle }}</td>
-            <td class="tableau__discret"><code>{{ r.cle }}</code></td>
-            <td class="numeric">{{ r.valeur }}</td>
-            <td>
-              @if (r.defaut) {
-                <span class="puce puce--neutre">Valeur par défaut</span>
-              } @else {
-                <span class="puce puce--info">Réglée par le club</span>
-              }
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-</section>
+</ng-container>

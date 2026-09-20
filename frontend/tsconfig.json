@@ -17,6 +17,9 @@
     "paths": {
       "ui": [
         "./projects/ui/src/public-api.ts"
+      ],
+      "api-client": [
+        "./projects/api-client/src/index.ts"
       ]
     }
   },

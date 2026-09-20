@@ -125,6 +125,23 @@ public class SessionService {
         return authentifier(compte, appartenance, maintenant, jetonAppareil).tokens();
     }
 
+    /**
+     * Ouvre une session pleine après l'activation du second facteur.
+     *
+     * <p>Le code que l'utilisateur vient de saisir est une preuve de second
+     * facteur : lui redemander son mot de passe n'ajouterait rien, et
+     * obligerait l'interface à le conserver le temps de l'activation.
+     */
+    @Transactional
+    public Tokens ouvrirApresActivation(UUID userId) {
+        UserAccount compte = comptes.findById(userId)
+                .filter(UserAccount::isActive)
+                .orElseThrow(() -> new BusinessRuleException(
+                        "auth.credentials.invalid", HttpStatus.UNAUTHORIZED));
+        Membership appartenance = permissions.appartenanceDe(userId);
+        return authentifier(compte, appartenance, horloge.instant(), null).tokens();
+    }
+
     @Transactional
     public Tokens rafraichir(String jetonOpaque) {
         Instant maintenant = horloge.instant();

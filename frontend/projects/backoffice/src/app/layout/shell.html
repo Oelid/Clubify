@@ -1,12 +1,12 @@
-<div class="shell">
+<div class="shell" *transloco="let t">
   <aside class="shell__nav">
     <div class="shell__marque">
       <span class="shell__logo">C</span>
-      <span class="shell__produit">Clubify</span>
+      <span class="shell__produit">{{ t('app.name') }}</span>
     </div>
 
     <nav>
-      @for (section of sections; track section.lien + section.libelle) {
+      @for (section of sections(); track section.lien) {
         <a
           class="shell__lien"
           [routerLink]="section.lien"
@@ -16,14 +16,14 @@
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path [attr.d]="section.icone" />
           </svg>
-          {{ section.libelle }}
+          {{ t(section.cle) }}
         </a>
       }
     </nav>
 
     <div class="shell__club">
-      <span class="shell__club-nom">{{ club().name }}</span>
-      <span class="shell__club-saison">Saison 2026-2027</span>
+      <span class="shell__club-nom">{{ club()?.name }}</span>
+      <span class="shell__club-saison">{{ t('app.season') }}</span>
     </div>
   </aside>
 
@@ -34,15 +34,18 @@
           <circle cx="11" cy="11" r="7" />
           <path d="M21 21l-4.3-4.3" />
         </svg>
-        <input type="search" placeholder="Rechercher une famille, un enfant, un reçu…" aria-label="Rechercher" />
+        <input type="search" [placeholder]="t('app.search')" [attr.aria-label]="t('app.search')" />
       </div>
 
       <div class="shell__compte">
         <div class="shell__compte-texte">
-          <span class="shell__compte-nom">{{ club().user }}</span>
-          <span class="shell__compte-role">{{ club().role }}</span>
+          <span class="shell__compte-nom">{{ nom() }}</span>
+          <span class="shell__compte-role">{{ role() ? t('role.' + role()) : '' }}</span>
         </div>
-        <span class="shell__avatar">NB</span>
+        <span class="shell__avatar">{{ initiales() }}</span>
+        <button class="shell__deconnexion" type="button" (click)="deconnecter()">
+          {{ t('app.signOut') }}
+        </button>
       </div>
     </header>
 

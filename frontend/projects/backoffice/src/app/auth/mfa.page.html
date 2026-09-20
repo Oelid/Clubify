@@ -1,64 +1,98 @@
-<div class="auth">
-  <div class="auth__carte auth__carte--large">
+<div class="auth" *transloco="let t">
+  <div class="auth__carte" [class.auth__carte--large]="activation()">
     <div class="auth__marque">
       <span class="auth__logo">C</span>
-      <span>Clubify</span>
+      <span>{{ t('app.name') }}</span>
     </div>
 
-    <h1 class="auth__titre">Activer le second facteur</h1>
-    <p class="auth__sous-titre">
-      Votre rôle donne accès à la caisse, aux soldes des familles et aux données de santé
-      des enfants. Le second facteur est donc obligatoire.
-    </p>
+    @if (activation()) {
+      <h1 class="auth__titre">{{ t('auth.mfa.title') }}</h1>
+      <p class="auth__sous-titre">{{ t('auth.mfa.why') }}</p>
 
-    <div class="mfa">
-      <div class="mfa__etape">
-        <span class="mfa__numero">1</span>
-        <div>
-          <h2 class="mfa__titre">Scannez ce code</h2>
-          <p class="mfa__texte">
-            Avec une application d'authentification, par exemple Google Authenticator
-            ou Microsoft Authenticator.
-          </p>
-          <div class="mfa__qr" data-testid="qr-code" aria-label="Code à scanner"></div>
-        </div>
-      </div>
-
-      <div class="mfa__etape">
-        <span class="mfa__numero">2</span>
-        <div>
-          <h2 class="mfa__titre">Conservez ces codes de secours</h2>
-          <p class="mfa__texte">
-            Chacun ne sert qu'une fois. Ils vous permettent de vous connecter si vous
-            perdez votre téléphone.
-          </p>
-          <ul class="mfa__codes numeric" data-testid="codes-de-secours">
-            @for (code of codes(); track code) {
-              <li>{{ code }}</li>
+      <div class="mfa">
+        <div class="mfa__etape">
+          <span class="mfa__numero">1</span>
+          <div>
+            <h2 class="mfa__titre">{{ t('auth.mfa.scanTitle') }}</h2>
+            <p class="mfa__texte">{{ t('auth.mfa.scanText') }}</p>
+            @if (otpauthUri()) {
+              <qrcode
+                class="mfa__qr"
+                data-testid="qr-code"
+                [qrdata]="otpauthUri()!"
+                [width]="176"
+                [margin]="0"
+                errorCorrectionLevel="M"
+                [alt]="t('auth.mfa.scanLabel')"
+              />
             }
-          </ul>
+          </div>
+        </div>
+
+        <div class="mfa__etape">
+          <span class="mfa__numero">2</span>
+          <div>
+            <h2 class="mfa__titre">{{ t('auth.mfa.codesTitle') }}</h2>
+            <p class="mfa__texte">{{ t('auth.mfa.codesText') }}</p>
+            <ul class="mfa__codes numeric" data-testid="codes-de-secours">
+              @for (code of codesDeSecours(); track code) {
+                <li>{{ code }}</li>
+              }
+            </ul>
+          </div>
+        </div>
+
+        <div class="mfa__etape">
+          <span class="mfa__numero">3</span>
+          <div>
+            <h2 class="mfa__titre">{{ t('auth.mfa.codeTitle') }}</h2>
+            <ng-container [ngTemplateOutlet]="saisie" />
+          </div>
         </div>
       </div>
+    } @else {
+      <h1 class="auth__titre">{{ t('auth.mfa.verifyTitle') }}</h1>
+      <p class="auth__sous-titre">{{ t('auth.mfa.verifyWhy') }}</p>
+      <ng-container [ngTemplateOutlet]="saisie" />
 
-      <div class="mfa__etape">
-        <span class="mfa__numero">3</span>
-        <div>
-          <h2 class="mfa__titre">Saisissez le code affiché</h2>
-          <label class="champ">
-            <span class="champ__libelle">Code à six chiffres</span>
-            <input
-              class="champ__saisie champ__saisie--code numeric"
-              inputmode="numeric"
-              maxlength="6"
-              placeholder="000000"
-            />
-          </label>
-        </div>
-      </div>
-    </div>
+      <label class="champ champ--case">
+        <input
+          type="checkbox"
+          [ngModel]="appareilDeConfiance()"
+          (ngModelChange)="appareilDeConfiance.set($event)"
+          name="appareilDeConfiance"
+        />
+        <span>{{ t('auth.mfa.trustDevice') }}</span>
+      </label>
+    }
 
-    <button class="bouton bouton--primaire" type="button" routerLink="/club">
-      Activer et continuer
+    @if (erreur()) {
+      <p class="champ__erreur" role="alert" data-testid="erreur">{{ t('error.' + erreur()) }}</p>
+    }
+
+    <button
+      class="bouton bouton--primaire"
+      type="button"
+      [disabled]="enCours() || code().length < 6"
+      (click)="soumettre()"
+    >
+      {{ activation() ? t('auth.mfa.submit') : t('auth.mfa.verifySubmit') }}
     </button>
   </div>
+
+  <ng-template #saisie>
+    <label class="champ">
+      <span class="champ__libelle">{{ t('auth.mfa.codeLabel') }}</span>
+      <input
+        class="champ__saisie champ__saisie--code numeric"
+        inputmode="numeric"
+        maxlength="6"
+        name="code"
+        placeholder="000000"
+        [ngModel]="code()"
+        (ngModelChange)="code.set($event)"
+        (keyup.enter)="soumettre()"
+      />
+    </label>
+  </ng-template>
 </div>

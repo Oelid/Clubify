@@ -1,58 +1,76 @@
-<header class="page__entete">
-  <div>
-    <h1 class="page__titre">Utilisateurs</h1>
-    <p class="page__sous-titre">Cinq comptes, dont un désactivé.</p>
-  </div>
-  <div class="page__actions">
-    <button class="bouton bouton--discret" type="button">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" />
-      </svg>
-      Exporter
-    </button>
-    <button class="bouton bouton--primaire" type="button">Ajouter un utilisateur</button>
-  </div>
-</header>
-
-<div class="tableau">
-  <table>
-    <thead>
-      <tr>
-        <th scope="col">Nom</th>
-        <th scope="col">Adresse électronique</th>
-        <th scope="col">Rôle</th>
-        <th scope="col">Second facteur</th>
-        <th scope="col">Statut</th>
-        <th scope="col" class="tableau__droite">Dernière connexion</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (u of utilisateurs(); track u.email) {
-        <tr>
-          <td class="tableau__fort">{{ u.nom }}</td>
-          <td class="tableau__discret">{{ u.email }}</td>
-          <td>{{ u.role }}</td>
-          <td>
-            @if (u.mfa) {
-              <span class="puce puce--ok">Actif</span>
-            } @else {
-              <span class="puce puce--neutre">Non activé</span>
-            }
-          </td>
-          <td>
-            @if (u.actif) {
-              <span class="puce puce--ok">Actif</span>
-            } @else {
-              <span class="puce puce--alerte">Désactivé</span>
-            }
-          </td>
-          <td class="tableau__droite tableau__discret numeric">{{ u.derniere }}</td>
-        </tr>
+<ng-container *transloco="let t">
+  <header class="page__entete">
+    <div>
+      <h1 class="page__titre">{{ t('users.title') }}</h1>
+      <p class="page__sous-titre">
+        {{ t('users.count', { count: utilisateurs().length, disabled: desactives() }) }}
+      </p>
+    </div>
+    <div class="page__actions">
+      @if (peutExporter()) {
+        <button class="bouton bouton--discret" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" />
+          </svg>
+          {{ t('users.export') }}
+        </button>
       }
-    </tbody>
-  </table>
-</div>
+      @if (peutCreer()) {
+        <button class="bouton bouton--primaire" type="button">{{ t('users.add') }}</button>
+      }
+    </div>
+  </header>
 
-<p class="page__note">
-  Les colonnes sensibles au sens de SEC-03 — santé, CIN, pièces — ne figurent dans aucun export.
-</p>
+  @if (erreur()) {
+    <p class="page__erreur" role="alert">{{ t('error.' + erreur()) }}</p>
+  }
+
+  <div class="tableau">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">{{ t('users.name') }}</th>
+          <th scope="col">{{ t('users.email') }}</th>
+          <th scope="col">{{ t('users.role') }}</th>
+          <th scope="col">{{ t('users.mfa') }}</th>
+          <th scope="col">{{ t('users.status') }}</th>
+          <th scope="col" class="tableau__droite">{{ t('users.lastLogin') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of utilisateurs(); track u.id) {
+          <tr>
+            <td class="tableau__fort">{{ u.lastName }} {{ u.firstName }}</td>
+            <td class="tableau__discret">{{ u.email }}</td>
+            <td>{{ t('role.' + u.role) }}</td>
+            <td>
+              @if (u.mfaEnabled) {
+                <span class="puce puce--ok">{{ t('users.mfaOn') }}</span>
+              } @else {
+                <span class="puce puce--neutre">{{ t('users.mfaOff') }}</span>
+              }
+            </td>
+            <td>
+              @if (u.active) {
+                <span class="puce puce--ok">{{ t('users.active') }}</span>
+              } @else {
+                <span class="puce puce--alerte">{{ t('users.disabled') }}</span>
+              }
+            </td>
+            <td class="tableau__droite tableau__discret numeric">
+              {{ u.lastLoginAt ? (u.lastLoginAt | clubDate: 'datetime') : t('users.never') }}
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="tableau__vide">
+              {{ page.isLoading() ? t('app.loading') : t('users.empty') }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <p class="page__note">{{ t('users.sensitiveNote') }}</p>
+</ng-container>

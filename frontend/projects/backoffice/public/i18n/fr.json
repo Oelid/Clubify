@@ -1,0 +1,182 @@
+{
+  "app": {
+    "name": "Clubify",
+    "season": "Saison 2026-2027",
+    "search": "Rechercher une famille, un enfant, un reçu…",
+    "loading": "Chargement…",
+    "signOut": "Se déconnecter",
+    "yes": "Oui",
+    "no": "Non"
+  },
+  "nav": {
+    "club": "Paramètres du club",
+    "users": "Utilisateurs",
+    "audit": "Journal d'audit"
+  },
+  "auth": {
+    "title": "Connexion",
+    "subtitle": "Espace du personnel du club.",
+    "email": "Adresse électronique",
+    "emailPlaceholder": "prenom.nom@exemple.test",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "Au moins 12 caractères",
+    "forgotten": "Mot de passe oublié ?",
+    "submit": "Se connecter",
+    "submitting": "Connexion…",
+    "privacy": "Vos données et celles des familles sont chiffrées et leur accès est journalisé.",
+    "mfa": {
+      "title": "Activer le second facteur",
+      "why": "Votre rôle donne accès à la caisse, aux soldes des familles et aux données de santé des enfants. Le second facteur est donc obligatoire.",
+      "scanTitle": "Scannez ce code",
+      "scanText": "Avec une application d'authentification, par exemple Google Authenticator ou Microsoft Authenticator.",
+      "scanLabel": "Code à scanner",
+      "codesTitle": "Conservez ces codes de secours",
+      "codesText": "Chacun ne sert qu'une fois. Ils vous permettent de vous connecter si vous perdez votre téléphone.",
+      "codeTitle": "Saisissez le code affiché",
+      "codeLabel": "Code à six chiffres",
+      "trustDevice": "Ne plus demander de code sur cet appareil",
+      "submit": "Activer et continuer",
+      "verifyTitle": "Code de vérification",
+      "verifyWhy": "Saisissez le code affiché par votre application d'authentification.",
+      "verifySubmit": "Vérifier"
+    }
+  },
+  "club": {
+    "title": "Paramètres du club",
+    "subtitle": "Identité du club et règles configurables.",
+    "identity": "Identité",
+    "name": "Nom du club",
+    "legalForm": "Forme juridique",
+    "ice": "ICE",
+    "taxId": "Identifiant fiscal",
+    "tradeRegister": "Registre du commerce",
+    "address": "Adresse",
+    "phone": "Téléphone",
+    "email": "Adresse électronique",
+    "timezone": "Fuseau horaire",
+    "currency": "Devise",
+    "defaultLanguage": "Langue par défaut",
+    "save": "Enregistrer",
+    "saved": "Paramètres enregistrés.",
+    "settings": "Règles configurables",
+    "settingKey": "Règle",
+    "settingValue": "Valeur",
+    "settingOrigin": "Origine",
+    "settingDefault": "Défaut Clubify",
+    "settingOverridden": "Choix du club",
+    "settingSource": "Source",
+    "phoneHelp": "Normalisé au format international, indicatif +212 par défaut.",
+    "brand": "Marque",
+    "brandHelp": "Les couleurs du club servent d'accent et habillent ses documents ; elles ne remplacent pas la charte du produit.",
+    "brandPrimary": "Couleur principale",
+    "brandSecondary": "Couleur secondaire",
+    "brandUnset": "Non définie"
+  },
+  "users": {
+    "title": "Utilisateurs",
+    "count": "{{count}} comptes, dont {{disabled}} désactivé(s).",
+    "add": "Ajouter un utilisateur",
+    "export": "Exporter",
+    "name": "Nom",
+    "email": "Adresse électronique",
+    "role": "Rôle",
+    "mfa": "Second facteur",
+    "mfaOn": "Actif",
+    "mfaOff": "Non activé",
+    "status": "Statut",
+    "active": "Actif",
+    "disabled": "Désactivé",
+    "lastLogin": "Dernière connexion",
+    "never": "Jamais",
+    "empty": "Aucun utilisateur.",
+    "sensitiveNote": "Les colonnes sensibles au sens de SEC-03 — santé, CIN, pièces — ne figurent dans aucun export."
+  },
+  "role": {
+    "ACCOUNT_ADMIN": "Administrateur du compte",
+    "MANAGER": "Gérant",
+    "FRONT_DESK": "Accueil",
+    "COACH": "Coach",
+    "ACCOUNTANT": "Comptable",
+    "PARENT": "Parent"
+  },
+  "audit": {
+    "title": "Journal d'audit",
+    "subtitle": "Chaque action sur l'argent, les droits et les données sensibles laisse une trace.",
+    "when": "Horodatage",
+    "actor": "Auteur",
+    "actorType": "Type",
+    "action": "Action",
+    "target": "Cible",
+    "filterAction": "Action",
+    "filterEntity": "Type d'objet",
+    "filterFrom": "Depuis",
+    "filterTo": "Jusqu'à",
+    "filter": "Filtrer",
+    "reset": "Réinitialiser",
+    "empty": "Aucune entrée pour ces critères.",
+    "system": "Système",
+    "user": "Utilisateur",
+    "page": "{{page}} sur {{total}}",
+    "previous": "Précédente",
+    "next": "Suivante"
+  },
+  "error": {
+    "unexpected": "Une erreur inattendue s'est produite.",
+    "network": {
+      "unreachable": "Le serveur est injoignable."
+    },
+    "http": {
+      "403": "Vous n'avez pas le droit d'effectuer cette action.",
+      "404": "Introuvable.",
+      "500": "Le serveur a rencontré une erreur."
+    },
+    "auth": {
+      "credentials": {
+        "invalid": "Adresse électronique ou mot de passe incorrect."
+      },
+      "account": {
+        "locked": "Compte temporairement bloqué après plusieurs échecs."
+      },
+      "mfa": {
+        "invalid": "Code incorrect ou expiré."
+      },
+      "challenge": {
+        "expired": "La vérification a expiré, reprenez la connexion."
+      },
+      "refresh": {
+        "invalid": "Votre session a expiré."
+      }
+    },
+    "club": {
+      "name": {
+        "required": "Le nom du club est obligatoire."
+      },
+      "ice": {
+        "invalid": "L'ICE compte quinze chiffres."
+      }
+    },
+    "phone": {
+      "invalid": "Numéro de téléphone invalide."
+    },
+    "user": {
+      "email": {
+        "alreadyUsed": "Cette adresse est déjà utilisée."
+      },
+      "password": {
+        "tooShort": "Mot de passe trop court."
+      },
+      "role": {
+        "notAssignableYet": "Ce rôle n'est pas encore attribuable."
+      },
+      "lastAdmin": {
+        "protected": "Le club doit garder un administrateur actif."
+      },
+      "admin": {
+        "permissionsNotRestrictable": "Les droits de l'administrateur ne se restreignent pas."
+      }
+    },
+    "setting": {
+      "notClubScoped": "Cette règle est fixée par Clubify."
+    }
+  }
+}

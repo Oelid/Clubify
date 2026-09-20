@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-import { ClubTheme } from 'ui';
+import { TranslocoService } from '@jsverse/transloco';
+import { LangueService } from './core/langue.service';
 
 @Component({
   selector: 'app-root',
@@ -10,17 +10,16 @@ import { ClubTheme } from 'ui';
   styleUrl: './app.css',
 })
 export class App {
-  private readonly document = inject(DOCUMENT);
-  private readonly theme = inject(ClubTheme);
+  private readonly langue = inject(LangueService);
+  private readonly transloco = inject(TranslocoService);
 
   constructor() {
-    // FR au MVP. L'arabe basculera `dir` sans toucher aux écrans, parce que
-    // les feuilles de style n'emploient que des propriétés logiques.
-    this.document.documentElement.lang = 'fr';
-    this.document.documentElement.dir = 'ltr';
+    // Avant toute connexion, la langue par défaut du produit. Celle de
+    // l'utilisateur prend le relais dès que la session s'ouvre, et la direction
+    // du document suit (PLT-08).
+    this.langue.appliquer(this.transloco.getDefaultLang());
 
-    // Marque du club, lue dans ses paramètres (ADM-01). En maquette, celle du
-    // club pilote ; à la connexion, celle que renvoie /club.
-    this.theme.apply({ primary: '#307890', secondary: '#f08840' });
+    // La marque du club est appliquée à la connexion, depuis ses paramètres
+    // (ADM-01) : rien n'est codé en dur ici.
   }
 }
