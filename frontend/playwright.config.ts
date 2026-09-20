@@ -39,6 +39,11 @@ chargerLesAcces();
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
+  // Un seul ouvrier : certains scénarios changent un réglage du club, que
+  // d'autres lisent. Les faire tourner ensemble rendrait le résultat dépendant
+  // de l'ordre, donc irreproductible — ce qu'une recette ne peut pas se
+  // permettre. La suite reste sous la minute.
+  workers: 1,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 1 : 0,
   reporter: [

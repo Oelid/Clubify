@@ -68,14 +68,16 @@ class Scenario:
 
     identifiant: str
     feature: str
+    groupe: str
     intitule: str
-    verification: str
+    prealable: str
+    etapes: list[str]
+    attendu: str
     criteres: list[str]
     mode: str
     etat: str = "Non joué"
     duree: float | None = None
     detail: str = ""
-    fichier: str = ""
 
 
 @dataclass
@@ -86,6 +88,68 @@ class Feature:
 
 
 # -------------------------------------------------------------------- source
+
+def lire_les_scenarios(texte: str) -> list[Scenario]:
+    """Les scénarios, tels que le fichier les raconte.
+
+    Le format est celui qu'on lit sans effort : un titre par scénario, puis des
+    lignes « - **Champ** : valeur ». Les étapes sont numérotées.
+    """
+    scenarios: list[Scenario] = []
+    feature = ""
+    groupe = ""
+    courant: dict[str, object] | None = None
+
+    def clore() -> None:
+        if courant is None:
+            return
+        scenarios.append(Scenario(
+            identifiant=str(courant["id"]),
+            feature=str(courant["feature"]),
+            groupe=str(courant["groupe"]),
+            intitule=str(courant["intitule"]),
+            prealable=str(courant.get("Préalable", "")),
+            etapes=list(courant.get("etapes", [])),
+            attendu=str(courant.get("Attendu", "")),
+            criteres=[c.strip() for c in str(courant.get("Critères", "")).split(",")
+                      if c.strip() and c.strip() != "—"],
+            mode=str(courant.get("Mode", "")),
+        ))
+
+    for ligne in texte.splitlines():
+        depouillee = ligne.strip()
+
+        if ligne.startswith("# F"):
+            clore()
+            courant = None
+            feature = ligne[2:].split("—")[0].strip()
+            continue
+        if ligne.startswith("## "):
+            clore()
+            courant = None
+            groupe = ligne[3:].strip()
+            continue
+        if ligne.startswith("### "):
+            clore()
+            titre = ligne[4:].strip()
+            identifiant, _, intitule = titre.partition("—")
+            courant = {"id": identifiant.strip(), "intitule": intitule.strip(),
+                       "feature": feature, "groupe": groupe, "etapes": []}
+            continue
+        if courant is None:
+            continue
+
+        champ = re.match(r"- \*\*(.+?)\*\*\s*:?\s*(.*)$", depouillee)
+        if champ:
+            courant[champ.group(1)] = champ.group(2).strip()
+            continue
+        etape = re.match(r"\d+\.\s+(.*)$", depouillee)
+        if etape:
+            courant["etapes"].append(etape.group(1).strip())
+
+    clore()
+    return scenarios
+
 
 def tableaux_markdown(texte: str) -> dict[str, list[dict[str, str]]]:
     """Les tableaux du fichier source, indexés par le titre qui les précède."""
@@ -311,32 +375,53 @@ def feuille_feature(wb, feature, scenarios, passages) -> None:
     feuille = wb.create_sheet(feature.code)
     feuille["A1"] = f"{feature.code} — {feature.nom}"
     feuille["A1"].font = Font(bold=True, size=13)
+    feuille["A2"] = ("Chaque scénario se déroule tel qu'il est écrit : le préalable, "
+                     "les étapes, puis le résultat attendu. L'état vient du dernier "
+                     "passage, jamais d'une saisie.")
+    feuille["A2"].alignment = Alignment(wrap_text=True)
+    feuille.merge_cells("A2:H2")
+    feuille.row_dimensions[2].height = 28
 
-    colonnes = ["ID", "Scénario", "Ce qu'on vérifie", "Critères", "Mode", "État",
-                "Durée (s)", "Dernier passage", "Détail"]
-    entete(feuille, colonnes, [7, 46, 58, 16, 12, 12, 10, 18, 46], ligne=3)
+    colonnes = ["ID", "Scénario", "Préalable", "Étapes", "Résultat attendu",
+                "Mode", "État", "Dernier passage"]
+    entete(feuille, colonnes, [7, 40, 34, 46, 56, 12, 12, 18], ligne=4)
 
-    ligne = 4
+    ligne = 5
+    groupe = None
     for scenario in sorted([s for s in scenarios if s.feature == feature.code],
                            key=lambda s: s.identifiant):
+        # Un intertitre par famille : on retrouve son écran d'un coup d'œil.
+        if scenario.groupe != groupe:
+            groupe = scenario.groupe
+            cellule = feuille.cell(row=ligne, column=1, value=groupe)
+            cellule.font = GRAS
+            cellule.fill = PatternFill("solid", fgColor="EDF1F5")
+            for colonne in range(2, len(colonnes) + 1):
+                feuille.cell(row=ligne, column=colonne).fill = PatternFill(
+                    "solid", fgColor="EDF1F5")
+            ligne += 1
+
         passage = passages.get(scenario.identifiant, {})
         valeurs = [
             scenario.identifiant,
             scenario.intitule,
-            scenario.verification,
-            ", ".join(scenario.criteres),
+            scenario.prealable,
+            "\n".join(f"{rang}. {etape}"
+                       for rang, etape in enumerate(scenario.etapes, 1)),
+            scenario.attendu,
             scenario.mode,
             scenario.etat,
-            round(scenario.duree, 2) if scenario.duree else None,
             passage.get("Date", ""),
-            scenario.detail or passage.get("Remarque", ""),
         ]
         for index, valeur in enumerate(valeurs, start=1):
-            feuille.cell(row=ligne, column=index, value=valeur)
+            cellule = feuille.cell(row=ligne, column=index, value=valeur)
+            cellule.alignment = HAUT
+        if scenario.detail:
+            feuille.cell(row=ligne, column=7).comment = None
         ligne += 1
 
-    colorer(feuille, "F", 4, ligne - 1)
-    encadrer(feuille, 3, ligne - 1, len(colonnes))
+    colorer(feuille, "G", 5, ligne - 1)
+    encadrer(feuille, 4, ligne - 1, len(colonnes))
 
 
 def feuille_couverture(wb, features, scenarios) -> None:
@@ -433,9 +518,9 @@ def main() -> int:
         print(f"Source manquante : {SOURCE}", file=sys.stderr)
         return 1
 
-    tableaux = tableaux_markdown(SOURCE.read_text(encoding="utf-8"))
-    decrits = tableaux.get("Scénarios fonctionnels", [])
-    passages = {p.get("ID", ""): p for p in tableaux.get("Recette manuelle — passages", [])}
+    texte = SOURCE.read_text(encoding="utf-8")
+    tableaux = tableaux_markdown(texte)
+    passages = {p.get("ID", ""): p for p in tableaux.get("Passages manuels", [])}
     anomalies = tableaux.get("Anomalies trouvées", [])
 
     if options.executer:
@@ -444,26 +529,14 @@ def main() -> int:
 
     resultats, joue = resultats_fonctionnels()
 
-    scenarios: list[Scenario] = []
-    for ligne in decrits:
-        identifiant = ligne.get("ID", "")
-        scenario = Scenario(
-            identifiant=identifiant,
-            feature=ligne.get("Feature", ""),
-            intitule=ligne.get("Scénario", ""),
-            verification=ligne.get("Ce qu'on vérifie", ""),
-            criteres=[c.strip() for c in ligne.get("Critères", "").split(",")
-                      if c.strip() and c.strip() != "—"],
-            mode=ligne.get("Mode", ""),
-        )
+    scenarios = lire_les_scenarios(texte)
+    for scenario in scenarios:
         if scenario.mode == "Manuel":
-            passage = passages.get(identifiant, {})
-            resultat = passage.get("Résultat", "")
+            resultat = passages.get(scenario.identifiant, {}).get("Résultat", "")
             scenario.etat = {"OK": "Vert", "KO": "Rouge"}.get(resultat, "Manuel")
-        trouve = resultats.get(identifiant)
+        trouve = resultats.get(scenario.identifiant)
         if trouve:
-            scenario.etat, scenario.duree, scenario.detail, scenario.fichier = trouve
-        scenarios.append(scenario)
+            scenario.etat, scenario.duree, scenario.detail, _ = trouve
 
     codes = sorted({s.feature for s in scenarios}
                    | {a.get("Feature", "") for a in anomalies})

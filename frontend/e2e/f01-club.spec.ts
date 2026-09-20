@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { configurationManquante } from './support/environnement';
+import { ApiDeRecette } from './support/api';
+import { configurationManquante, marqueDuPassage } from './support/environnement';
 import { entrerCommeAdministrateur } from './support/pages';
 
 /** Recette fonctionnelle de F01 — paramètres du club et règles configurables. */
@@ -13,11 +14,10 @@ test.describe('F01 — Paramètres du club', () => {
     await entrerCommeAdministrateur(page);
   });
 
-  test("S05 — Le gérant modifie l'identité du club", async ({ page }) => {
+  test("S10 — Modifier l'identité du club", async ({ page }) => {
     const nom = `Club de recette ${Date.now() % 100000}`;
 
     await page.getByLabel('Nom du club').fill(nom);
-    // Saisi comme au comptoir, avec des espaces et sans indicatif.
     await page.getByLabel('Téléphone').fill('06 12 34 56 78');
     await page.getByRole('button', { name: 'Enregistrer' }).click();
 
@@ -26,12 +26,10 @@ test.describe('F01 — Paramètres du club', () => {
     await expect(page.getByLabel('Téléphone')).toHaveValue('+212612345678');
 
     await page.getByRole('link', { name: "Journal d'audit" }).click();
-    await expect(page.getByRole('heading', { name: "Journal d'audit" })).toBeVisible();
-    // La modification laisse une trace, avec son auteur (SEC-04).
     await expect(page.getByText('club.updated').first()).toBeVisible();
   });
 
-  test('S06 — Nom du club laissé vide', async ({ page }) => {
+  test('S11 — Nom du club laissé vide', async ({ page }) => {
     const avant = await page.getByLabel('Nom du club').inputValue();
 
     await page.getByLabel('Nom du club').fill('');
@@ -39,12 +37,21 @@ test.describe('F01 — Paramètres du club', () => {
 
     await expect(page.getByTestId('erreur')).toHaveText(/nom du club est obligatoire/i);
 
-    // Rien n'a été enregistré : le nom d'origine revient au rechargement.
     await page.reload();
     await expect(page.getByLabel('Nom du club')).toHaveValue(avant);
   });
 
-  test('S19 — Le gérant change la couleur du club', async ({ page }) => {
+  test('S12 — ICE mal formé', async ({ page }) => {
+    await page.getByRole('textbox', { name: 'ICE' }).fill('12345');
+    await page.getByRole('button', { name: 'Enregistrer' }).click();
+
+    await expect(page.getByTestId('erreur')).toHaveText(/quinze chiffres/i);
+
+    await page.reload();
+    await expect(page.getByRole('textbox', { name: 'ICE' })).not.toHaveValue('12345');
+  });
+
+  test('S13 — Changer la couleur du club', async ({ page }) => {
     const choisie = '#8a2f6b';
 
     await page.getByTestId('couleur-principale').fill(choisie);
@@ -52,9 +59,6 @@ test.describe('F01 — Paramètres du club', () => {
     await expect(page.locator('.page__succes')).toBeVisible();
 
     // L'accent change sous les yeux : c'est la preuve que c'est enregistré.
-    // Mesuré par sondage : la confirmation s'affiche avant que le jeton de
-    // marque ne soit reposé, et comparer une seule fois rendrait le test
-    // capricieux.
     await expect
       .poll(async () =>
         (
@@ -67,7 +71,6 @@ test.describe('F01 — Paramètres du club', () => {
       )
       .toBe(choisie);
 
-    // Et la couleur survit au rechargement : elle vient bien du club.
     await page.reload();
     await expect(page.getByTestId('couleur-principale')).toHaveValue(choisie);
 
@@ -77,16 +80,30 @@ test.describe('F01 — Paramètres du club', () => {
     await expect(page.locator('.page__succes')).toBeVisible();
   });
 
-  test('S20 — Le gérant modifie une règle configurable', async ({ page }) => {
+  test('S14 — Lire les règles configurables', async ({ page }) => {
+    const tableau = page.locator('.tableau--dans-carte tbody tr');
+    await expect(tableau.first()).toBeVisible();
+
+    // Une règle du ressort du club : libellé, explication, valeur, origine.
+    const duree = tableau.filter({ hasText: 'files.link_ttl_minutes' });
+    await expect(duree).toContainText("Durée d'un lien de fichier");
+    await expect(duree).toContainText(/minutes pendant lesquelles un lien/i);
+    await expect(duree).toContainText(/Défaut Clubify|Choix du club/);
+
+    // Une règle que le club ne peut pas changer le dit, et n'a pas de champ.
+    const longueur = tableau.filter({ hasText: 'security.password.min_length' });
+    await expect(longueur).toContainText('Fixée par Clubify');
+    await expect(longueur.getByRole('spinbutton')).toHaveCount(0);
+  });
+
+  test('S15 — Modifier une règle configurable', async ({ page }) => {
     const ligne = page.locator('.tableau--dans-carte tbody tr')
       .filter({ hasText: 'files.link_ttl_minutes' });
-    const champ = ligne.getByRole('spinbutton');
 
-    await champ.fill('25');
+    await ligne.getByRole('spinbutton').fill('25');
     await page.getByRole('button', { name: 'Enregistrer' }).click();
     await expect(page.locator('.page__succes')).toBeVisible();
 
-    // La valeur est retenue, et l'origine dit désormais que c'est un choix du club.
     await page.reload();
     await expect(ligne.getByRole('spinbutton')).toHaveValue('25');
     await expect(ligne).toContainText('Choix du club');
@@ -97,20 +114,29 @@ test.describe('F01 — Paramètres du club', () => {
     await expect(page.locator('.page__succes')).toBeVisible();
   });
 
-  test('S12 — Lire les règles configurables du club', async ({ page }) => {
-    const tableau = page.locator('.tableau--dans-carte tbody tr');
-    await expect(tableau.first()).toBeVisible();
+  test('S16 — Le nombre de lignes par page suit la règle du club', async ({ page }) => {
+    const api = await ApiDeRecette.enTantQuAdministrateur();
+    await api.assurerAuMoins(35, marqueDuPassage());
+    await api.fermer();
 
-    const duree = tableau.filter({ hasText: 'files.link_ttl_minutes' });
-    await expect(duree).toContainText('15');
-    // L'origine dit si la valeur vient de Clubify ou d'un choix du club (C31).
-    await expect(duree).toContainText(/Défaut Clubify|Choix du club|Fixée par Clubify/);
-    // Et la règle s'explique en français, sans jargon.
-    await expect(duree).toContainText(/Durée d'un lien de fichier/);
-    await expect(duree).toContainText(/minutes pendant lesquelles un lien/i);
+    const ligne = page.locator('.tableau--dans-carte tbody tr')
+      .filter({ hasText: 'ui.page_size' });
+    await ligne.getByRole('spinbutton').fill('30');
+    await page.getByRole('button', { name: 'Enregistrer' }).click();
+    await expect(page.locator('.page__succes')).toBeVisible();
 
-    // Une règle que le club ne peut pas changer le dit franchement.
-    const longueur = tableau.filter({ hasText: 'security.password.min_length' });
-    await expect(longueur).toContainText('Fixée par Clubify');
+    // La taille est annoncée à la connexion : il faut donc en rouvrir une.
+    await page.getByRole('button', { name: 'Se déconnecter' }).click();
+    await entrerCommeAdministrateur(page);
+    await page.getByRole('link', { name: 'Utilisateurs' }).click();
+
+    await expect(page.getByTestId('lignes-par-page')).toHaveValue('30');
+    await expect(page.getByTestId('plage')).toContainText('1–30');
+
+    // On remet le défaut pour les scénarios suivants.
+    await page.getByRole('link', { name: 'Paramètres du club' }).click();
+    await ligne.getByRole('spinbutton').fill('20');
+    await page.getByRole('button', { name: 'Enregistrer' }).click();
+    await expect(page.locator('.page__succes')).toBeVisible();
   });
 });

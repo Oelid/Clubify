@@ -150,6 +150,7 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C12 | 12 | Compte administratif, puis compte gérant sans délégation | Chacun tente de créer un utilisateur | Refus pour les deux ; l'administrateur le peut ; après délégation, le gérant le peut |
 | C12a | 12 | Club avec un seul administrateur | Tentative de le désactiver, puis de le rétrograder en gérant | Deux refus avec un code stable ; possible dès qu'un second administrateur existe |
 | C12b | 10 | Compte administrateur | Un autre administrateur tente de lui retirer une permission | Refus : les droits de l'administrateur ne se retirent pas |
+| C12c | 12 | Formulaire de création d'un utilisateur | On déroule la liste des rôles | Seuls les rôles que l'application sait attribuer sont proposés ; l'écran les demande au backend plutôt que de recopier la règle |
 | C13 | 14 | Un fichier privé est déposé | Lecture du fichier sur le support de stockage, hors application | Contenu illisible (chiffré) ; l'application le restitue en clair à un rôle autorisé |
 | C14 | 14, 18 | Un fichier privé est déposé | Un utilisateur autorisé l'ouvre | Une entrée d'audit « accès fichier » avec l'utilisateur, le fichier, l'heure |
 | C15 | 15 | Un utilisateur porte un téléphone | Toute opération le concernant | Le téléphone n'apparaît dans aucun log technique |
@@ -189,6 +190,8 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C40b | 32 | — | Appel direct à l'API avec une taille de cinq mille, puis zéro, puis une page négative | Le serveur borne sans refuser : cent lignes, une ligne, première page. La borne est côté serveur, hors de portée de l'appelant (décision 0033) |
 | C40c | 32 | Club ayant retenu trente lignes par page | Liste demandée sans taille | Trente lignes ; l'interface reçoit cette taille à la connexion |
 | C40d | 32 | Club ayant réglé cinq cents lignes par page | Liste demandée sans taille | Ramenée à cent : aucun réglage ne dépasse la borne |
+| C41 | 32 | Club comptant des comptes de plusieurs rôles, dont un désactivé | On filtre par rôle, par statut, puis on cherche un nom | La base filtre, pagine et compte ; la recherche porte sur le nom, le prénom et l'adresse, sans tenir compte de la casse |
+| C41b | 1 | Deux clubs ayant chacun des coachs | Le gérant du premier filtre par rôle | Aucun compte de l'autre club n'apparaît : le filtre s'ajoute au discriminant de club, il ne s'y substitue pas |
 
 Les critères C1, C11, C11b, C14, C16 et C17 constituent le test d'isolation, le test de permissions et le test d'audit exigés par `CLAUDE.md` §6 ; leur mécanique est réutilisable par toutes les features suivantes.
 

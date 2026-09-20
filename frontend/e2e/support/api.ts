@@ -97,6 +97,36 @@ export class ApiDeRecette {
     return { email, secret };
   }
 
+  /**
+   * Garantit que le club compte au moins tant de personnes.
+   *
+   * <p>Les scénarios de pagination ont besoin d'une population ; les recréer à
+   * chaque passage la ferait enfler sans fin. On ne crée que ce qui manque.
+   */
+  async assurerAuMoins(nombre: number, marque: string): Promise<void> {
+    const reponse = await this.contexte.get('/api/v1/users?page=0&size=1', {
+      headers: { Authorization: `Bearer ${this.jeton}` },
+    });
+    const total = (await reponse.json()).page.totalElements as number;
+
+    for (let rang = total; rang < nombre; rang += 1) {
+      await this.creerUtilisateur('COACH', `${marque}p${rang}`);
+    }
+  }
+
+  /** Ferme un compte, pour éprouver le filtre par statut. */
+  async desactiver(email: string): Promise<void> {
+    const reponse = await this.contexte.get(
+      `/api/v1/users?page=0&size=1&search=${encodeURIComponent(email)}`,
+      { headers: { Authorization: `Bearer ${this.jeton}` } },
+    );
+    const trouve = (await reponse.json()).content[0];
+    await this.contexte.put(`/api/v1/users/${trouve.id}/status`, {
+      headers: { Authorization: `Bearer ${this.jeton}` },
+      data: { active: false },
+    });
+  }
+
   async fermer(): Promise<void> {
     await this.contexte.dispose();
   }
