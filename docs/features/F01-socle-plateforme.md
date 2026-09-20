@@ -154,7 +154,8 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C19b | 19 | Journal contenant des entrées de trois utilisateurs sur deux semaines | Filtre sur un utilisateur, une semaine et le type « paramètres », puis clic sur une entrée | Seules les entrées correspondantes s'affichent ; le clic ouvre le paramètre concerné |
 | C20 | 20, 22 | Événement `user.created` publié dans une transaction qui échoue ensuite | — | Aucun événement consommé, aucune entrée d'audit |
 | C21 | 20 | Un effet externe est en outbox et son traitement échoue une première fois | Rejeu | L'effet est traité une fois et une seule |
-| C22 | 21 | L'abonné audit est rendu défaillant en test | Modification d'un paramètre | Le paramètre est bien modifié ; l'échec de l'abonné est tracé et rejouable |
+| C22 | 21 | Un abonné externe (outbox, de test) est rendu défaillant | Modification d'un paramètre | Le paramètre est bien modifié et audité ; l'échec de l'abonné externe est tracé et rejoué |
+| C22b | 17, 21 | L'abonné audit est rendu défaillant en test | Modification d'un paramètre | L'action échoue entièrement : aucun paramètre modifié, aucune entrée partielle (M3) |
 | C23 | 23 | Un fichier privé existe, durée des liens à 15 minutes | Obtention d'un lien, attente de 16 minutes, ouverture | Le lien est refusé après expiration ; un lien réémis fonctionne |
 | C24 | 23 | Un lien valide obtenu par la gérante de A | Un utilisateur de B l'utilise | Refus |
 | C25 | 24 | Valeurs par défaut du club | Dépôt d'un PDF de 12 Mo, puis d'un fichier `.exe` de 1 Mo, puis d'un PNG de 2 Mo | Deux refus avec un code d'erreur stable, puis acceptation |
@@ -256,27 +257,165 @@ Sources : [Jackrabbit — permissions](https://help.jackrabbitclass.com/help/use
 
 ## Plan d'implémentation
 
-Étape 3. Non commencé.
+Étape 3, rédigée le 2026-09-20. Ordre imposé par le processus : contrat, backend, frontend. F01 étant la première feature, l'étape 0 crée les deux squelettes techniques actés par 0024 et 0025.
+
+### Étape 0 — Squelettes
+
+Backend (`backend/`) : projet Maven mono-module, Spring Boot 4.0.x, Java 21 ; profils `dev`, `test`, `demo`, `prod` ; Docker Compose PostgreSQL pour `dev` ; Flyway avec une migration `V0` vide ; classe de base de test Testcontainers ; règles ArchUnit de `backend/CLAUDE.md` ; `openapi-generator-maven-plugin` branché sur `contracts/openapi.yaml` ; springdoc en `dev` ; logs structurés avec identifiant de corrélation ; Actuator `health` et `info`.
+
+Frontend (`frontend/`) : workspace Angular, projets `backoffice`, `ui`, `api-client` ; Tailwind ; PrimeNG en mode thémable ; Transloco avec `fr` ; Storybook ; Playwright ; génération d'`api-client` depuis le même contrat ; budget de bundle dans `angular.json`.
+
+Résultat vérifiable : `mvn verify` et `ng test` passent sur un projet vide ; l'API répond `/actuator/health` ; le backoffice affiche une page vide traduite.
+
+### Étape 1 — Contrat d'API
+
+Fichiers dans `contracts/` : `openapi.yaml` (index), `common.yaml` (`ProblemDetail` avec `code`, pagination, `Money`), `auth.yaml`, `club.yaml`, `users.yaml`, `audit.yaml`, `files.yaml`, `exports.yaml`. Préfixe `/api/v1`. Détail des points d'entrée dans « Impact sur le contrat d'API ».
+
+### Étape 2 — Socle technique commun (`ma.clubify.common`, `security`, `config`, `exception`)
+
+Dans cet ordre, chaque brique avec son test :
+
+1. `BaseEntity` : UUID v7, `club_id`, colonnes d'audit, `deleted_at`, `@SoftDelete`, `@Version` optionnel. `Money` embeddable. `Clock` injecté.
+2. Isolation : `TenantContext` alimenté par le filtre de sécurité ; `@TenantId` sur `club_id` ; `CurrentTenantIdentifierResolver` ; migration Flyway activant la Row-Level Security sur chaque table métier avec `SET LOCAL app.club_id` par transaction. Classe de test `IsolationTest` réutilisable : deux clubs, une requête, aucune fuite (C1, C2).
+3. Événements : `DomainEvent`, publication par `ApplicationEventPublisher` dans le service ; abonnés internes en `BEFORE_COMMIT` (audit) ; table `outbox_event` écrite dans la transaction pour les effets externes, relecteur planifié avec tentatives et journal d'erreur (C20, C21, C22).
+4. Audit : `AuditLog` en ajout seul ; abonné aux événements ; migration créant le rôle de base `clubify_app` sans `UPDATE` ni `DELETE` sur `audit_log` ; `AuditTest` réutilisable (C16, C17).
+5. Permissions : registre en code (`PermissionRegistry`, codes `domaine.objet.action`, paramètre optionnel), jeux par rôle déclarés par feature, surcharges en base ; intégration `@PreAuthorize` par un évaluateur maison ; règle ArchUnit « tout point d'entrée porte une permission » (C11, C11a, C11b, C11c).
+6. Paramètres : `SettingRegistry` en code (clé, type, portée club ou plateforme, défaut), valeurs de club en base (`club_setting`, JSONB), lecture typée avec repli sur le défaut, changement audité (C31).
+7. Données sensibles : `EncryptedStringConverter` AES-256-GCM, clé par variable d'environnement avec identifiant de clé pour rotation ; chiffrement des fichiers au dépôt et déchiffrement à la lecture ; masquage dans les logs (C13, C15).
+8. i18n et erreurs : `MessageSource`, `messages_fr.properties`, `GlobalExceptionHandler` en `ProblemDetail` avec `code` (C36).
+9. Fichiers : interface `FileStorage`, implémentations disque local (`dev`, `test`) et S3 compatible (`prod`), liens signés à durée limitée (C23 à C27).
+10. Connecteurs : interfaces `MessagingProvider` et `PaymentProvider`, implémentation `noop` (C39).
+11. Validation : téléphone E.164 avec +212 par défaut (C37).
+
+### Étape 3 — Domaine plateforme (`ma.clubify.platform`)
+
+1. Migrations Flyway : `club`, `site`, `user_account`, `membership`, `user_permission_override`, `refresh_token`, `trusted_device`, `recovery_code`, `club_setting`, `stored_file`, `audit_log`, `outbox_event`.
+2. Authentification : connexion, second facteur TOTP (RFC 6238, implémenté avec le JDK), défi en deux temps, appareil de confiance, codes de secours, verrouillage, jetons JWT courts et rafraîchissement révocable, déconnexion, sessions par utilisateur (C5 à C10b).
+3. Club et site : lecture et modification de l'identité, logo, paramètres régionaux, numérotation, règles configurables (C3, C27 à C32).
+4. Utilisateurs : liste, création, modification, désactivation, rôle, surcharges de permissions, réinitialisation du second facteur, fermeture des sessions ; protection du dernier administrateur (C4, C9, C12 à C12b).
+5. Journal : consultation filtrée, lien vers l'entité (C18, C19, C19b).
+6. Exports : service générique CSV et Excel à partir d'une définition de colonnes avec drapeau « sensible » ; première liste : les utilisateurs ; permission `exporter` par domaine ; entrée d'audit (C33 à C35).
+7. Amorçage : commande `--seed-club` créant un club, son site, son premier administrateur et le club de test (C3, Q1).
+
+### Étape 4 — Frontend (`frontend/projects/ui`, `backoffice`)
+
+1. `ui` : jetons (couleurs Clubify et marque par club, typographie, espacements, mouvement), enveloppes PrimeNG pour bouton, champ, sélecteur, tableau, dialogue, toast, onglets ; pipes `money` et `clubDate` ; chaque composant avec sa story FR et RTL.
+2. `backoffice/core` : intercepteur d'authentification et de langue, garde par permission, `TenantContext`, gestion du défi second facteur.
+3. Écrans : connexion ; code second facteur avec « se souvenir de cet appareil » ; activation du second facteur (QR, codes de secours) imposée à l'administrateur et au gérant ; profil (mon second facteur, mes appareils) ; paramètres du club en quatre onglets (identité et logo, régional, numérotation, règles) ; utilisateurs (liste avec export, fiche avec rôle, permissions et surcharges, sessions, second facteur) ; journal d'audit (filtres, détail avant/après, lien).
+4. Playwright : parcours « première connexion de l'administrateur jusqu'au journal » ; Storybook : validation RTL des composants de `ui` avant la première livraison d'écran.
+
+### Étape 5 — Livraison
+
+Contrat, `docs/modele-donnees.md` (entités ci-dessous), fiche, tests verts, `docs/suivi-features.xlsx`. Mise à jour de `backend/CLAUDE.md` et `frontend/CLAUDE.md` : rubrique « Commandes ».
 
 ## Impacts et régressions
 
-Étape 3. Non commencé. Aucune feature livrée avant celle-ci : aucune régression possible ; l'analyse portera sur les invariants.
+Étape 3. Aucune feature livrée avant F01 : **aucune régression possible**. Mais F01 pose chaque invariant de la section 9.6 ; tout choix ci-dessous est irréversible sans refonte. Niveau global : **majeur**, par nature.
+
+| Critère du processus | Niveau | Pourquoi |
+| --- | --- | --- |
+| Migration de données existantes | Maîtrisé | Aucune donnée |
+| Contrat d'API déjà consommé | Maîtrisé | Premier contrat |
+| Calcul d'argent | Maîtrisé | Aucun montant en F01 ; `Money` est défini, pas utilisé |
+| Invariant du `CLAUDE.md` | **Majeur** | F01 les pose tous ; deux exceptions explicites (M1, M2) |
+| Feature déjà livrée | Maîtrisé | Aucune |
+| Nouvelle dépendance | **Majeur** | Quatre demandées (M6) |
+
+Points majeurs, chacun à valider explicitement par Omar :
+
+| # | Point | Choix proposé | Alternative |
+| --- | --- | --- | --- |
+| M1 | `User` sans `club_id` | L'utilisateur est global (PLT-02 : un même compte dans plusieurs clubs) ; l'appartenance `Membership` porte `club_id` et le rôle. Exception documentée à « `club_id` sur chaque donnée » ; toute donnée métier reste rattachée au club | Un utilisateur par club, à fusionner en R9 : migration de données garantie plus tard |
+| M2 | `audit_log.club_id` nullable pour les seuls événements d'authentification | Une connexion échouée sur un identifiant inconnu n'a pas de club ; contrainte `CHECK` : `club_id` obligatoire pour tout autre type d'action | Pseudo-club « plateforme » : complique l'isolation |
+| M3 | Audit synchrone et bloquant | L'abonné audit s'exécute dans la transaction de l'action (`BEFORE_COMMIT`) : si l'audit échoue, l'action échoue. Une action sur l'argent sans trace ne doit pas exister. C'est l'unique exception à la règle 21 ; les abonnés externes (messages, exports) passent par l'outbox et ne bloquent jamais. **C22 est réécrit** : l'abonné rendu défaillant est un abonné outbox, pas l'audit | Audit dérivé de l'outbox, asynchrone, rejouable : cohérent avec la règle 21 mais fenêtre où l'action est validée sans ligne d'audit |
+| M4 | Rôles, permissions et paramètres définis en code, surcharges et valeurs en base | Le catalogue est versionné avec les features qui le déclarent ; la base ne porte que ce qui varie par club ou par utilisateur | Tout en base : administrable sans livraison, mais rien ne garantit qu'une feature déclare ses permissions |
+| M5 | Chiffrement applicatif des fichiers et des champs sensibles | AES-256-GCM, clé par environnement hors dépôt, identifiant de clé stocké pour rotation ; le stockage ne voit jamais le clair (C13) | Chiffrement côté stockage seulement : le clair transite et dépend de l'hébergeur (0018) |
+| M6 | Nouvelles dépendances | Bouncy Castle (Argon2, exigé par Spring Security), `fastexcel` (Excel, léger) ou Apache POI, client S3 (AWS SDK v2 ou MinIO), `angularx-qrcode` (QR du second facteur côté frontend). TOTP implémenté avec le JDK, sans dépendance | BCrypt intégré à la place d'Argon2 ; CSV seul en R1 ; QR généré côté backend avec ZXing |
+| M7 | Row-Level Security PostgreSQL | Activée dès F01 : `SET LOCAL app.club_id` par transaction, rôle de base non superutilisateur ; seconde ligne derrière `@TenantId` | Reporter : l'isolation ne tiendrait que par l'application |
+| M8 | Export synchrone | Génération à la demande, réponse directe ; listes de R1 petites | File d'attente : inutile avant des milliers de lignes |
+
+Régressions : aucune feature livrée. Les classes de test `IsolationTest`, `AuditTest` et `PermissionTest` créées ici deviennent le harnais de non-régression de toutes les features suivantes (`CLAUDE.md` §6).
 
 ## Impact sur le modèle de données
 
-Étape 3. Entités pressenties, à confirmer par le plan : `Club`, `Site`, `User`, `UserClubRole`, `Role`, `Permission`, `UserPermissionOverride`, `TrustedDevice`, `RecoveryCode`, `RefreshToken`, `AuditLog`, `DomainEvent` / `Outbox`, `StoredFile`, `ClubSetting`. Toutes déjà listées en brouillon dans `docs/modele-donnees.md` (socle plateforme), sauf `UserClubRole`, `UserPermissionOverride`, `TrustedDevice`, `RecoveryCode`, `RefreshToken`, `Outbox`.
+Étape 3. Entités créées, toutes avec `club_id` sauf mention, colonnes d'audit et `deleted_at`. À reporter dans `docs/modele-donnees.md` à la livraison.
+
+| Entité | Rôle | Points notables |
+| --- | --- | --- |
+| `Club` | Le tenant | Identité, forme juridique, ICE, IF, RC, logo (→ `StoredFile`), fuseau, devise, langue, statut. Pas de `club_id` sur elle-même |
+| `Site` | Lieu d'exploitation | Un site par défaut créé avec le club |
+| `User` | Compte d'un membre du staff | **Global, sans `club_id`** (M1) ; courriel unique ; mot de passe haché ; secret TOTP chiffré ; langue ; compteur d'échecs et verrouillage |
+| `Membership` | Appartenance d'un utilisateur à un club | `club_id`, rôle (six valeurs), statut ; une par couple utilisateur–club |
+| `UserPermissionOverride` | Surcharge d'une permission pour une appartenance | Code, accordée ou retirée, paramètre JSONB, auteur |
+| `RefreshToken` | Session | Haché, appareil, expiration, révocation |
+| `TrustedDevice` | Appareil de confiance | Identifiant aléatoire, libellé, expiration, révocation |
+| `RecoveryCode` | Code de secours | Haché, usage unique |
+| `ClubSetting` | Valeur d'une règle configurable | Clé du registre, valeur JSONB ; le défaut vit en code |
+| `StoredFile` | Fichier privé | Propriétaire (type, id), nature, clé de stockage, type MIME, taille, empreinte, identifiant de clé de chiffrement |
+| `AuditLog` | Journal | Auteur (type : utilisateur, parent, système ; id ; libellé de règle), action, entité, avant, après, motif, horodatage, identifiant de requête ; **ajout seul** ; `club_id` nullable pour l'authentification seulement (M2) |
+| `OutboxEvent` | Événement à effet externe | Type, charge JSONB, tentatives, dernière erreur, traité le |
+
+Hors base : `Role` (énumération), `Permission` et `Setting` (registres en code, M4).
 
 ## Impact sur le contrat d'API
 
-Étape 3. Domaines pressentis dans `contracts/` : `auth`, `club`, `users`, `audit`, `files`, `exports`.
+Étape 3. Tout en `/api/v1`, codes d'erreur stables, aucun identifiant de club dans les requêtes. Fichiers : `contracts/openapi.yaml`, `common.yaml`, `auth.yaml`, `club.yaml`, `users.yaml`, `audit.yaml`, `files.yaml`, `exports.yaml`.
+
+| Domaine | Points d'entrée | Permission |
+| --- | --- | --- |
+| auth | `POST /auth/login` (courriel, mot de passe → jetons, ou défi second facteur), `POST /auth/mfa/verify` (défi, code, appareil de confiance), `POST /auth/refresh`, `POST /auth/logout`, `GET /auth/me` | Aucune (pré-authentification) ou authentifié |
+| auth, profil | `POST /auth/mfa/setup` (URI otpauth, codes de secours), `POST /auth/mfa/confirm`, `POST /auth/mfa/recovery-codes/regenerate`, `GET /auth/devices`, `DELETE /auth/devices/{id}` | Authentifié, sur soi-même |
+| club | `GET /club`, `PUT /club`, `PUT /club/logo`, `GET /club/settings`, `PUT /club/settings`, `GET /club/settings/definitions` | `club.settings.consulter`, `club.settings.modifier` |
+| users | `GET /users`, `POST /users`, `GET /users/{id}`, `PUT /users/{id}`, `POST /users/{id}/disable`, `POST /users/{id}/enable`, `PUT /users/{id}/role`, `GET /users/{id}/permissions`, `PUT /users/{id}/permissions`, `POST /users/{id}/sessions/revoke`, `POST /users/{id}/mfa/reset`, `GET /permissions` | `users.consulter`, `users.creer`, `users.modifier`, `users.desactiver`, `users.permissions.modifier`, `users.sessions.fermer`, `users.mfa.reinitialiser` |
+| audit | `GET /audit-entries` (auteur, période, action, entité, pagination) | `audit.consulter` |
+| files | `POST /files`, `GET /files/{id}/link` (lien signé), `GET /files/dl/{token}` (public, signé, expirant), `DELETE /files/{id}` | `files.deposer`, `files.consulter`, par domaine propriétaire |
+| exports | `POST /exports` (liste, filtres, format → fichier) | `<domaine>.exporter` |
 
 ## Paramètres configurables par club
 
-Étape 3. Pressentis : fuseau horaire, devise, langue par défaut, préfixes et exercice de numérotation, types et taille maximale de fichiers, durée des liens temporaires ; plus le registre lui-même (règle 31).
+Étape 3. Portée « club » = modifiable par l'administrateur ; « plateforme » = fixée par Clubify, hors 9.8.
+
+| Clé | Portée | Défaut | Source |
+| --- | --- | --- | --- |
+| `club.timezone` | club | `Africa/Casablanca` | Section 5, règle 29 |
+| `club.currency` | club | `MAD` | 9.6, règle 29 |
+| `club.default_language` | club | `fr` | PLT-08, règle 29 |
+| `security.mfa.trusted_device_days` | club | 30 | Règle 5 (B4) |
+| `security.password.min_length` | plateforme | 12 | Règle 7 (Q3) |
+| `security.lockout.max_attempts` | plateforme | 5 | Règle 9 (Q3) |
+| `security.lockout.minutes` | plateforme | 15 | Règle 9 (Q3) |
+| `security.access_token.minutes` | plateforme | 15 | Règle 8 |
+| `security.refresh_token.days` | plateforme | 30 | Règle 8 |
+| `files.max_size_mb` | club | 10 | Règle 24 (Q7) |
+| `files.allowed_types` | club | `pdf, jpeg, png` | Règle 24 (Q7) |
+| `files.link_ttl_minutes` | club | 15 | Règle 23 (Q7) |
+| `billing.invoice_prefix` | club | `F` | Règle 30 ; utilisé par F08 |
+| `billing.receipt_prefix` | club | `R` | Règle 30 ; utilisé par F09 |
+| `billing.fiscal_year_start_month` | club | 1 | Règle 30 ; exercice comptable à confirmer avec le comptable (question ouverte 3 de 0023) |
+
+Le registre lui-même (règle 31) est le mécanisme que toutes les règles de la section 9.8 utiliseront.
 
 ## Points de sécurité et données sensibles
 
-Étape 3. Permissions de F01 déclarées à la règle 11b. Déjà identifiés par les règles 7, 8, 9, 14, 15, 17, 23, 24, 33 : hachage, révocation, verrouillage, chiffrement au champ et au fichier, absence de secrets dans le dépôt et les logs, journal inviolable, liens signés à durée limitée, exclusion des colonnes sensibles à l'export.
+Étape 3.
+
+Permissions introduites (règle 11b), avec leur jeu par défaut :
+
+| Permission | Administrateur | Gérant | Administratif | Coach | Comptable |
+| --- | --- | --- | --- | --- | --- |
+| `club.settings.consulter` | oui | oui | oui | non | oui |
+| `club.settings.modifier` | oui | oui | non | non | non |
+| `users.consulter` | oui | oui | non | non | non |
+| `users.creer`, `users.modifier`, `users.desactiver` | oui | par délégation | non | non | non |
+| `users.permissions.modifier` | oui, non délégable | non | non | non | non |
+| `users.sessions.fermer`, `users.mfa.reinitialiser` | oui | non | non | non | non |
+| `audit.consulter` | oui | oui | non | non | non |
+| `files.deposer`, `files.consulter` (domaine club) | oui | oui | oui | non | non |
+| `users.exporter` | oui | oui | oui | non | non |
+
+Le rôle parent n'a aucune permission en F01.
+
+Mesures : hachage Argon2 ; TOTP obligatoire administrateur et gérant ; appareils de confiance et codes de secours ; verrouillage ; jetons courts, rafraîchissement révocable, sessions fermables ; isolation `@TenantId` et Row-Level Security ; journal en ajout seul garanti en base ; chiffrement AES-256-GCM des secrets TOTP et des fichiers, clé hors dépôt avec rotation possible ; liens de fichiers signés et expirants ; colonnes sensibles exclues des exports ; aucune donnée personnelle dans les logs ; `ProblemDetail` sans détail interne ; aucun secret dans un fichier versionné.
 
 ## Questions
 
@@ -297,4 +436,4 @@ Toutes tranchées le 2026-09-20. Reste ouvert hors F01 : le lieu d'hébergement 
 
 ## Statut
 
-Cadrée — 2026-09-20. Étapes 1 et 2 closes, onze écarts de benchmark tranchés ; étape 3 (plan d'implémentation et analyse d'impact) à faire.
+Cadrée — 2026-09-20. Étapes 1 et 2 closes ; étape 3 rédigée, en attente de validation des huit points majeurs M1 à M8.
