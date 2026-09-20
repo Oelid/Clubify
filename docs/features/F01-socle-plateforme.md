@@ -434,6 +434,91 @@ Toutes tranchées le 2026-09-20. Reste ouvert hors F01 : le lieu d'hébergement 
 | Q9 | Export des colonnes sensibles : lesquelles, et qui peut les inclure ? | **Tranché** : la liste de SEC-03 telle quelle (santé, CIN, pièces) ; personne en R1. |
 | Q10 | Verrouillage de la langue : FR seule à l'écran en R1, même si le champ « langue » existe ? | **Tranché** : Oui ; le champ existe, seule `fr` est proposée jusqu'à R8. |
 
+## Tests
+
+Étape 4, écrite le 2026-09-20. **64 tests en place, tous rouges** : 7 échecs de règles
+d'architecture et 57 erreurs faute de schéma et de contrôleurs. `./mvnw test` le vérifie.
+
+Les tests de F01 s'écrivent **au niveau HTTP, contre le contrat** de `contracts/openapi.yaml`,
+jamais contre les services. Ils décrivent donc des parcours réels, échouent aujourd'hui parce
+qu'aucun contrôleur n'existe, et passeront à l'étape 5 sans être réécrits.
+
+Trois classes forment le harnais réutilisable exigé par le `CLAUDE.md` §6 : `IsolationApiTest`,
+`AuditApiTest` et `UsersApiTest` (permissions). Toute feature suivante les rejoue.
+
+| Critère | Classe de test | Méthode |
+| --- | --- | --- |
+| C1 | `IsolationApiTest` | `c1_listeCloisonnee`, `c1_pasDeFuiteParLeCodeDErreur` |
+| C2 | `IsolationApiTest` | `c2_clubIdDuClientIgnore` |
+| C3 | `ClubApiTest` | `c3_siteParDefaut` |
+| C4 | `IsolationApiTest` | `c4_rolesParClub` |
+| C5 | `AuthApiTest` | `c5_motDePasse` |
+| C5b | `AuthApiTest` | `c5b_longueurMinimale` |
+| C6 | `AuthApiTest` | `c6_defiSecondFacteur` |
+| C6b | `AuthApiTest` | `c6b_enrolementImpose` |
+| C6c | `AuthApiTest` | `c6c_reinitialisation` |
+| C6d | `AuthApiTest` | `c6d_appareilDeConfiance` |
+| C6e | `AuthApiTest` | `c6e_codesDeSecours` |
+| C7 | `UsersApiTest` | `c7_aucunCompteEnfant` |
+| C8 | `AuthApiTest` | `c8_deconnexion` |
+| C8b | `UsersApiTest` | `c8b_fermetureDesSessions` |
+| C9 | `AuthApiTest` | `c9_desactivation` |
+| C10 | `AuthApiTest` | `c10_echecsJournalises` |
+| C10b | `AuthApiTest` | `c10b_verrouillage` |
+| C11 | `UsersApiTest` | `c11_permissionCoteService` |
+| C11a | `UsersApiTest` | `c11a_surchargeParUtilisateur` |
+| C11b | `ArchitectureTest` | `toutPointDEntreePorteUnePermission` |
+| C11c | `UsersApiTest` | `c11c_permissionParametree` |
+| C12 | `UsersApiTest` | `c12_creationReservee`, `c12_ajustementNonDelegable` |
+| C12a | `UsersApiTest` | `c12a_dernierAdministrateurProtege` |
+| C12b | `UsersApiTest` | `c12b_droitsAdministrateurNonRetirables` |
+| C13 | `FilesApiTest` | `c13_chiffrementAuRepos` |
+| C14 | `FilesApiTest` | `c14_accesJournalise` |
+| C15 | `PlatformInvariantsTest` | `c15_pasDeDonneePersonnelleDansLesLogs` |
+| C16 | `AuditApiTest` | `c16_avantApres` |
+| C16b | `AuditApiTest` | `c16b_auteurSysteme` |
+| C17 | `AuditApiTest` | `c17_ajoutSeul` |
+| C18 | `AuditApiTest` | `c18_couvertureDesActions` |
+| C19 | `AuditApiTest` | `c19_lecteursDuJournal` |
+| C19b | `AuditApiTest` | `c19b_recherche` |
+| C20 | `PlatformInvariantsTest` | `c20_evenementLieALaTransaction` |
+| C21 | `PlatformInvariantsTest` | `c21_outboxRejouable` |
+| C22 | `PlatformInvariantsTest` | `c22_abonneExterneNonBloquant` |
+| C22b | `PlatformInvariantsTest` | `c22b_auditBloquant` |
+| C23 | `FilesApiTest` | `c23_lienTemporaire` |
+| C24 | `FilesApiTest` | `c24_lienCloisonne` |
+| C25 | `FilesApiTest` | `c25_tailleEtType` |
+| C26 | `FilesApiTest` | `c26_suppressionLogique` |
+| C27 | `FilesApiTest` | `c27_logoDuClub` |
+| C28 | `ClubApiTest` | `c28_identite` |
+| C29 | `ClubApiTest` | `c29_fuseauHoraire` |
+| C30 | `ClubApiTest` | `c30_numerotation` |
+| C31 | `ClubApiTest` | `c31_registreDesReglesConfigurables`, `c31_definitions` |
+| C32 | `ClubApiTest` | `c32_parametresReservesAuGerant` |
+| C33 | `ExportsApiTest` | `c33_csvEtExcel` |
+| C33b | `ExportsApiTest` | `c33b_exporterEstUnDroitDistinct` |
+| C34 | `ExportsApiTest` | `c34_colonnesSensiblesExclues` |
+| C35 | `ExportsApiTest` | `c35_exportJournalise` |
+| C36 | `PlatformInvariantsTest` | `c36_erreursTraduites` |
+| C37 | `PlatformInvariantsTest` | `c37_telephoneE164` |
+| C38 | `PlatformInvariantsTest` | `c38_schemaConforme` |
+| C39 | `PlatformInvariantsTest` | `c39_connecteursAbstraits` |
+
+Les 55 critères sont couverts. Six règles d'architecture de `backend/CLAUDE.md` s'ajoutent
+dans `ArchitectureTest` sans correspondre à un critère : dépendances entre couches et entre
+domaines, Lombok encadré sur les entités, horloge injectée.
+
+Ce que les tests exigent du code de l'étape 5, au-delà des règles de la fiche :
+- des fonctions utilitaires réservées aux migrations de test (`current_totp_for_test`,
+  `raw_content_for_test`, `replay_outbox_for_test`, `run_system_rule_for_test`, les bascules
+  d'échec d'abonné) ; elles ne doivent jamais exister hors du profil `test` ;
+- quelques points d'entrée de test (`/test/plafond`, `/test/echec-apres-publication`,
+  `/test/effet-externe`, `/test/notifier`), pour éprouver le socle sans attendre une feature
+  métier ; même contrainte.
+
+Reste à écrire à l'étape 4 : les tests du frontend (Vitest, Storybook en FR et en RTL,
+Playwright sur la première connexion), qui attendent la création du workspace Angular.
+
 ## Statut
 
-En cours — 2026-09-20. Étapes 1 à 3 closes, plan et points majeurs validés (décision 0029) ; étape 4 (tests d'abord) à faire.
+En cours — 2026-09-20. Étapes 1 à 3 closes ; étape 4 en cours : 64 tests backend en place et rouges, tests frontend à écrire après la création du workspace Angular.

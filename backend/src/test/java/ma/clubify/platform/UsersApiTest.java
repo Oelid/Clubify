@@ -1,0 +1,215 @@
+package ma.clubify.platform;
+
+import ma.clubify.support.Api;
+import ma.clubify.support.Fixtures;
+import ma.clubify.support.IntegrationTest;
+import ma.clubify.support.TestSeeder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+/**
+ * Rôles, permissions et gestion des utilisateurs (SEC-02, décision 0028).
+ * Ces cas forment le test de permissions réutilisable du CLAUDE.md §6.
+ */
+@IntegrationTest
+@DisplayName("Utilisateurs, rôles et permissions")
+class UsersApiTest {
+
+    @Autowired
+    private Api api;
+    @Autowired
+    private TestSeeder seeder;
+    @Autowired
+    private JdbcTemplate jdbc;
+
+    private UUID clubA;
+    private UUID admin;
+    private UUID manager;
+
+    @BeforeEach
+    void seed() {
+        seeder.truncateAll();
+        clubA = seeder.club(Fixtures.CLUB_A);
+        admin = seeder.user(clubA, Fixtures.ADMIN_A_EMAIL, "ACCOUNT_ADMIN", Fixtures.VALID_PASSWORD);
+        manager = seeder.user(clubA, Fixtures.MANAGER_A_EMAIL, "MANAGER", Fixtures.VALID_PASSWORD);
+        seeder.user(clubA, Fixtures.FRONT_DESK_A_EMAIL, "FRONT_DESK", Fixtures.VALID_PASSWORD);
+    }
+
+    @Test
+    @DisplayName("C7 — aucun compte ne peut exister pour un adhérent mineur")
+    void c7_aucunCompteEnfant() throws Exception {
+        // Le rôle PARENT existe dans le catalogue mais ne reçoit aucun compte avant R8,
+        // et aucun rôle ne permet de créer un compte pour un enfant (section 5, Mineurs).
+        api.send(adminToken(), post("/api/v1/users"), Map.of(
+                        "email", "enfant@example.test", "firstName", "Prenom", "lastName", "Nom",
+                        "role", "PARENT", "password", Fixtures.VALID_PASSWORD))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("user.role.notAssignableYet"));
+    }
+
+    @Test
+    @DisplayName("C8b — l'administrateur ferme les sessions sans désactiver le compte")
+    void c8b_fermetureDesSessions() throws Exception {
+        String jetonManager = api.login(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD);
+        long avant = seeder.auditCount();
+
+        api.send(adminToken(), delete("/api/v1/users/" + manager + "/sessions"), null)
+                .andExpect(status().isNoContent());
+
+        api.getAs(jetonManager, "/auth/me").andExpect(status().isUnauthorized());
+        // Le compte reste actif : il peut se reconnecter.
+        api.loginRaw(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD).andExpect(status().isOk());
+        assertThat(seeder.auditCount()).isGreaterThan(avant);
+    }
+
+    @Test
+    @DisplayName("C11 — l'accueil ne modifie pas les paramètres, même en appelant l'API directement")
+    void c11_permissionCoteService() throws Exception {
+        String accueil = api.login(Fixtures.FRONT_DESK_A_EMAIL, Fixtures.VALID_PASSWORD);
+
+        api.send(accueil, put("/api/v1/club"), Map.of("name", "Club A Sport"))
+                .andExpect(status().isForbidden());
+
+        Integer refus = jdbc.queryForObject(
+                "select count(*) from audit_log where action = 'security.access.denied'",
+                Integer.class);
+        assertThat(refus).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("C11a — une permission retirée puis rendue au gérant, avec trace")
+    void c11a_surchargeParUtilisateur() throws Exception {
+        String admin_ = adminToken();
+        String gerant = api.login(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD);
+
+        // Par défaut, le gérant peut modifier les paramètres du club.
+        api.send(gerant, put("/api/v1/club"), Map.of("name", "Club A Sport"))
+                .andExpect(status().isOk());
+
+        api.send(admin_, put("/api/v1/users/" + manager + "/permissions"), List.of(
+                        Map.of("code", "club.settings.modifier", "granted", false)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.effective").value(
+                        org.hamcrest.Matchers.not(
+                                org.hamcrest.Matchers.hasItem("club.settings.modifier"))));
+
+        String gerant2 = api.login(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD);
+        api.send(gerant2, put("/api/v1/club"), Map.of("name", "Club A Gym"))
+                .andExpect(status().isForbidden());
+
+        api.send(admin_, put("/api/v1/users/" + manager + "/permissions"), List.of())
+                .andExpect(status().isOk());
+        String gerant3 = api.login(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD);
+        api.send(gerant3, put("/api/v1/club"), Map.of("name", "Club A Gym"))
+                .andExpect(status().isOk());
+
+        Integer traces = jdbc.queryForObject(
+                "select count(*) from audit_log where action = 'user.permissions.updated'",
+                Integer.class);
+        assertThat(traces).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("C11c — une permission paramétrée respecte son plafond")
+    void c11c_permissionParametree() throws Exception {
+        String admin_ = adminToken();
+        // Permission de test déclarée avec un plafond, à l'image de TAR-05.
+        api.send(admin_, put("/api/v1/users/" + manager + "/permissions"), List.of(
+                        Map.of("code", "test.plafond.appliquer", "granted", true, "parameter", 100)))
+                .andExpect(status().isOk());
+
+        String gerant = api.login(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD);
+        api.send(gerant, post("/api/v1/test/plafond"), Map.of("valeur", 80))
+                .andExpect(status().isOk());
+        api.send(gerant, post("/api/v1/test/plafond"), Map.of("valeur", 120))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("security.permission.limitExceeded"));
+    }
+
+    @Test
+    @DisplayName("C12 — seul l'administrateur crée un utilisateur, sauf délégation au gérant")
+    void c12_creationReservee() throws Exception {
+        String accueil = api.login(Fixtures.FRONT_DESK_A_EMAIL, Fixtures.VALID_PASSWORD);
+        String gerant = api.login(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD);
+        Map<String, Object> nouveau = Map.of(
+                "email", "nouveau@example.test", "firstName", "Prenom", "lastName", "Nom",
+                "role", "COACH", "password", Fixtures.VALID_PASSWORD);
+
+        api.send(accueil, post("/api/v1/users"), nouveau).andExpect(status().isForbidden());
+        api.send(gerant, post("/api/v1/users"), nouveau).andExpect(status().isForbidden());
+
+        String admin_ = adminToken();
+        api.send(admin_, post("/api/v1/users"), nouveau).andExpect(status().isCreated());
+
+        // Après délégation de la gestion des utilisateurs, le gérant y parvient.
+        api.send(admin_, put("/api/v1/users/" + manager + "/permissions"), List.of(
+                Map.of("code", "users.creer", "granted", true)));
+        String gerant2 = api.login(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD);
+        api.send(gerant2, post("/api/v1/users"), Map.of(
+                        "email", "second@example.test", "firstName", "Prenom", "lastName", "Nom",
+                        "role", "COACH", "password", Fixtures.VALID_PASSWORD))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("C12a — le dernier administrateur ne peut être ni désactivé ni rétrogradé")
+    void c12a_dernierAdministrateurProtege() throws Exception {
+        String admin_ = adminToken();
+
+        api.send(admin_, put("/api/v1/users/" + admin + "/status"), Map.of("active", false))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("user.lastAdmin.protected"));
+
+        api.send(admin_, put("/api/v1/users/" + admin + "/role"), Map.of("role", "MANAGER"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("user.lastAdmin.protected"));
+
+        // Dès qu'un second administrateur existe, les deux deviennent possibles.
+        api.send(admin_, put("/api/v1/users/" + manager + "/role"), Map.of("role", "ACCOUNT_ADMIN"))
+                .andExpect(status().isNoContent());
+        api.send(admin_, put("/api/v1/users/" + admin + "/role"), Map.of("role", "MANAGER"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("C12b — les droits d'un administrateur ne se retirent pas")
+    void c12b_droitsAdministrateurNonRetirables() throws Exception {
+        String admin_ = adminToken();
+        UUID second = seeder.user(clubA, "admin2.a@example.test", "ACCOUNT_ADMIN",
+                Fixtures.VALID_PASSWORD);
+
+        api.send(admin_, put("/api/v1/users/" + second + "/permissions"), List.of(
+                        Map.of("code", "club.settings.modifier", "granted", false)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("user.admin.permissionsNotRestrictable"));
+    }
+
+    @Test
+    @DisplayName("C12 — l'ajustement des permissions n'est jamais délégable")
+    void c12_ajustementNonDelegable() throws Exception {
+        String admin_ = adminToken();
+
+        api.send(admin_, put("/api/v1/users/" + manager + "/permissions"), List.of(
+                        Map.of("code", "users.permissions.modifier", "granted", true)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("security.permission.notDelegable"));
+    }
+
+    private String adminToken() throws Exception {
+        return api.login(Fixtures.ADMIN_A_EMAIL, Fixtures.VALID_PASSWORD);
+    }
+}
