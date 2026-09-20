@@ -103,6 +103,7 @@ public class TokenService {
                 return null;
             }
 
+            Date emission = revendications.getIssueTime();
             String permissions = revendications.getStringClaim("perms");
             return new AuthenticatedUser(
                     UUID.fromString(revendications.getSubject()),
@@ -113,7 +114,8 @@ public class TokenService {
                             ? Set.of()
                             : Set.of(permissions.split(" ")),
                     revendications.getStringClaim("lang"),
-                    Boolean.TRUE.equals(revendications.getBooleanClaim("mfa_pending")));
+                    Boolean.TRUE.equals(revendications.getBooleanClaim("mfa_pending")),
+                    emission == null ? null : emission.toInstant());
         } catch (Exception echec) {
             // Un jeton illisible est un jeton refusé : jamais une erreur serveur.
             return null;

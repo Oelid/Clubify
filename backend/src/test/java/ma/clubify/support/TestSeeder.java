@@ -57,8 +57,9 @@ public class TestSeeder {
             userId = UUID.randomUUID();
             jdbc.update("""
                     insert into user_account (id, email, first_name, last_name, password_hash,
-                                              language, active, mfa_enabled, created_at, updated_at)
-                    values (?, ?, 'Prenom', 'Nom', ?, 'fr', true, false, now(), now())
+                                              language, active, mfa_enabled, sessions_valid_from,
+                                              created_at, updated_at)
+                    values (?, ?, 'Prenom', 'Nom', ?, 'fr', true, false, now(), now(), now())
                     """, userId, email, PasswordHashes.of(rawPassword));
         }
 

@@ -61,6 +61,13 @@ public class UserAccount extends BaseEntity {
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
 
+    /**
+     * Tout jeton d'accès émis avant cette borne est refusé. La déplacer révoque
+     * instantanément les sessions, sans attendre l'échéance des jetons.
+     */
+    @Column(name = "sessions_valid_from", nullable = false)
+    private Instant sessionsValidFrom;
+
     @Version
     @Column(name = "version", nullable = false)
     private long version;

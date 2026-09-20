@@ -6,6 +6,7 @@ import ma.clubify.common.exception.BusinessRuleException;
 import ma.clubify.common.export.Colonne;
 import ma.clubify.common.export.ExportWriter;
 import ma.clubify.common.security.PermissionChecker;
+import ma.clubify.common.util.Json;
 import ma.clubify.config.AuthenticatedUser;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -30,13 +31,15 @@ public class ExportService {
     private final ExportWriter ecrivain;
     private final MessageSource messages;
     private final DomainEvents evenements;
+    private final Json json;
 
     public ExportService(UserService utilisateurs, ExportWriter ecrivain,
-                         MessageSource messages, DomainEvents evenements) {
+                         MessageSource messages, DomainEvents evenements, Json json) {
         this.utilisateurs = utilisateurs;
         this.ecrivain = ecrivain;
         this.messages = messages;
         this.evenements = evenements;
+        this.json = json;
     }
 
     @Transactional(readOnly = true)
@@ -53,8 +56,8 @@ public class ExportService {
         };
 
         evenements.publish(new DomainEvent(utilisateur.clubId(), "export.created", "Export", null,
-                null, Map.of("dataset", liste, "format", format,
-                "rows", String.valueOf(resultat.lignes())).toString(), null));
+                null, json.de(Map.of("dataset", liste, "format", format,
+                "rows", String.valueOf(resultat.lignes()))), null));
         return resultat;
     }
 

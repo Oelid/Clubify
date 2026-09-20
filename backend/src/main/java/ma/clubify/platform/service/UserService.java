@@ -7,6 +7,7 @@ import ma.clubify.common.exception.NotFoundException;
 import ma.clubify.common.model.entity.UuidV7;
 import ma.clubify.common.security.PermissionChecker;
 import ma.clubify.common.security.Permissions;
+import ma.clubify.common.util.Json;
 import ma.clubify.config.AuthenticatedUser;
 import ma.clubify.platform.model.entity.Membership;
 import ma.clubify.platform.model.entity.Role;
@@ -46,12 +47,13 @@ public class UserService {
     private final ClubSettingService reglages;
     private final PasswordEncoder motsDePasse;
     private final DomainEvents evenements;
+    private final Json json;
     private final Clock horloge;
 
     public UserService(UserAccountRepository comptes, MembershipRepository appartenances,
                        UserPermissionOverrideRepository surcharges, PermissionResolver permissions,
                        SessionService sessions, ClubSettingService reglages,
-                       PasswordEncoder motsDePasse, DomainEvents evenements, Clock horloge) {
+                       PasswordEncoder motsDePasse, DomainEvents evenements, Json json, Clock horloge) {
         this.comptes = comptes;
         this.appartenances = appartenances;
         this.surcharges = surcharges;
@@ -60,6 +62,7 @@ public class UserService {
         this.reglages = reglages;
         this.motsDePasse = motsDePasse;
         this.evenements = evenements;
+        this.json = json;
         this.horloge = horloge;
     }
 
@@ -105,6 +108,7 @@ public class UserService {
         compte.setLanguage(langue == null ? "fr" : langue);
         compte.setPasswordHash(motsDePasse.encode(motDePasse));
         compte.setActive(true);
+        compte.setSessionsValidFrom(horloge.instant());
         comptes.save(compte);
 
         Membership appartenance = new Membership();
@@ -147,7 +151,8 @@ public class UserService {
         vue.compte().setActive(actif);
         vue.appartenance().setActive(actif);
         if (!actif) {
-            // Désactiver ferme les sessions ouvertes (critère C9).
+            // Désactiver ferme les sessions et invalide les jetons déjà émis (C9).
+            vue.compte().setSessionsValidFrom(horloge.instant());
             sessions.revoquerSessionsDe(userId, vue.appartenance().getClubId());
         }
         publier(actif ? "user.enabled" : "user.disabled", userId, null, null);
@@ -166,7 +171,8 @@ public class UserService {
         }
 
         vue.appartenance().setRole(role);
-        publier("user.role.updated", userId, avant.name(), role.name());
+        publier("user.role.updated", userId, json.de("role", avant.name()),
+                json.de("role", role.name()));
     }
 
     @Transactional(readOnly = true)
@@ -207,7 +213,8 @@ public class UserService {
             surcharges.save(surcharge);
         }
 
-        publier("user.permissions.updated", userId, null, String.valueOf(demandes.size()));
+        publier("user.permissions.updated", userId, null,
+                json.de("count", demandes.size()));
         return droitsSansControle(vue);
     }
 
@@ -215,6 +222,8 @@ public class UserService {
     @PreAuthorize("@perm.a('users.sessions.fermer')")
     public void fermerSessions(UUID userId) {
         Vue vue = vue(userId);
+        // La borne invalide aussi les jetons d'accès déjà émis (critère C8b).
+        vue.compte().setSessionsValidFrom(horloge.instant());
         sessions.revoquerSessionsDe(userId, vue.appartenance().getClubId());
     }
 
@@ -254,8 +263,8 @@ public class UserService {
                 avant, apres, null));
     }
 
-    private static String resume(UserAccount compte, Role role) {
-        return Map.of("email", compte.getEmail(), "role", role.name()).toString();
+    private String resume(UserAccount compte, Role role) {
+        return json.de(Map.of("email", compte.getEmail(), "role", role.name()));
     }
 
     /** Un compte et son appartenance au club courant. */

@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import ma.clubify.config.AuthenticatedUser;
+import ma.clubify.platform.repository.UserAccountRepository;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +20,11 @@ import java.util.List;
  *
  * <p>C'est ici, et nulle part ailleurs, que le club est déterminé. Un
  * identifiant de club envoyé par le client est ignoré (PLT-01, critère C2).
+ *
+ * <p>Le filtre vérifie aussi que le compte est toujours actif et que le jeton
+ * n'a pas été révoqué : un jeton signé reste valable jusqu'à son échéance, ce
+ * qui laisserait quinze minutes de sursis après une désactivation ou une
+ * fermeture de sessions (critères C8b et C9).
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -27,10 +33,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final TokenService jetons;
     private final TenantContext contexte;
+    private final UserAccountRepository comptes;
 
-    public JwtAuthenticationFilter(TokenService jetons, TenantContext contexte) {
+    public JwtAuthenticationFilter(TokenService jetons, TenantContext contexte,
+                                   UserAccountRepository comptes) {
         this.jetons = jetons;
         this.contexte = contexte;
+        this.comptes = comptes;
     }
 
     @Override
@@ -40,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         try {
             AuthenticatedUser utilisateur = lireUtilisateur(demande);
-            if (utilisateur != null) {
+            if (utilisateur != null && encoreValable(utilisateur)) {
                 contexte.set(utilisateur.clubId());
                 SecurityContextHolder.getContext().setAuthentication(
                         new UsernamePasswordAuthenticationToken(utilisateur, null, List.of()));
@@ -51,6 +60,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             contexte.clear();
             SecurityContextHolder.clearContext();
         }
+    }
+
+    private boolean encoreValable(AuthenticatedUser utilisateur) {
+        return comptes.findById(utilisateur.userId())
+                .filter(compte -> compte.isActive())
+                .filter(compte -> utilisateur.issuedAt() == null
+                        || !utilisateur.issuedAt().isBefore(
+                                compte.getSessionsValidFrom().minusSeconds(1)))
+                .isPresent();
     }
 
     private AuthenticatedUser lireUtilisateur(HttpServletRequest demande) {
