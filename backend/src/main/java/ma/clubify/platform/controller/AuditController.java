@@ -1,10 +1,10 @@
 package ma.clubify.platform.controller;
 
-import ma.clubify.common.model.entity.AuditLog;
 import ma.clubify.generated.api.AuditApi;
 import ma.clubify.generated.model.AuditEntry;
 import ma.clubify.generated.model.AuditEntryPage;
 import ma.clubify.generated.model.PageMeta;
+import ma.clubify.platform.model.dto.AuditEntryDto;
 import ma.clubify.platform.service.AuditQueryService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,7 +37,7 @@ public class AuditController implements AuditApi {
             Integer page, Integer size, UUID actorId, String action, String entityType,
             UUID entityId, OffsetDateTime from, OffsetDateTime to) {
 
-        Page<AuditLog> trouvees = journal.rechercher(
+        Page<AuditEntryDto> trouvees = journal.rechercher(
                 actorId, action, entityType, entityId,
                 from == null ? null : from.toInstant(),
                 to == null ? null : to.toInstant(),
@@ -55,20 +55,20 @@ public class AuditController implements AuditApi {
         return ResponseEntity.ok(reponse);
     }
 
-    private static AuditEntry versContrat(AuditLog entree) {
+    private static AuditEntry versContrat(AuditEntryDto entree) {
         AuditEntry contrat = new AuditEntry();
-        contrat.setId(entree.getId());
-        contrat.setOccurredAt(entree.getOccurredAt().atOffset(ZoneOffset.UTC));
-        contrat.setActorType(AuditEntry.ActorTypeEnum.fromValue(entree.getActorType().name()));
-        contrat.setActorId(entree.getActorId());
-        contrat.setActorLabel(entree.getActorLabel());
-        contrat.setAction(entree.getAction());
-        contrat.setEntityType(entree.getEntityType());
-        contrat.setEntityId(entree.getEntityId());
-        contrat.setBefore(entree.getBeforeState());
-        contrat.setAfter(entree.getAfterState());
-        contrat.setReason(entree.getReason());
-        contrat.setRequestId(entree.getRequestId());
+        contrat.setId(entree.id());
+        contrat.setOccurredAt(entree.occurredAt().atOffset(ZoneOffset.UTC));
+        contrat.setActorType(AuditEntry.ActorTypeEnum.fromValue(entree.actorType()));
+        contrat.setActorId(entree.actorId());
+        contrat.setActorLabel(entree.actorLabel());
+        contrat.setAction(entree.action());
+        contrat.setEntityType(entree.entityType());
+        contrat.setEntityId(entree.entityId());
+        contrat.setBefore(entree.before());
+        contrat.setAfter(entree.after());
+        contrat.setReason(entree.reason());
+        contrat.setRequestId(entree.requestId());
         return contrat;
     }
 }

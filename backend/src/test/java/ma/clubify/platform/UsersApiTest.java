@@ -45,6 +45,8 @@ class UsersApiTest {
     private PermissionLimits plafonds;
     @Autowired
     private TokenService jetons;
+    @Autowired
+    private ma.clubify.common.security.TenantContext contexte;
 
     private UUID clubA;
     private UUID admin;
@@ -145,6 +147,11 @@ class UsersApiTest {
 
         String gerant = auth.jetonDe(Fixtures.MANAGER_A_EMAIL);
         AuthenticatedUser porteur = jetons.lire(gerant);
+        assertThat(porteur).as("jeton du gérant lisible").isNotNull();
+
+        // Hors demande servie, le club se pose à la main : c'est ce que fait le
+        // filtre d'authentification, et sans quoi le discriminant ne trouve rien.
+        contexte.set(clubA);
 
         // Le plafond se lit depuis la surcharge, et borne la valeur demandée.
         assertThat(plafonds.plafondDe(porteur, "club.settings.modifier").intValue())
@@ -152,6 +159,7 @@ class UsersApiTest {
         assertThat(plafonds.plafondDe(porteur, "users.consulter"))
                 .as("sans paramètre, la permission vaut sans limite")
                 .isNull();
+        contexte.clear();
     }
 
     @Test

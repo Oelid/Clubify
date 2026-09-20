@@ -9,6 +9,7 @@ import ma.clubify.common.model.entity.UuidV7;
 import ma.clubify.common.security.EncryptionService;
 import ma.clubify.common.security.PermissionChecker;
 import ma.clubify.common.security.TokenService;
+import ma.clubify.platform.model.dto.StoredFileDto;
 import ma.clubify.platform.model.entity.FileLink;
 import ma.clubify.platform.model.entity.StoredFile;
 import ma.clubify.platform.repository.FileLinkRepository;
@@ -58,7 +59,7 @@ public class FileService {
 
     @Transactional
     @PreAuthorize("@perm.a('files.deposer')")
-    public StoredFile deposer(String nom, String typeMime, byte[] contenu, String usage) {
+    public StoredFileDto deposer(String nom, String typeMime, byte[] contenu, String usage) {
         long tailleMaximale = reglages.entier("files.max_size_mb") * 1024L * 1024L;
         if (contenu.length > tailleMaximale) {
             throw new BusinessRuleException("file.size.tooLarge", HttpStatus.PAYLOAD_TOO_LARGE);
@@ -88,7 +89,8 @@ public class FileService {
         fichiers.save(fichier);
 
         evenements.publish(DomainEvent.of(clubId, "file.uploaded", "StoredFile", id));
-        return fichier;
+        return new StoredFileDto(fichier.getId(), fichier.getPurpose(), fichier.getFilename(),
+                fichier.getContentType(), fichier.getSizeBytes(), fichier.getCreatedAt());
     }
 
     /** Délivre un lien signé et expirant vers le fichier (critère C23). */

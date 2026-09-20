@@ -7,6 +7,7 @@ import ma.clubify.generated.model.SettingDefinition;
 import ma.clubify.generated.model.SettingUpdate;
 import ma.clubify.generated.model.SettingValue;
 import ma.clubify.generated.model.UpdateClubLogoRequest;
+import ma.clubify.platform.model.dto.ClubDto;
 import ma.clubify.platform.service.ClubService;
 import ma.clubify.platform.service.ClubSettingService;
 import ma.clubify.platform.service.SettingDefinitions;
@@ -87,21 +88,21 @@ public class ClubController implements ClubApi {
 
     // ------------------------------------------------------- conversions
 
-    private static Club versContrat(ma.clubify.platform.model.entity.Club club) {
+    private static Club versContrat(ClubDto club) {
         Club contrat = new Club();
-        contrat.setId(club.getId());
-        contrat.setName(club.getName());
-        contrat.setTimezone(club.getTimezone());
-        contrat.setCurrency(club.getCurrency());
-        contrat.setLogoFileId(club.getLogoFileId());
-        contrat.setLegalForm(club.getLegalForm());
-        contrat.setIce(club.getIce());
-        contrat.setTaxId(club.getTaxId());
-        contrat.setTradeRegister(club.getTradeRegister());
-        contrat.setAddress(club.getAddress());
-        contrat.setPhone(club.getPhone());
-        contrat.setEmail(club.getEmail());
-        contrat.setDefaultLanguage(club.getDefaultLanguage());
+        contrat.setId(club.id());
+        contrat.setName(club.name());
+        contrat.setTimezone(club.timezone());
+        contrat.setCurrency(club.currency());
+        contrat.setLogoFileId(club.logoFileId());
+        contrat.setLegalForm(club.legalForm());
+        contrat.setIce(club.ice());
+        contrat.setTaxId(club.taxId());
+        contrat.setTradeRegister(club.tradeRegister());
+        contrat.setAddress(club.address());
+        contrat.setPhone(club.phone());
+        contrat.setEmail(club.email());
+        contrat.setDefaultLanguage(club.defaultLanguage());
         return contrat;
     }
 

@@ -9,6 +9,7 @@ import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.Setter;
 import ma.clubify.common.model.entity.ClubScopedEntity;
+import ma.clubify.platform.model.Role;
 
 import java.util.UUID;
 

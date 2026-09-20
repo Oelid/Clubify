@@ -1,17 +1,17 @@
 package ma.clubify.common.security;
 
-import ma.clubify.platform.model.entity.Role;
+import ma.clubify.platform.model.Role;
 
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static ma.clubify.platform.model.entity.Role.ACCOUNT_ADMIN;
-import static ma.clubify.platform.model.entity.Role.ACCOUNTANT;
-import static ma.clubify.platform.model.entity.Role.COACH;
-import static ma.clubify.platform.model.entity.Role.FRONT_DESK;
-import static ma.clubify.platform.model.entity.Role.MANAGER;
+import static ma.clubify.platform.model.Role.ACCOUNT_ADMIN;
+import static ma.clubify.platform.model.Role.ACCOUNTANT;
+import static ma.clubify.platform.model.Role.COACH;
+import static ma.clubify.platform.model.Role.FRONT_DESK;
+import static ma.clubify.platform.model.Role.MANAGER;
 
 /**
  * Catalogue des permissions de F01 et jeu par défaut de chaque rôle

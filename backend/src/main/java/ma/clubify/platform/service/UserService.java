@@ -10,7 +10,9 @@ import ma.clubify.common.security.Permissions;
 import ma.clubify.common.util.Json;
 import ma.clubify.config.AuthenticatedUser;
 import ma.clubify.platform.model.entity.Membership;
-import ma.clubify.platform.model.entity.Role;
+import ma.clubify.platform.model.Role;
+import ma.clubify.platform.model.dto.PermissionsDto;
+import ma.clubify.platform.model.dto.UserDto;
 import ma.clubify.platform.model.entity.UserAccount;
 import ma.clubify.platform.model.entity.UserPermissionOverride;
 import ma.clubify.platform.repository.MembershipRepository;
@@ -68,25 +70,26 @@ public class UserService {
 
     @Transactional(readOnly = true)
     @PreAuthorize("@perm.a('users.consulter')")
-    public Page<Vue> lister(Pageable pagination) {
-        List<Vue> vues = appartenances.findAll().stream()
+    public Page<UserDto> lister(Pageable pagination) {
+        List<UserDto> vues = appartenances.findAll().stream()
                 .map(appartenance -> comptes.findById(appartenance.getUserId())
                         .map(compte -> new Vue(compte, appartenance)))
                 .flatMap(Optional::stream)
                 .sorted(java.util.Comparator.comparing(v -> v.compte().getLastName()))
+                .map(UserService::vers)
                 .toList();
         return new org.springframework.data.domain.PageImpl<>(vues, pagination, vues.size());
     }
 
     @Transactional(readOnly = true)
     @PreAuthorize("@perm.a('users.consulter')")
-    public Vue lire(UUID userId) {
-        return vue(userId);
+    public UserDto lire(UUID userId) {
+        return vers(vue(userId));
     }
 
     @Transactional
     @PreAuthorize("@perm.a('users.creer')")
-    public Vue creer(String email, String prenom, String nom, String telephone, String langue,
+    public UserDto creer(String email, String prenom, String nom, String telephone, String langue,
                      Role role, String motDePasse) {
         if (!role.attribuableEnR1()) {
             throw new BusinessRuleException("user.role.notAssignableYet");
@@ -120,12 +123,12 @@ public class UserService {
         appartenances.save(appartenance);
 
         publier("user.created", compte.getId(), null, resume(compte, role));
-        return new Vue(compte, appartenance);
+        return vers(new Vue(compte, appartenance));
     }
 
     @Transactional
     @PreAuthorize("@perm.a('users.modifier')")
-    public Vue modifier(UUID userId, String prenom, String nom, String telephone, String langue) {
+    public UserDto modifier(UUID userId, String prenom, String nom, String telephone, String langue) {
         Vue vue = vue(userId);
         String avant = resume(vue.compte(), vue.appartenance().getRole());
 
@@ -137,7 +140,7 @@ public class UserService {
         }
 
         publier("user.updated", userId, avant, resume(vue.compte(), vue.appartenance().getRole()));
-        return vue;
+        return vers(vue);
     }
 
     @Transactional
@@ -177,10 +180,8 @@ public class UserService {
 
     @Transactional(readOnly = true)
     @PreAuthorize("@perm.a('users.consulter')")
-    public Droits droits(UUID userId) {
-        Vue vue = vue(userId);
-        return new Droits(vue.appartenance().getRole(), permissions.effectives(vue.appartenance()),
-                permissions.surchargesDe(vue.appartenance()));
+    public PermissionsDto droits(UUID userId) {
+        return droitsDe(vue(userId));
     }
 
     /**
@@ -191,7 +192,7 @@ public class UserService {
      */
     @Transactional
     @PreAuthorize("@perm.a('users.permissions.modifier')")
-    public Droits definirSurcharges(UUID userId, List<Demande> demandes) {
+    public PermissionsDto definirSurcharges(UUID userId, List<Demande> demandes) {
         Vue vue = vue(userId);
         if (Permissions.detientTout(vue.appartenance().getRole())) {
             throw new BusinessRuleException("user.admin.permissionsNotRestrictable");
@@ -218,7 +219,7 @@ public class UserService {
 
         publier("user.permissions.updated", userId, null,
                 json.de("count", demandes.size()));
-        return droitsSansControle(vue);
+        return droitsDe(vue);
     }
 
     @Transactional
@@ -245,9 +246,23 @@ public class UserService {
         }
     }
 
-    private Droits droitsSansControle(Vue vue) {
-        return new Droits(vue.appartenance().getRole(), permissions.effectives(vue.appartenance()),
-                permissions.surchargesDe(vue.appartenance()));
+    private PermissionsDto droitsDe(Vue vue) {
+        return new PermissionsDto(
+                vue.appartenance().getRole().name(),
+                permissions.effectives(vue.appartenance()),
+                permissions.surchargesDe(vue.appartenance()).stream()
+                        .map(surcharge -> new PermissionsDto.OverrideDto(
+                                surcharge.getPermissionCode(), surcharge.isGranted(),
+                                surcharge.getParameter()))
+                        .toList());
+    }
+
+    private static UserDto vers(Vue vue) {
+        UserAccount compte = vue.compte();
+        return new UserDto(compte.getId(), compte.getEmail(), compte.getFirstName(),
+                compte.getLastName(), compte.getPhone(), compte.getLanguage(),
+                vue.appartenance().getRole().name(), compte.isActive(), compte.isMfaEnabled(),
+                compte.getLastLoginAt());
     }
 
     private Vue vue(UUID userId) {
@@ -270,13 +285,13 @@ public class UserService {
         return json.de(Map.of("email", compte.getEmail(), "role", role.name()));
     }
 
-    /** Un compte et son appartenance au club courant. */
-    public record Vue(UserAccount compte, Membership appartenance) {
-    }
-
-    /** Droits effectifs d'un utilisateur et surcharges qui s'y appliquent. */
-    public record Droits(Role role, java.util.Set<String> effectives,
-                         List<UserPermissionOverride> surcharges) {
+    /**
+      * Un compte et son appartenance au club courant.
+      *
+      * <p>Interne au service : les entités ne franchissent pas sa frontière
+      * (backend/CLAUDE.md, vérifié par ArchitectureTest).
+      */
+    private record Vue(UserAccount compte, Membership appartenance) {
     }
 
     /** Demande de surcharge : accorder ou retirer une permission. */

@@ -8,6 +8,7 @@ import ma.clubify.common.export.ExportWriter;
 import ma.clubify.common.security.PermissionChecker;
 import ma.clubify.common.util.Json;
 import ma.clubify.config.AuthenticatedUser;
+import ma.clubify.platform.model.dto.UserDto;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.AccessDeniedException;
@@ -62,20 +63,18 @@ public class ExportService {
     }
 
     private Resultat exporterUtilisateurs(String format) {
-        List<UserService.Vue> vues = utilisateurs
+        List<UserDto> vues = utilisateurs
                 .lister(org.springframework.data.domain.Pageable.unpaged())
                 .getContent();
 
-        List<Colonne<UserService.Vue>> colonnes = List.of(
-                Colonne.de("lastName", libelle("export.users.lastName"),
-                        v -> v.compte().getLastName()),
-                Colonne.de("firstName", libelle("export.users.firstName"),
-                        v -> v.compte().getFirstName()),
-                Colonne.de("email", libelle("export.users.email"), v -> v.compte().getEmail()),
+        List<Colonne<UserDto>> colonnes = List.of(
+                Colonne.de("lastName", libelle("export.users.lastName"), UserDto::lastName),
+                Colonne.de("firstName", libelle("export.users.firstName"), UserDto::firstName),
+                Colonne.de("email", libelle("export.users.email"), UserDto::email),
                 Colonne.de("role", libelle("export.users.role"),
-                        v -> libelle("role." + v.appartenance().getRole().name())),
+                        vue -> libelle("role." + vue.role())),
                 Colonne.de("active", libelle("export.users.active"),
-                        v -> libelle(v.compte().isActive() ? "yes" : "no")));
+                        vue -> libelle(vue.active() ? "yes" : "no")));
 
         byte[] octets = "XLSX".equals(format)
                 ? ecrivain.xlsx(libelle("export.users.sheet"), colonnes, vues)

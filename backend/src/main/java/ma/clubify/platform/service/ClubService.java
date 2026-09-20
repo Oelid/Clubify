@@ -6,6 +6,7 @@ import ma.clubify.common.exception.BusinessRuleException;
 import ma.clubify.common.exception.NotFoundException;
 import ma.clubify.common.security.PermissionChecker;
 import ma.clubify.common.util.PhoneNumbers;
+import ma.clubify.platform.model.dto.ClubDto;
 import ma.clubify.platform.model.entity.Club;
 import ma.clubify.platform.repository.ClubRepository;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,13 +37,13 @@ public class ClubService {
 
     @Transactional(readOnly = true)
     @PreAuthorize("@perm.a('club.settings.consulter')")
-    public Club lire() {
-        return courant();
+    public ClubDto lire() {
+        return vers(courant());
     }
 
     @Transactional
     @PreAuthorize("@perm.a('club.settings.modifier')")
-    public Club modifier(String nom, String formeJuridique, String ice, String identifiantFiscal,
+    public ClubDto modifier(String nom, String formeJuridique, String ice, String identifiantFiscal,
                          String registreDuCommerce, String adresse, String telephone,
                          String email, String fuseau, String devise, String langue) {
         Club club = courant();
@@ -76,7 +77,7 @@ public class ClubService {
 
         evenements.publish(DomainEvent.modification(club.getId(), "club.updated", "Club",
                 club.getId(), avant, resume(club)));
-        return club;
+        return vers(club);
     }
 
     @Transactional
@@ -108,6 +109,13 @@ public class ClubService {
     private Club courant() {
         UUID clubId = PermissionChecker.requis().clubId();
         return clubs.findById(clubId).orElseThrow(() -> new NotFoundException("club.notFound"));
+    }
+
+    private static ClubDto vers(Club club) {
+        return new ClubDto(club.getId(), club.getName(), club.getLegalForm(), club.getIce(),
+                club.getTaxId(), club.getTradeRegister(), club.getAddress(), club.getPhone(),
+                club.getEmail(), club.getTimezone(), club.getCurrency(),
+                club.getDefaultLanguage(), club.getLogoFileId());
     }
 
     private static String resume(Club club) {

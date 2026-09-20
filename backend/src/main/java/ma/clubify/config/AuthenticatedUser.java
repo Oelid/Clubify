@@ -1,6 +1,6 @@
 package ma.clubify.config;
 
-import ma.clubify.platform.model.entity.Role;
+import ma.clubify.platform.model.Role;
 
 import java.time.Instant;
 import java.util.Set;

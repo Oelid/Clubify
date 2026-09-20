@@ -9,6 +9,7 @@ import ma.clubify.common.security.PermissionChecker;
 import ma.clubify.common.security.TotpService;
 import ma.clubify.config.AuthenticatedUser;
 import ma.clubify.platform.model.entity.RecoveryCode;
+import ma.clubify.platform.model.dto.TrustedDeviceDto;
 import ma.clubify.platform.model.entity.TrustedDevice;
 import ma.clubify.platform.model.entity.UserAccount;
 import ma.clubify.platform.repository.RecoveryCodeRepository;
@@ -102,8 +103,12 @@ public class MfaService {
     }
 
     @Transactional(readOnly = true)
-    public List<TrustedDevice> appareilsDeConfiance() {
-        return appareils.findAllByUserIdAndRevokedAtIsNull(PermissionChecker.requis().userId());
+    public List<TrustedDeviceDto> appareilsDeConfiance() {
+        return appareils.findAllByUserIdAndRevokedAtIsNull(PermissionChecker.requis().userId())
+                .stream()
+                .map(appareil -> new TrustedDeviceDto(appareil.getId(), appareil.getLabel(),
+                        appareil.getLastUsedAt(), appareil.getExpiresAt()))
+                .toList();
     }
 
     @Transactional

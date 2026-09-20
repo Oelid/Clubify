@@ -29,9 +29,12 @@ import java.util.Map;
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private final MessageSource messages;
+    private final ma.clubify.common.audit.AccessDenialAuditor refus;
 
-    public GlobalExceptionHandler(MessageSource messages) {
+    public GlobalExceptionHandler(MessageSource messages,
+                                  ma.clubify.common.audit.AccessDenialAuditor refus) {
         this.messages = messages;
+        this.refus = refus;
     }
 
     @ExceptionHandler(BusinessRuleException.class)
@@ -41,7 +44,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ProblemDetail> onAccessDenied(AccessDeniedException echec) {
+    public ResponseEntity<ProblemDetail> onAccessDenied(AccessDeniedException echec,
+                                                        HttpServletRequest demande) {
+        refus.refus(demande.getRequestURI());
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(probleme(HttpStatus.FORBIDDEN, "security.permission.denied", null));
     }

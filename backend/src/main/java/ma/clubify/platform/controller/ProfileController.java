@@ -5,6 +5,7 @@ import ma.clubify.generated.model.MfaConfirmRequest;
 import ma.clubify.generated.model.MfaSetupResponse;
 import ma.clubify.generated.model.RecoveryCodes;
 import ma.clubify.generated.model.TrustedDevice;
+import ma.clubify.platform.model.dto.TrustedDeviceDto;
 import ma.clubify.platform.service.MfaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -70,14 +71,13 @@ public class ProfileController implements ProfileApi {
         return ResponseEntity.noContent().build();
     }
 
-    private static TrustedDevice versContrat(
-            ma.clubify.platform.model.entity.TrustedDevice appareil) {
+    private static TrustedDevice versContrat(TrustedDeviceDto appareil) {
         TrustedDevice contrat = new TrustedDevice();
-        contrat.setId(appareil.getId());
-        contrat.setLabel(appareil.getLabel());
-        contrat.setExpiresAt(appareil.getExpiresAt().atOffset(java.time.ZoneOffset.UTC));
-        if (appareil.getLastUsedAt() != null) {
-            contrat.setLastUsedAt(appareil.getLastUsedAt().atOffset(java.time.ZoneOffset.UTC));
+        contrat.setId(appareil.id());
+        contrat.setLabel(appareil.label());
+        contrat.setExpiresAt(appareil.expiresAt().atOffset(java.time.ZoneOffset.UTC));
+        if (appareil.lastUsedAt() != null) {
+            contrat.setLastUsedAt(appareil.lastUsedAt().atOffset(java.time.ZoneOffset.UTC));
         }
         return contrat;
     }

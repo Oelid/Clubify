@@ -4,6 +4,7 @@ import ma.clubify.generated.api.FilesApi;
 import ma.clubify.generated.model.FileLink;
 import ma.clubify.generated.model.FilePurpose;
 import ma.clubify.generated.model.StoredFile;
+import ma.clubify.platform.model.dto.StoredFileDto;
 import ma.clubify.platform.service.FileService;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -34,7 +35,7 @@ public class FilesController implements FilesApi {
     @PreAuthorize("@perm.a('files.deposer')")
     public ResponseEntity<StoredFile> uploadFile(MultipartFile file, FilePurpose purpose) {
         try {
-            ma.clubify.platform.model.entity.StoredFile depose = fichiers.deposer(
+            StoredFileDto depose = fichiers.deposer(
                     file.getOriginalFilename(), file.getContentType(), file.getBytes(),
                     purpose.getValue());
             return ResponseEntity.status(HttpStatus.CREATED).body(versContrat(depose));
@@ -77,15 +78,15 @@ public class FilesController implements FilesApi {
         return ResponseEntity.noContent().build();
     }
 
-    private static StoredFile versContrat(ma.clubify.platform.model.entity.StoredFile fichier) {
+    private static StoredFile versContrat(StoredFileDto fichier) {
         StoredFile contrat = new StoredFile();
-        contrat.setId(fichier.getId());
-        contrat.setPurpose(FilePurpose.fromValue(fichier.getPurpose()));
-        contrat.setFilename(fichier.getFilename());
-        contrat.setContentType(fichier.getContentType());
-        contrat.setSizeBytes(fichier.getSizeBytes());
-        if (fichier.getCreatedAt() != null) {
-            contrat.setCreatedAt(fichier.getCreatedAt().atOffset(ZoneOffset.UTC));
+        contrat.setId(fichier.id());
+        contrat.setPurpose(FilePurpose.fromValue(fichier.purpose()));
+        contrat.setFilename(fichier.filename());
+        contrat.setContentType(fichier.contentType());
+        contrat.setSizeBytes(fichier.sizeBytes());
+        if (fichier.createdAt() != null) {
+            contrat.setCreatedAt(fichier.createdAt().atOffset(ZoneOffset.UTC));
         }
         return contrat;
     }

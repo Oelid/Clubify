@@ -4,6 +4,7 @@ import jakarta.persistence.criteria.Predicate;
 import ma.clubify.common.model.entity.AuditLog;
 import ma.clubify.common.repository.AuditLogRepository;
 import ma.clubify.common.security.PermissionChecker;
+import ma.clubify.platform.model.dto.AuditEntryDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -34,7 +35,7 @@ public class AuditQueryService {
 
     @Transactional(readOnly = true)
     @PreAuthorize("@perm.a('audit.consulter')")
-    public Page<AuditLog> rechercher(UUID auteurId, String action, String typeEntite,
+    public Page<AuditEntryDto> rechercher(UUID auteurId, String action, String typeEntite,
                                      UUID entiteId, Instant depuis, Instant jusqua,
                                      Pageable pagination) {
         UUID clubId = PermissionChecker.requis().clubId();
@@ -69,6 +70,14 @@ public class AuditQueryService {
                 : org.springframework.data.domain.PageRequest.of(
                         pagination.getPageNumber(), pagination.getPageSize(),
                         Sort.by(Sort.Direction.DESC, "occurredAt"));
-        return journal.findAll(criteres, triee);
+        return journal.findAll(criteres, triee).map(AuditQueryService::vers);
+    }
+
+    private static AuditEntryDto vers(AuditLog entree) {
+        return new AuditEntryDto(entree.getId(), entree.getOccurredAt(),
+                entree.getActorType().name(), entree.getActorId(), entree.getActorLabel(),
+                entree.getAction(), entree.getEntityType(), entree.getEntityId(),
+                entree.getBeforeState(), entree.getAfterState(), entree.getReason(),
+                entree.getRequestId());
     }
 }

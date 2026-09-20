@@ -1,7 +1,7 @@
 package ma.clubify.platform.repository;
 
 import ma.clubify.platform.model.entity.Membership;
-import ma.clubify.platform.model.entity.Role;
+import ma.clubify.platform.model.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

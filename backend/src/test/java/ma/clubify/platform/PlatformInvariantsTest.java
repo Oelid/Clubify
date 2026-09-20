@@ -145,6 +145,9 @@ class PlatformInvariantsTest {
 
         api.send(admin, put("/api/v1/club"), Map.of("name", "Club A Sport"))
                 .andExpect(status().isOk());
+
+        // La demande servie a vidé le contexte en sortant : on le repose.
+        contexte.set(clubA);
         transaction.executeWithoutResult(statut ->
                 outbox.deposer(new ExternalEffect(clubA, "test.effet.defaillant", Map.of())));
 

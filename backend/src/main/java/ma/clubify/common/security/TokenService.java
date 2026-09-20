@@ -8,7 +8,7 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import ma.clubify.config.AuthenticatedUser;
-import ma.clubify.platform.model.entity.Role;
+import ma.clubify.platform.model.Role;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

@@ -13,6 +13,8 @@ import ma.clubify.generated.model.UserPage;
 import ma.clubify.generated.model.UserPermissions;
 import ma.clubify.generated.model.UserUpdateRequest;
 import ma.clubify.common.security.Permissions;
+import ma.clubify.platform.model.dto.PermissionsDto;
+import ma.clubify.platform.model.dto.UserDto;
 import ma.clubify.platform.service.MfaService;
 import ma.clubify.platform.service.UserService;
 import org.springframework.data.domain.Page;
@@ -48,7 +50,7 @@ public class UsersController implements UsersApi {
     @Override
     @PreAuthorize("@perm.a('users.consulter')")
     public ResponseEntity<UserPage> listUsers(Integer page, Integer size, Role role, Boolean active) {
-        Page<UserService.Vue> trouvees = utilisateurs.lister(
+        Page<UserDto> trouvees = utilisateurs.lister(
                 PageRequest.of(page == null ? 0 : page, size == null ? 20 : size));
 
         UserPage reponse = new UserPage();
@@ -66,10 +68,10 @@ public class UsersController implements UsersApi {
     @Override
     @PreAuthorize("@perm.a('users.creer')")
     public ResponseEntity<User> createUser(UserCreateRequest demande) {
-        UserService.Vue creee = utilisateurs.creer(
+        UserDto creee = utilisateurs.creer(
                 demande.getEmail(), demande.getFirstName(), demande.getLastName(),
                 demande.getPhone(), demande.getLanguage(),
-                ma.clubify.platform.model.entity.Role.valueOf(demande.getRole().getValue()),
+                ma.clubify.platform.model.Role.valueOf(demande.getRole().getValue()),
                 demande.getPassword());
         return ResponseEntity.status(HttpStatus.CREATED).body(versContrat(creee));
     }
@@ -99,7 +101,7 @@ public class UsersController implements UsersApi {
     @PreAuthorize("@perm.a('users.modifier')")
     public ResponseEntity<Void> setUserRole(UUID userId, SetUserRoleRequest demande) {
         utilisateurs.definirRole(userId,
-                ma.clubify.platform.model.entity.Role.valueOf(demande.getRole().getValue()));
+                ma.clubify.platform.model.Role.valueOf(demande.getRole().getValue()));
         return ResponseEntity.noContent().build();
     }
 
@@ -152,8 +154,8 @@ public class UsersController implements UsersApi {
 
     private static List<Role> rolesParDefaut(String permission) {
         List<Role> roles = new ArrayList<>();
-        for (ma.clubify.platform.model.entity.Role role
-                : ma.clubify.platform.model.entity.Role.values()) {
+        for (ma.clubify.platform.model.Role role
+                : ma.clubify.platform.model.Role.values()) {
             if (Permissions.parDefaut(role).contains(permission)) {
                 roles.add(Role.fromValue(role.name()));
             }
@@ -161,31 +163,31 @@ public class UsersController implements UsersApi {
         return roles;
     }
 
-    private static User versContrat(UserService.Vue vue) {
+    private static User versContrat(UserDto vue) {
         User utilisateur = new User();
-        utilisateur.setId(vue.compte().getId());
-        utilisateur.setEmail(vue.compte().getEmail());
-        utilisateur.setFirstName(vue.compte().getFirstName());
-        utilisateur.setLastName(vue.compte().getLastName());
-        utilisateur.setPhone(vue.compte().getPhone());
-        utilisateur.setLanguage(vue.compte().getLanguage());
-        utilisateur.setRole(Role.fromValue(vue.appartenance().getRole().name()));
-        utilisateur.setActive(vue.compte().isActive());
-        utilisateur.setMfaEnabled(vue.compte().isMfaEnabled());
-        if (vue.compte().getLastLoginAt() != null) {
-            utilisateur.setLastLoginAt(vue.compte().getLastLoginAt().atOffset(ZoneOffset.UTC));
+        utilisateur.setId(vue.id());
+        utilisateur.setEmail(vue.email());
+        utilisateur.setFirstName(vue.firstName());
+        utilisateur.setLastName(vue.lastName());
+        utilisateur.setPhone(vue.phone());
+        utilisateur.setLanguage(vue.language());
+        utilisateur.setRole(Role.fromValue(vue.role()));
+        utilisateur.setActive(vue.active());
+        utilisateur.setMfaEnabled(vue.mfaEnabled());
+        if (vue.lastLoginAt() != null) {
+            utilisateur.setLastLoginAt(vue.lastLoginAt().atOffset(ZoneOffset.UTC));
         }
         return utilisateur;
     }
 
-    private static UserPermissions versContrat(UserService.Droits droits) {
+    private static UserPermissions versContrat(PermissionsDto droits) {
         UserPermissions reponse = new UserPermissions();
-        reponse.setRole(Role.fromValue(droits.role().name()));
-        reponse.setEffective(new ArrayList<>(droits.effectives()));
-        reponse.setOverrides(droits.surcharges().stream().map(surcharge -> {
+        reponse.setRole(Role.fromValue(droits.role()));
+        reponse.setEffective(new ArrayList<>(droits.effective()));
+        reponse.setOverrides(droits.overrides().stream().map(surcharge -> {
             PermissionOverride contrat = new PermissionOverride();
-            contrat.setCode(surcharge.getPermissionCode());
-            contrat.setGranted(surcharge.isGranted());
+            contrat.setCode(surcharge.code());
+            contrat.setGranted(surcharge.granted());
             return contrat;
         }).toList());
         return reponse;
