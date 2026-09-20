@@ -14,6 +14,10 @@ springdoc:
   api-docs:
     enabled: true
 clubify:
+  auth:
+    # En développement, l'interface tourne en clair sur localhost : un cookie
+    # « Secure » ne serait jamais renvoyé par le navigateur.
+    cookie-secure: false
   security:
     jwt:
       secret: dev-secret-a-remplacer-par-une-variable-d-environnement-32o

@@ -35,6 +35,10 @@ public final class SettingDefinitions {
         declarer("club.timezone", Type.STRING, Scope.CLUB, "Africa/Casablanca", "F01 règle 29");
         declarer("club.currency", Type.STRING, Scope.CLUB, "MAD", "F01 règle 29");
         declarer("club.default_language", Type.STRING, Scope.CLUB, "fr", "F01 règle 29 / PLT-08");
+        // Sans valeur, l'interface garde les jetons Clubify : la marque du club
+        // reste un accent, jamais la charte du produit (décision 0025).
+        declarer("club.brand.primary", Type.STRING, Scope.CLUB, null, "F01 règle 29 / 0025");
+        declarer("club.brand.secondary", Type.STRING, Scope.CLUB, null, "F01 règle 29 / 0025");
 
         declarer("security.mfa.trusted_device_days", Type.INTEGER, Scope.CLUB, 30,
                 "F01 règle 5 / benchmark B4");

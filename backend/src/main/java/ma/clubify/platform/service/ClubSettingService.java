@@ -44,7 +44,8 @@ public class ClubSettingService {
     }
 
     public String texte(String cle) {
-        return String.valueOf(valeur(cle));
+        Object valeur = valeur(cle);
+        return valeur == null ? null : String.valueOf(valeur);
     }
 
     @SuppressWarnings("unchecked")

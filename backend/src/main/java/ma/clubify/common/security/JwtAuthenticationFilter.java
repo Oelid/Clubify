@@ -62,12 +62,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
+    /**
+     * Un jeton n'est valable que s'il a été émis après la dernière fermeture des
+     * sessions du compte (critères C8b, C9).
+     *
+     * <p>Aucune tolérance : l'horodatage d'émission d'un JWT est tronqué à la
+     * seconde, si bien qu'un jeton émis dans la même seconde qu'une fermeture
+     * paraît antérieur à elle. Il est alors refusé, et l'utilisateur se
+     * reconnecte. L'inverse — laisser passer une seconde de jetons après une
+     * fermeture demandée — serait une porte ouverte sur un compte que le gérant
+     * croit fermé.
+     */
     private boolean encoreValable(AuthenticatedUser utilisateur) {
         return comptes.findById(utilisateur.userId())
                 .filter(compte -> compte.isActive())
                 .filter(compte -> utilisateur.issuedAt() == null
-                        || !utilisateur.issuedAt().isBefore(
-                                compte.getSessionsValidFrom().minusSeconds(1)))
+                        || !utilisateur.issuedAt().isBefore(compte.getSessionsValidFrom()))
                 .isPresent();
     }
 

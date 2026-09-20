@@ -1,5 +1,6 @@
 package ma.clubify.platform;
 
+import ma.clubify.common.security.RefreshCookie;
 import ma.clubify.support.Api;
 import ma.clubify.support.Auth;
 import ma.clubify.support.Fixtures;
@@ -45,6 +46,38 @@ class AuthApiTest {
         seeder.reset();
         clubA = seeder.club(Fixtures.CLUB_A);
         seeder.user(clubA, Fixtures.FRONT_DESK_A_EMAIL, "FRONT_DESK", Fixtures.VALID_PASSWORD);
+    }
+
+    @Test
+    @DisplayName("C8c — le jeton de renouvellement n'est jamais lisible par le navigateur")
+    void c8c_renouvellementEnCookie() throws Exception {
+        var connexion = api.loginRaw(Fixtures.FRONT_DESK_A_EMAIL, Fixtures.VALID_PASSWORD)
+                .andExpect(status().isOk())
+                .andReturn().getResponse();
+
+        String cookie = connexion.getHeader("Set-Cookie");
+        assertThat(cookie).as("cookie de renouvellement posé").isNotNull();
+        assertThat(cookie)
+                .contains(RefreshCookie.NOM)
+                .contains("HttpOnly")
+                .contains("SameSite=Strict")
+                .contains("Path=/api/v1/auth");
+
+        // Le cookie seul suffit à renouveler : le corps peut être vide.
+        String renouvele = api.mvc().perform(post("/api/v1/auth/refresh")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{}")
+                        .cookie(new jakarta.servlet.http.Cookie(
+                                RefreshCookie.NOM, connexion.getCookie(RefreshCookie.NOM).getValue())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(api.json().readTree(renouvele).path("accessToken").asString()).isNotEmpty();
+
+        // Sans cookie ni corps, rien à renouveler.
+        api.mvc().perform(post("/api/v1/auth/refresh")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

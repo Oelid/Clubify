@@ -77,6 +77,9 @@ public class TokenService {
                 .claim("perms", String.join(" ", utilisateur.permissions()))
                 .claim("lang", utilisateur.language())
                 .claim("mfa_pending", utilisateur.mfaPending())
+                // « iat » est tronqué à la seconde ; la borne de révocation des
+                // sessions se compare à la milliseconde (critères C8b, C9).
+                .claim("iat_ms", maintenant.toEpochMilli())
                 .issueTime(Date.from(maintenant))
                 .expirationTime(Date.from(maintenant.plus(dureeAcces)))
                 .build();
@@ -103,6 +106,7 @@ public class TokenService {
                 return null;
             }
 
+            Number emissionPrecise = revendications.getLongClaim("iat_ms");
             Date emission = revendications.getIssueTime();
             String permissions = revendications.getStringClaim("perms");
             return new AuthenticatedUser(
@@ -115,7 +119,9 @@ public class TokenService {
                             : Set.of(permissions.split(" ")),
                     revendications.getStringClaim("lang"),
                     Boolean.TRUE.equals(revendications.getBooleanClaim("mfa_pending")),
-                    emission == null ? null : emission.toInstant());
+                    emissionPrecise != null
+                            ? java.time.Instant.ofEpochMilli(emissionPrecise.longValue())
+                            : emission == null ? null : emission.toInstant());
         } catch (Exception echec) {
             // Un jeton illisible est un jeton refusé : jamais une erreur serveur.
             return null;

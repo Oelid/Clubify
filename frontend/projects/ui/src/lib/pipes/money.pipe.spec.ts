@@ -6,6 +6,14 @@ import { ClubContext } from '../club-context';
  * Les montants arrivent en centimes avec leur devise (invariant du CLAUDE.md).
  * Aucun composant ne les formate à la main : ce pipe est le seul chemin.
  */
+/**
+ * Le séparateur de milliers français est une espace fine insécable : elle doit
+ * le rester, sans quoi un montant peut se couper en fin de ligne. Les tests
+ * comparent donc à espace près, jamais au code de l'espace, qui appartient à
+ * la version d'ICU du moteur.
+ */
+const lisible = (rendu: string): string => rendu.replace(/[  ]/g, ' ');
+
 describe('MoneyPipe', () => {
   let pipe: MoneyPipe;
   let contexte: ClubContext;
@@ -18,7 +26,8 @@ describe('MoneyPipe', () => {
   });
 
   it('formate des centimes dans la devise du club', () => {
-    expect(pipe.transform({ amountCents: 350000, currency: 'MAD' })).toContain('3 500,00');
+    expect(lisible(pipe.transform({ amountCents: 350000, currency: 'MAD' })))
+      .toContain('3 500,00');
   });
 
   it('ne perd jamais les centimes', () => {

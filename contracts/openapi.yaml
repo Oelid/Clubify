@@ -772,9 +772,12 @@ components:
 
     RefreshRequest:
       type: object
-      required: [refreshToken]
       properties:
-        refreshToken: { type: string }
+        refreshToken:
+          type: string
+          description: >-
+            Facultatif pour un navigateur : le jeton voyage alors dans le cookie
+            HttpOnly posé à la connexion. Les clients sans cookie le passent ici.
 
     TokenPair:
       type: object
@@ -847,6 +850,13 @@ components:
         timezone: { type: string, example: Africa/Casablanca }
         currency: { type: string, example: MAD }
         logoFileId: { type: string, format: uuid }
+        brandPrimary:
+          type: string
+          description: >-
+            Couleur de marque du club, en accent seulement. Absente si le club
+            n'en a pas choisi : l'interface garde alors les jetons Clubify.
+          example: '#F08840'
+        brandSecondary: { type: string, example: '#307890' }
 
     Club:
       allOf:

@@ -46,6 +46,10 @@ logging:
       console: ${LOG_FORMAT:}
 
 clubify:
+  auth:
+    # Le jeton de renouvellement voyage en cookie HttpOnly (frontend/CLAUDE.md).
+    cookie-secure: true
+    refresh-ttl: P30D
   security:
     jwt:
       issuer: clubify

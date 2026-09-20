@@ -9,6 +9,10 @@ springdoc:
   api-docs:
     enabled: false
 clubify:
+  auth:
+    # En test, l'interface tourne en clair sur localhost : un cookie
+    # « Secure » ne serait jamais renvoyé par le navigateur.
+    cookie-secure: false
   security:
     jwt:
       secret: test-secret-de-signature-pour-les-tests-uniquement-32o

@@ -94,6 +94,10 @@ public class AuthService {
 
     /** La session porte son club : même principe. */
     public Tokens rafraichir(String jetonOpaque) {
+        if (jetonOpaque == null || jetonOpaque.isBlank()) {
+            // Ni corps ni cookie : la session n'existe pas, le client doit se connecter.
+            throw new BusinessRuleException("auth.refresh.invalid", HttpStatus.UNAUTHORIZED);
+        }
         UUID clubId = recherche.clubDeLaSession(jetons.empreinte(jetonOpaque))
                 .orElseThrow(() -> new BusinessRuleException(
                         "auth.refresh.invalid", HttpStatus.UNAUTHORIZED));
