@@ -75,7 +75,10 @@
     "brandPrimary": "Couleur principale",
     "brandSecondary": "Couleur secondaire",
     "brandUnset": "Non définie",
-    "brandApplied": "La couleur choisie s'applique dès l'enregistrement, en accent dans l'application et sur les documents du club."
+    "brandApplied": "La couleur choisie s'applique dès l'enregistrement, en accent dans l'application et sur les documents du club.",
+    "settingLabel": "Règle",
+    "settingDescription": "À quoi elle sert",
+    "settingFixed": "Fixée par Clubify"
   },
   "users": {
     "title": "Utilisateurs",
@@ -221,6 +224,76 @@
       "dataset": {
         "unknown": "Cette liste ne peut pas être exportée."
       }
+    }
+  },
+  "setting": {
+    "club.timezone": {
+      "label": "Fuseau horaire",
+      "description": "Sert à afficher les heures et à décider de quel jour relève une séance. Exemple : Africa/Casablanca."
+    },
+    "club.currency": {
+      "label": "Devise",
+      "description": "Monnaie de tous les montants du club. Exemple : MAD."
+    },
+    "club.default_language": {
+      "label": "Langue par défaut",
+      "description": "Langue des écrans et des documents pour qui n'en a pas choisi une. Exemple : fr."
+    },
+    "club.brand.primary": {
+      "label": "Couleur principale",
+      "description": "Couleur du club, en accent dans l'application et sur ses documents."
+    },
+    "club.brand.secondary": {
+      "label": "Couleur secondaire",
+      "description": "Seconde couleur du club, employée en complément de la principale."
+    },
+    "security.mfa.required": {
+      "label": "Second facteur obligatoire",
+      "description": "Si activé, l'administrateur et le gérant ne peuvent plus rien faire sans avoir activé leur second facteur. Sinon, ils sont seulement avertis."
+    },
+    "security.mfa.grace_days": {
+      "label": "Délai avant obligation",
+      "description": "Jours laissés pour activer le second facteur avant qu'il ne bloque, quand il est obligatoire. Exemple : 7."
+    },
+    "security.mfa.trusted_device_days": {
+      "label": "Appareil de confiance",
+      "description": "Jours pendant lesquels un appareil reconnu ne redemande pas de code. Exemple : 30."
+    },
+    "security.password.min_length": {
+      "label": "Longueur du mot de passe",
+      "description": "Nombre minimum de caractères. Fixé par Clubify et non modifiable."
+    },
+    "security.lockout.max_attempts": {
+      "label": "Tentatives avant blocage",
+      "description": "Nombre d'essais manqués qui bloquent temporairement un compte. Fixé par Clubify."
+    },
+    "security.lockout.minutes": {
+      "label": "Durée du blocage",
+      "description": "Minutes pendant lesquelles un compte bloqué le reste. Fixé par Clubify."
+    },
+    "files.max_size_mb": {
+      "label": "Taille maximale d'un fichier",
+      "description": "En mégaoctets. Au-delà, le dépôt est refusé. Exemple : 10."
+    },
+    "files.allowed_types": {
+      "label": "Types de fichiers acceptés",
+      "description": "Formats qu'on peut déposer : PDF, photo JPEG ou PNG."
+    },
+    "files.link_ttl_minutes": {
+      "label": "Durée d'un lien de fichier",
+      "description": "Minutes pendant lesquelles un lien vers une pièce reste ouvrable. Passé ce délai, il faut en demander un autre. Exemple : 15."
+    },
+    "billing.invoice_prefix": {
+      "label": "Préfixe des factures",
+      "description": "Lettres placées devant le numéro de chaque facture. Exemple : F donne F-2027-0001."
+    },
+    "billing.receipt_prefix": {
+      "label": "Préfixe des reçus",
+      "description": "Lettres placées devant le numéro de chaque reçu. Exemple : R donne R-2027-0001."
+    },
+    "billing.fiscal_year_start_month": {
+      "label": "Premier mois de l'exercice",
+      "description": "Mois où commence l'exercice comptable, de 1 à 12. La numérotation des factures repart à cette date. Exemple : 1 pour janvier."
     }
   }
 }

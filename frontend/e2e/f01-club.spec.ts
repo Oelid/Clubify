@@ -77,6 +77,26 @@ test.describe('F01 — Paramètres du club', () => {
     await expect(page.locator('.page__succes')).toBeVisible();
   });
 
+  test('S20 — Le gérant modifie une règle configurable', async ({ page }) => {
+    const ligne = page.locator('.tableau--dans-carte tbody tr')
+      .filter({ hasText: 'files.link_ttl_minutes' });
+    const champ = ligne.getByRole('spinbutton');
+
+    await champ.fill('25');
+    await page.getByRole('button', { name: 'Enregistrer' }).click();
+    await expect(page.locator('.page__succes')).toBeVisible();
+
+    // La valeur est retenue, et l'origine dit désormais que c'est un choix du club.
+    await page.reload();
+    await expect(ligne.getByRole('spinbutton')).toHaveValue('25');
+    await expect(ligne).toContainText('Choix du club');
+
+    // On remet le défaut pour les scénarios suivants.
+    await ligne.getByRole('spinbutton').fill('15');
+    await page.getByRole('button', { name: 'Enregistrer' }).click();
+    await expect(page.locator('.page__succes')).toBeVisible();
+  });
+
   test('S12 — Lire les règles configurables du club', async ({ page }) => {
     const tableau = page.locator('.tableau--dans-carte tbody tr');
     await expect(tableau.first()).toBeVisible();
@@ -84,8 +104,13 @@ test.describe('F01 — Paramètres du club', () => {
     const duree = tableau.filter({ hasText: 'files.link_ttl_minutes' });
     await expect(duree).toContainText('15');
     // L'origine dit si la valeur vient de Clubify ou d'un choix du club (C31).
-    await expect(duree).toContainText(/Défaut Clubify|Choix du club/);
-    // Et la source documentée dit d'où la règle sort.
-    await expect(duree).toContainText('F01');
+    await expect(duree).toContainText(/Défaut Clubify|Choix du club|Fixée par Clubify/);
+    // Et la règle s'explique en français, sans jargon.
+    await expect(duree).toContainText(/Durée d'un lien de fichier/);
+    await expect(duree).toContainText(/minutes pendant lesquelles un lien/i);
+
+    // Une règle que le club ne peut pas changer le dit franchement.
+    const longueur = tableau.filter({ hasText: 'security.password.min_length' });
+    await expect(longueur).toContainText('Fixée par Clubify');
   });
 });

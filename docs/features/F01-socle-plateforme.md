@@ -174,6 +174,7 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C29 | 29 | Club au fuseau `Africa/Casablanca` | Une date est enregistrée à 10 h 00 heure locale | Stockée en UTC ; restituée à 10 h 00 dans le fuseau du club |
 | C30 | 30 | Paramètres de numérotation | La gérante fixe un préfixe de reçu et l'exercice de départ | Enregistré et audité ; aucun numéro n'est encore émis (F09) |
 | C31 | 31 | Registre des règles | Une feature de test déclare une règle avec une valeur par défaut | Sans saisie, la valeur par défaut est lue ; après saisie par la gérante, la valeur du club est lue ; le changement est audité |
+| C31b | 31 | Registre des règles affiché au gérant | Il change la valeur d'une règle de son ressort et enregistre | La valeur est retenue, l'origine passe à « choix du club », et chaque règle porte son explication en français ; celles que Clubify fixe se lisent sans pouvoir se modifier |
 | C32 | 32 | Compte administratif | Il tente de changer le fuseau du club | Refus |
 | C33 | 33 | Liste des utilisateurs de A | La gérante exporte en CSV puis en Excel | Deux fichiers avec les mêmes lignes, en-têtes traduits en FR, aucune ligne de B |
 | C33b | 33 | Compte coach pouvant consulter une liste de test | Il tente de l'exporter | Refus : consulter n'emporte pas exporter |
@@ -511,6 +512,7 @@ Trois classes forment le harnais réutilisable exigé par le `CLAUDE.md` §6 : `
 | C29 | `ClubApiTest` | `c29_fuseauHoraire` |
 | C30 | `ClubApiTest` | `c30_numerotation` |
 | C31 | `ClubApiTest` | `c31_registreDesReglesConfigurables`, `c31_definitions` |
+| C31b | recette S20 | `S20` |
 | C32 | `ClubApiTest` | `c32_parametresReservesAuGerant` |
 | C33 | `ExportsApiTest` | `c33_csvEtExcel` |
 | C33b | `ExportsApiTest` | `c33b_exporterEstUnDroitDistinct` |

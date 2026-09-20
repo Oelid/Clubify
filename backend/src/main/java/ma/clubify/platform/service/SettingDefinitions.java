@@ -35,10 +35,11 @@ public final class SettingDefinitions {
         declarer("club.timezone", Type.STRING, Scope.CLUB, "Africa/Casablanca", "F01 règle 29");
         declarer("club.currency", Type.STRING, Scope.CLUB, "MAD", "F01 règle 29");
         declarer("club.default_language", Type.STRING, Scope.CLUB, "fr", "F01 règle 29 / PLT-08");
-        // Sans valeur, l'interface garde les jetons Clubify : la marque du club
-        // reste un accent, jamais la charte du produit (décision 0025).
-        declarer("club.brand.primary", Type.STRING, Scope.CLUB, null, "F01 règle 29 / 0025");
-        declarer("club.brand.secondary", Type.STRING, Scope.CLUB, null, "F01 règle 29 / 0025");
+        // Palette par défaut : bleu acier et orange du logo. La marque du club
+        // reste un accent, jamais la charte du produit ; un club qui a la sienne
+        // remplace ces deux valeurs depuis l'écran des paramètres (décision 0032).
+        declarer("club.brand.primary", Type.STRING, Scope.CLUB, "#307890", "0032");
+        declarer("club.brand.secondary", Type.STRING, Scope.CLUB, "#F08840", "0032");
 
         declarer("security.mfa.trusted_device_days", Type.INTEGER, Scope.CLUB, 30,
                 "F01 règle 5 / benchmark B4");
@@ -65,8 +66,15 @@ public final class SettingDefinitions {
                 "F01 règle 30 ; exercice comptable à confirmer");
     }
 
+    /**
+      * Le registre, dans l'ordre où les règles sont déclarées.
+      *
+      * <p>Cet ordre groupe les règles par domaine — club, sécurité, fichiers,
+      * facturation — et c'est celui que l'écran des paramètres présente. Une
+      * copie non ordonnée y ferait voisiner la devise et la durée d'un lien.
+      */
     public static Map<String, Definition> toutes() {
-        return Map.copyOf(REGISTRE);
+        return java.util.Collections.unmodifiableMap(new LinkedHashMap<>(REGISTRE));
     }
 
     public static Definition definition(String cle) {

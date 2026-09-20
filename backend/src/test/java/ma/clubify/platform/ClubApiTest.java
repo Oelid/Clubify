@@ -76,6 +76,23 @@ class ClubApiTest {
     }
 
     @Test
+    @DisplayName("C28c — un club neuf porte la palette par défaut, sans rien saisir")
+    void c28c_paletteParDefaut() throws Exception {
+        String admin = adminToken();
+
+        // Aucune couleur n'a été saisie : les valeurs viennent du registre.
+        api.getAs(admin, "/club/settings")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.key == 'club.brand.primary')].value").value("#307890"))
+                .andExpect(jsonPath("$[?(@.key == 'club.brand.primary')].overridden").value(false));
+
+        // Et l'interface les reçoit à la connexion, pour habiller l'accent.
+        api.getAs(admin, "/auth/me")
+                .andExpect(jsonPath("$.club.brandPrimary").value("#307890"))
+                .andExpect(jsonPath("$.club.brandSecondary").value("#F08840"));
+    }
+
+    @Test
     @DisplayName("C29 — une date saisie en heure du club est stockée en UTC et restituée localement")
     void c29_fuseauHoraire() throws Exception {
         String admin = adminToken();

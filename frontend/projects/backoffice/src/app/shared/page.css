@@ -362,3 +362,20 @@
   border: none;
   border-radius: 2px;
 }
+
+/* La clé technique reste lisible pour le support, sans encombrer le gérant. */
+.tableau__cle {
+  display: block;
+  margin-block-start: 2px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 400;
+}
+
+/* Champ de saisie dans une cellule : à la taille du tableau, pas de la page. */
+.champ__saisie--compact {
+  inline-size: 100%;
+  max-inline-size: 220px;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-sm);
+}

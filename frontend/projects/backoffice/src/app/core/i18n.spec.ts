@@ -34,13 +34,41 @@ describe('Traductions des erreurs', () => {
     expect(manquants, `codes sans traduction : ${manquants.join(', ')}`).toEqual([]);
   });
 
-  it("n'emploie aucun libellé vide", () => {
-    const vides = cles(libelles).filter((chemin) => {
-      const valeur = chemin
-        .split('.')
-        .reduce<unknown>((noeud, cle) => (noeud as Record<string, unknown>)[cle], libelles);
-      return typeof valeur !== 'string' || valeur.trim() === '';
+  it('décrit chaque règle configurable dans les mots du club', () => {
+    const chemin = resolve(
+      process.cwd(),
+      '../backend/src/main/java/ma/clubify/platform/service/SettingDefinitions.java',
+    );
+    const regles = [...readFileSync(chemin, 'utf-8').matchAll(/declarer\(\s*"([^"]+)"/g)].map(
+      (trouve) => trouve[1],
+    );
+    expect(regles.length).toBeGreaterThan(0);
+
+    const decrites = (libelles as Record<string, Record<string, unknown>>)['setting'] ?? {};
+    const manquantes = regles.filter((cle) => {
+      const entree = decrites[cle] as { label?: string; description?: string } | undefined;
+      return !entree?.label || !entree.description;
     });
+
+    // Sans description, le gérant lit une clé technique et ne sait pas ce qu'il
+    // change. Une feature qui ajoute une règle la décrit dans la foulée.
+    expect(manquantes, `règles à décrire : ${manquantes.join(', ')}`).toEqual([]);
+  });
+
+  it("n'emploie aucun libellé vide", () => {
+    // La valeur est relevée pendant le parcours : certaines clés contiennent
+    // elles-mêmes des points (« setting.club.timezone.label »), et les
+    // reparcourir en découpant sur le point mènerait nulle part.
+    const feuilles = (noeud: unknown, prefixe = ''): [string, unknown][] =>
+      Object.entries(noeud as Record<string, unknown>).flatMap(([cle, valeur]) =>
+        typeof valeur === 'object' && valeur !== null
+          ? feuilles(valeur, `${prefixe}${cle}.`)
+          : [[`${prefixe}${cle}`, valeur] as [string, unknown]],
+      );
+
+    const vides = feuilles(libelles)
+      .filter(([, valeur]) => typeof valeur !== 'string' || valeur.trim() === '')
+      .map(([chemin]) => chemin);
 
     expect(vides).toEqual([]);
   });

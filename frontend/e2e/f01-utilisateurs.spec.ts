@@ -39,6 +39,8 @@ test.describe('F01 — Utilisateurs et journal', () => {
     // Il lit les paramètres, mais aucune action ne lui est proposée (C32).
     await expect(page.getByRole('button', { name: 'Enregistrer' })).toHaveCount(0);
     await expect(page.getByLabel('Nom du club')).toBeDisabled();
+    // Les règles configurables se lisent, sans champ pour les changer.
+    await expect(page.locator('.tableau--dans-carte').getByRole('spinbutton')).toHaveCount(0);
 
     // Le menu ne promet que ce que le droit permet (décision 0028).
     await expect(page.getByRole('link', { name: "Journal d'audit" })).toHaveCount(0);

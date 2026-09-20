@@ -1,6 +1,6 @@
 import { Component, computed, inject, resource, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { Club, ClubApi, SettingDefinition, SettingValue } from 'api-client';
 import { firstValueFrom } from 'rxjs';
 import { ClubTheme } from 'ui';
@@ -17,6 +17,7 @@ export class ClubSettingsPage {
   private readonly api = inject(ClubApi);
   private readonly session = inject(SessionStore);
   private readonly theme = inject(ClubTheme);
+  private readonly transloco = inject(TranslocoService);
 
   protected readonly erreur = signal<string | null>(null);
   protected readonly enregistre = signal(false);
@@ -25,8 +26,11 @@ export class ClubSettingsPage {
   /** Copie de travail : l'identité n'est envoyée qu'à l'enregistrement. */
   protected readonly saisie = signal<Club | null>(null);
 
-  /** Couleurs choisies mais pas encore enregistrées, par clé de règle. */
-  private readonly marqueChoisie = signal<Record<string, string>>({});
+  /**
+   * Règles modifiées mais pas encore enregistrées, par clé. Les couleurs en
+   * font partie : ce sont des règles comme les autres, avec un champ à part.
+   */
+  private readonly reglagesModifies = signal<Record<string, string>>({});
 
   protected readonly club = resource({
     loader: async () => {
@@ -65,10 +69,24 @@ export class ClubSettingsPage {
   protected readonly marquePrincipale = computed(() => this.reglage('club.brand.primary'));
   protected readonly marqueSecondaire = computed(() => this.reglage('club.brand.secondary'));
 
-  /** Une valeur de règle peut être une liste : on l'affiche sans la reformater. */
+  /**
+   * Règle fixée par Clubify, qu'aucun club ne peut changer. Le dire vaut mieux
+   * que de laisser quelqu'un chercher où la modifier.
+   */
+  protected estFigee(cle: string): boolean {
+    return this.source().get(cle)?.scope === 'PLATFORM';
+  }
+
+  /**
+   * La valeur, telle qu'un gérant la lit. Un « true » brut ne dit rien à qui
+   * n'écrit pas de code.
+   */
   protected valeurLisible(valeur: unknown): string {
     if (valeur === null || valeur === undefined) {
       return '—';
+    }
+    if (typeof valeur === 'boolean') {
+      return this.transloco.translate(valeur ? 'app.yes' : 'app.no');
     }
     return Array.isArray(valeur) ? valeur.join(', ') : String(valeur);
   }
@@ -79,7 +97,7 @@ export class ClubSettingsPage {
   }
 
   private reglage(cle: string): string | null {
-    const choisie = this.marqueChoisie()[cle];
+    const choisie = this.reglagesModifies()[cle];
     if (choisie) {
       return choisie;
     }
@@ -94,9 +112,49 @@ export class ClubSettingsPage {
     }
   }
 
-  /** Retient une couleur choisie ; elle part avec le reste à l'enregistrement. */
+  /** Retient une valeur saisie ; elle part avec le reste à l'enregistrement. */
   protected choisirLaMarque(cle: string, valeur: string): void {
-    this.marqueChoisie.set({ ...this.marqueChoisie(), [cle]: valeur });
+    this.reglagesModifies.set({ ...this.reglagesModifies(), [cle]: valeur });
+  }
+
+  /** Valeur en cours de saisie pour une règle, ou celle qui est enregistrée. */
+  protected valeurSaisie(regle: SettingValue): string {
+    const modifiee = this.reglagesModifies()[regle.key];
+    if (modifiee !== undefined) {
+      return modifiee;
+    }
+    if (Array.isArray(regle.value)) {
+      return regle.value.join(', ');
+    }
+    return regle.value === null || regle.value === undefined ? '' : String(regle.value);
+  }
+
+  protected typeDe(cle: string): string {
+    return this.source().get(cle)?.type ?? 'STRING';
+  }
+
+  /**
+   * Convertit une saisie vers le type que la règle attend.
+   *
+   * <p>Le backend refuse une valeur mal typée ; la convertir ici évite au gérant
+   * une erreur pour avoir écrit « 15 » dans un champ qui attend un nombre.
+   */
+  private valeurTypee(cle: string, saisie: string): unknown {
+    switch (this.typeDe(cle)) {
+      case 'BOOLEAN':
+        return saisie === 'true';
+      case 'INTEGER':
+        return Number.parseInt(saisie, 10);
+      case 'DECIMAL':
+        return Number.parseFloat(saisie);
+      case 'JSON':
+        return saisie
+          .split(',')
+          .map((element) => element.trim())
+          .filter((element) => element.length > 0);
+      default:
+        return saisie;
+    }
   }
 
   protected async enregistrer(): Promise<void> {
@@ -128,18 +186,21 @@ export class ClubSettingsPage {
       // Le backend a pu normaliser le téléphone : on affiche ce qu'il a retenu.
       this.saisie.set({ ...mis });
 
-      const couleurs = this.marqueChoisie();
-      if (Object.keys(couleurs).length > 0) {
+      const modifiees = this.reglagesModifies();
+      if (Object.keys(modifiees).length > 0) {
         // On applique ce que le backend vient de retenir, et non une relecture
         // qui n'est pas encore arrivée : c'est ce qui rendait l'accent
         // capricieux après l'enregistrement.
         const retenues = await firstValueFrom(
           this.api.updateClubSettings({
-            settingUpdate: Object.entries(couleurs).map(([key, value]) => ({ key, value })),
+            settingUpdate: Object.entries(modifiees).map(([key, saisie]) => ({
+              key,
+              value: this.valeurTypee(key, saisie),
+            })),
           }),
         );
         this.reglages.set(retenues);
-        this.marqueChoisie.set({});
+        this.reglagesModifies.set({});
 
         const principale = this.couleurParmi(retenues, 'club.brand.primary');
         if (principale) {

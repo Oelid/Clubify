@@ -168,25 +168,54 @@
       <table>
         <thead>
           <tr>
-            <th scope="col">{{ t('club.settingKey') }}</th>
+            <th scope="col">{{ t('club.settingLabel') }}</th>
+            <th scope="col">{{ t('club.settingDescription') }}</th>
             <th scope="col">{{ t('club.settingValue') }}</th>
             <th scope="col">{{ t('club.settingOrigin') }}</th>
-            <th scope="col">{{ t('club.settingSource') }}</th>
           </tr>
         </thead>
         <tbody>
           @for (r of valeurs(); track r.key) {
             <tr>
-              <td class="tableau__fort"><code>{{ r.key }}</code></td>
-              <td class="numeric">{{ valeurLisible(r.value) }}</td>
+              <td class="tableau__fort">
+                {{ t('setting.' + r.key + '.label') }}
+                <span class="tableau__cle"><code>{{ r.key }}</code></span>
+              </td>
+              <td class="tableau__discret">{{ t('setting.' + r.key + '.description') }}</td>
+              <td class="numeric">
+                @if (estFigee(r.key) || !peutModifier()) {
+                  {{ valeurLisible(r.value) }}
+                } @else if (typeDe(r.key) === 'BOOLEAN') {
+                  <select
+                    class="champ__saisie champ__saisie--compact"
+                    [attr.aria-label]="t('setting.' + r.key + '.label')"
+                    [ngModel]="valeurSaisie(r)"
+                    [ngModelOptions]="{ standalone: true }"
+                    (ngModelChange)="choisirLaMarque(r.key, $event)"
+                  >
+                    <option value="true">{{ t('app.yes') }}</option>
+                    <option value="false">{{ t('app.no') }}</option>
+                  </select>
+                } @else {
+                  <input
+                    class="champ__saisie champ__saisie--compact"
+                    [type]="typeDe(r.key) === 'INTEGER' ? 'number' : 'text'"
+                    [attr.aria-label]="t('setting.' + r.key + '.label')"
+                    [ngModel]="valeurSaisie(r)"
+                    [ngModelOptions]="{ standalone: true }"
+                    (ngModelChange)="choisirLaMarque(r.key, $event)"
+                  />
+                }
+              </td>
               <td>
-                @if (r.overridden) {
+                @if (estFigee(r.key)) {
+                  <span class="puce puce--neutre">{{ t('club.settingFixed') }}</span>
+                } @else if (r.overridden) {
                   <span class="puce puce--info">{{ t('club.settingOverridden') }}</span>
                 } @else {
                   <span class="puce puce--neutre">{{ t('club.settingDefault') }}</span>
                 }
               </td>
-              <td class="tableau__discret">{{ source().get(r.key)?.source }}</td>
             </tr>
           } @empty {
             <tr>
