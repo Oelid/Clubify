@@ -1,0 +1,69 @@
+# Environnement de recette : l'application complète, en une commande.
+#
+# Volontairement séparé du développement — sa propre base, ses propres ports —
+# pour que le travail en cours ne modifie pas les données sous les yeux de celui
+# qui teste. Voir docs/recette.md.
+name: clubify-recette
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: clubify
+      POSTGRES_USER: clubify
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?mot de passe de base manquant ; lancez tools/demarrer-recette.ps1}
+    ports:
+      # 5433 et non 5432 : la base de développement garde la sienne.
+      - "5433:5432"
+    volumes:
+      - recette-pg:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clubify -d clubify"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: demo
+      DATABASE_URL: jdbc:postgresql://db:5432/clubify
+      DATABASE_USER: clubify
+      DATABASE_PASSWORD: ${DB_PASSWORD}
+      CLUBIFY_JWT_SECRET: ${JWT_SECRET:?secret de signature manquant}
+      CLUBIFY_ENCRYPTION_KEY: ${ENCRYPTION_KEY:?clé de chiffrement manquante}
+      CLUBIFY_FILE_ROOT: /var/clubify/files
+    # Amorce le club au premier démarrage ; les suivants n'y touchent pas.
+    command:
+      - --seed-club
+      - --club=${CLUB_NAME:-Club de recette}
+      - --admin=${ADMIN_EMAIL:-recette@exemple.test}
+      - --password=${ADMIN_PASSWORD:?mot de passe administrateur manquant}
+    ports:
+      - "8081:8080"
+    volumes:
+      - recette-fichiers:/var/clubify/files
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      # 4300 et non 4200 : le serveur de développement garde le sien.
+      - "4300:80"
+
+volumes:
+  recette-pg:
+  recette-fichiers:

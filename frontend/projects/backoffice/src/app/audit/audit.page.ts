@@ -14,7 +14,6 @@ import { codeDErreur } from '../core/api-errors';
   selector: 'app-audit',
   imports: [FormsModule, TranslocoDirective, ClubDatePipe],
   templateUrl: './audit.page.html',
-  styleUrl: '../shared/page.css',
 })
 export class AuditPage {
   private readonly api = inject(AuditApi);

@@ -14,7 +14,6 @@ import { SessionStore } from '../core/session.store';
   selector: 'app-users',
   imports: [TranslocoDirective, ClubDatePipe],
   templateUrl: './users.page.html',
-  styleUrl: '../shared/page.css',
 })
 export class UsersPage {
   private readonly api = inject(UsersApi);

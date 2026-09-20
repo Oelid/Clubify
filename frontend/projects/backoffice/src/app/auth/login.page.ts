@@ -13,7 +13,6 @@ import { AuthSession } from '../core/auth.service';
   selector: 'app-login',
   imports: [FormsModule, RouterLink, TranslocoDirective],
   templateUrl: './login.page.html',
-  styleUrl: './auth.css',
 })
 export class LoginPage {
   private readonly auth = inject(AuthSession);

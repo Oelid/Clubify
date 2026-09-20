@@ -31,3 +31,6 @@ __pycache__/
 # Artefacts de la recette Playwright (captures, traces)
 frontend/test-results/
 frontend/playwright-report/
+
+# Secrets de l'environnement de recette, generes au premier demarrage
+.env

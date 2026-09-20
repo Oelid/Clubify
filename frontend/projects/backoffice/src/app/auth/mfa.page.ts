@@ -19,7 +19,6 @@ import { SessionStore } from '../core/session.store';
   selector: 'app-mfa',
   imports: [FormsModule, NgTemplateOutlet, TranslocoDirective, QRCodeComponent],
   templateUrl: './mfa.page.html',
-  styleUrl: './auth.css',
 })
 export class MfaPage {
   private readonly auth = inject(AuthSession);

@@ -24,6 +24,7 @@ C'est un logiciel d'école d'activités, pas un logiciel de salle de sport.
 | `docs/suivi-features.xlsx` | Suivi de l'avancement : état, dates de cycle, date de production ; régénéré par `tools/generer-suivi.py` |
 | `docs/suivi-tests.xlsx` | Recette fonctionnelle : scénarios joués depuis les écrans, résultats réels, couverture des critères, anomalies ; régénéré par `tools/generer-suivi-tests.py` |
 | `docs/suivi-tests.md` | Les scénarios de recette en langage métier, et comment la lancer. Source du classeur ci-dessus |
+| `docs/recette.md` | Comment lancer l'application : environnement de recette en conteneurs, ou serveurs de développement |
 | `docs/processus-feature.md` | Les six étapes d'implémentation d'une feature, avec leurs points d'arrêt |
 | `docs/features/` | Une fiche par feature, à partir de `_gabarit.md` |
 | `docs/decisions/` | Une fiche par décision, à partir de `0000-gabarit.md` |

@@ -102,7 +102,7 @@ Bibliothèque `ui`. Construite avant le premier écran ; validée en FR et en RT
 - Storybook : chaque composant de `ui` et chaque page notable, en FR et en RTL ; c'est le support de validation des maquettes avec l'accueil et le gérant.
 - Playwright : **la recette fonctionnelle**, décrite en langage métier dans `docs/suivi-tests.md` et suivie dans `docs/suivi-tests.xlsx`. C'est ce qui atteste qu'une feature marche de bout en bout ; les tests unitaires et d'intégration sont le filet du développement, pas la recette. Chaque scénario porte son identifiant (`S01`…) dans son titre, ce qui relie le classeur à un passage réel.
 - Aucun nom réel ni donnée issue des captures dans les stories, les tests ni les captures d'écran (`../CLAUDE.md` §7) : familles fictives partagées avec le backend.
-- Budget de performance vérifié en CI : taille du bundle initial de chaque application plafonnée dans `angular.json`.
+- Budget de performance plafonné dans `angular.json`. Ce qu'on surveille vraiment est la **taille transférée** — 113 kB pour le backoffice au 20/09/2026 — et non la taille brute : c'est elle que l'accueil attend au comptoir. Le plafond brut est passé à 550 kB parce que les squelettes de page sont devenus des styles globaux ; ils étaient jusque-là recopiés dans le lot de chacun des trois écrans qui les emploient.
 
 ## Sécurité
 

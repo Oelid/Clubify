@@ -11,7 +11,6 @@ import { SessionStore } from '../core/session.store';
   selector: 'app-club-settings',
   imports: [FormsModule, TranslocoDirective],
   templateUrl: './club-settings.page.html',
-  styleUrl: '../shared/page.css',
 })
 export class ClubSettingsPage {
   private readonly api = inject(ClubApi);

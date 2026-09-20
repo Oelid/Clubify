@@ -1,9 +1,22 @@
+# Environnement de recette : l'application complète, telle qu'Omar l'ouvre,
+# avec sa propre base. Séparé du développement pour que le travail en cours ne
+# vienne pas modifier les données sous ses yeux.
 spring:
   datasource:
     url: ${DATABASE_URL}
     username: ${DATABASE_USER}
     password: ${DATABASE_PASSWORD}
+  docker:
+    compose:
+      # L'application tourne déjà dans un conteneur : elle n'en démarre pas d'autre.
+      enabled: false
 springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-ui
+
+clubify:
+  auth:
+    # La recette s'ouvre en clair sur localhost : un cookie « Secure » ne serait
+    # jamais renvoyé par le navigateur.
+    cookie-secure: false

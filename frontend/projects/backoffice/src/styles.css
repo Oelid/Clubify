@@ -2,6 +2,15 @@
 @import '../../ui/src/lib/styles/tokens.css';
 
 /*
+ * Squelettes partagés par plusieurs écrans. Globaux et non encapsulés : trois
+ * pages les emploient, et les déclarer comme styles de composant recopiait les
+ * mêmes règles dans chacun de leurs lots. Les noms sont préfixés, aucun risque
+ * de collision.
+ */
+@import './app/shared/page.css';
+@import './app/auth/auth.css';
+
+/*
  * Le thème lit les jetons : aucune couleur en dur.
  * Droite-à-gauche dès le premier jour : propriétés logiques uniquement.
  */
