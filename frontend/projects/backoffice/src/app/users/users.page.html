@@ -1,0 +1,58 @@
+<header class="page__entete">
+  <div>
+    <h1 class="page__titre">Utilisateurs</h1>
+    <p class="page__sous-titre">Cinq comptes, dont un désactivé.</p>
+  </div>
+  <div class="page__actions">
+    <button class="bouton bouton--discret" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" />
+      </svg>
+      Exporter
+    </button>
+    <button class="bouton bouton--primaire" type="button">Ajouter un utilisateur</button>
+  </div>
+</header>
+
+<div class="tableau">
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Nom</th>
+        <th scope="col">Adresse électronique</th>
+        <th scope="col">Rôle</th>
+        <th scope="col">Second facteur</th>
+        <th scope="col">Statut</th>
+        <th scope="col" class="tableau__droite">Dernière connexion</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (u of utilisateurs(); track u.email) {
+        <tr>
+          <td class="tableau__fort">{{ u.nom }}</td>
+          <td class="tableau__discret">{{ u.email }}</td>
+          <td>{{ u.role }}</td>
+          <td>
+            @if (u.mfa) {
+              <span class="puce puce--ok">Actif</span>
+            } @else {
+              <span class="puce puce--neutre">Non activé</span>
+            }
+          </td>
+          <td>
+            @if (u.actif) {
+              <span class="puce puce--ok">Actif</span>
+            } @else {
+              <span class="puce puce--alerte">Désactivé</span>
+            }
+          </td>
+          <td class="tableau__droite tableau__discret numeric">{{ u.derniere }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<p class="page__note">
+  Les colonnes sensibles au sens de SEC-03 — santé, CIN, pièces — ne figurent dans aucun export.
+</p>

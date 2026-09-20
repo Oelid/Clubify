@@ -1,0 +1,98 @@
+<header class="page__entete">
+  <div>
+    <h1 class="page__titre">Paramètres du club</h1>
+    <p class="page__sous-titre">Identité, réglages régionaux et règles configurables.</p>
+  </div>
+  <button class="bouton bouton--primaire" type="button">Enregistrer</button>
+</header>
+
+<div class="grille">
+  <section class="carte">
+    <h2 class="carte__titre">Identité</h2>
+
+    <div class="carte__corps">
+      <label class="champ">
+        <span class="champ__libelle">Nom du club</span>
+        <input class="champ__saisie" value="Club A" />
+      </label>
+
+      <div class="champ__paire">
+        <label class="champ">
+          <span class="champ__libelle">Forme juridique</span>
+          <input class="champ__saisie" value="SARL" />
+        </label>
+        <label class="champ">
+          <span class="champ__libelle">ICE</span>
+          <input class="champ__saisie numeric" value="001234567000089" />
+        </label>
+      </div>
+
+      <div class="champ__paire">
+        <label class="champ">
+          <span class="champ__libelle">Téléphone</span>
+          <input class="champ__saisie numeric" value="+212612345678" />
+          <span class="champ__aide">Normalisé au format international.</span>
+        </label>
+        <label class="champ">
+          <span class="champ__libelle">Adresse électronique</span>
+          <input class="champ__saisie" value="contact@exemple.test" />
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <section class="carte">
+    <h2 class="carte__titre">Marque</h2>
+    <div class="carte__corps">
+      <div class="logo">
+        <div class="logo__apercu">CA</div>
+        <div>
+          <button class="bouton bouton--discret" type="button">Changer le logo</button>
+          <p class="champ__aide">PNG ou JPEG, 10 Mo au plus. Fichier privé, servi par lien temporaire.</p>
+        </div>
+      </div>
+      <div class="champ__paire">
+        <label class="champ">
+          <span class="champ__libelle">Couleur principale</span>
+          <span class="couleur"><i style="background: #307890"></i> #307890</span>
+        </label>
+        <label class="champ">
+          <span class="champ__libelle">Couleur secondaire</span>
+          <span class="couleur"><i style="background: #f08840"></i> #F08840</span>
+        </label>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section class="carte">
+  <h2 class="carte__titre">Règles configurables</h2>
+  <div class="tableau tableau--dans-carte">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Règle</th>
+          <th scope="col">Clé</th>
+          <th scope="col">Valeur</th>
+          <th scope="col">Origine</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of reglages(); track r.cle) {
+          <tr>
+            <td class="tableau__fort">{{ r.libelle }}</td>
+            <td class="tableau__discret"><code>{{ r.cle }}</code></td>
+            <td class="numeric">{{ r.valeur }}</td>
+            <td>
+              @if (r.defaut) {
+                <span class="puce puce--neutre">Valeur par défaut</span>
+              } @else {
+                <span class="puce puce--info">Réglée par le club</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

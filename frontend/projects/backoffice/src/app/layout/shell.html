@@ -1,0 +1,53 @@
+<div class="shell">
+  <aside class="shell__nav">
+    <div class="shell__marque">
+      <span class="shell__logo">C</span>
+      <span class="shell__produit">Clubify</span>
+    </div>
+
+    <nav>
+      @for (section of sections; track section.lien + section.libelle) {
+        <a
+          class="shell__lien"
+          [routerLink]="section.lien"
+          routerLinkActive="shell__lien--actif"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path [attr.d]="section.icone" />
+          </svg>
+          {{ section.libelle }}
+        </a>
+      }
+    </nav>
+
+    <div class="shell__club">
+      <span class="shell__club-nom">{{ club().name }}</span>
+      <span class="shell__club-saison">Saison 2026-2027</span>
+    </div>
+  </aside>
+
+  <div class="shell__corps">
+    <header class="shell__entete">
+      <div class="shell__recherche">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="M21 21l-4.3-4.3" />
+        </svg>
+        <input type="search" placeholder="Rechercher une famille, un enfant, un reçu…" aria-label="Rechercher" />
+      </div>
+
+      <div class="shell__compte">
+        <div class="shell__compte-texte">
+          <span class="shell__compte-nom">{{ club().user }}</span>
+          <span class="shell__compte-role">{{ club().role }}</span>
+        </div>
+        <span class="shell__avatar">NB</span>
+      </div>
+    </header>
+
+    <main class="shell__contenu">
+      <router-outlet />
+    </main>
+  </div>
+</div>

@@ -1,0 +1,203 @@
+.auth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  min-block-size: 100vh;
+  padding: var(--space-8) var(--space-4);
+}
+
+.auth__carte {
+  inline-size: min(400px, 100%);
+  padding: var(--space-8);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.auth__carte--large {
+  inline-size: min(560px, 100%);
+}
+
+.auth__marque {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-end: var(--space-6);
+  font-weight: 600;
+}
+
+.auth__logo {
+  display: grid;
+  place-items: center;
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: var(--radius-md);
+  background: var(--brand-primary);
+  color: var(--brand-primary-contrast);
+  font-size: var(--font-size-sm);
+}
+
+.auth__titre {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.auth__sous-titre {
+  margin: 0 0 var(--space-6);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+}
+
+.auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.auth__oubli {
+  align-self: flex-start;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+}
+
+.auth__oubli:hover {
+  color: var(--color-text);
+  text-decoration: underline;
+}
+
+.auth__pied {
+  max-inline-size: 400px;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
+.champ {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.champ__libelle {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.champ__saisie {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  transition: border-color var(--motion-fast) var(--motion-easing);
+}
+
+.champ__saisie:focus {
+  border-color: var(--brand-primary);
+  outline: 2px solid color-mix(in srgb, var(--brand-primary) 30%, transparent);
+  outline-offset: 1px;
+}
+
+.champ__saisie--code {
+  inline-size: 9ch;
+  font-size: var(--font-size-lg);
+  letter-spacing: 0.3em;
+}
+
+.bouton {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background var(--motion-fast) var(--motion-easing),
+    border-color var(--motion-fast) var(--motion-easing);
+}
+
+.bouton--primaire {
+  background: var(--brand-primary);
+  color: var(--brand-primary-contrast);
+}
+
+.bouton--primaire:hover {
+  background: var(--brand-primary-hover);
+}
+
+.bouton--primaire:active {
+  background: var(--brand-primary-active);
+}
+
+.mfa {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin-block-end: var(--space-6);
+}
+
+.mfa__etape {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.mfa__numero {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  inline-size: 22px;
+  block-size: 22px;
+  border-radius: 50%;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.mfa__titre {
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+}
+
+.mfa__texte {
+  margin: 0 0 var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.mfa__qr {
+  inline-size: 132px;
+  block-size: 132px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  background-image:
+    repeating-linear-gradient(90deg, var(--color-text) 0 8px, transparent 8px 16px),
+    repeating-linear-gradient(0deg, var(--color-text) 0 8px, transparent 8px 16px);
+  background-size: 16px 16px;
+  background-position: 10px 10px;
+  background-repeat: repeat;
+}
+
+.mfa__codes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+  list-style: none;
+  font-size: var(--font-size-sm);
+}

@@ -41,6 +41,10 @@
   --brand-primary: var(--color-accent);
   --brand-secondary: var(--color-text-muted);
   --brand-primary-contrast: var(--color-accent-contrast);
+  /* Survol et appui : plus sombres que la marque. Le thème du club les recalcule
+     depuis sa couleur, et les éclaircit si celle-ci est déjà très sombre. */
+  --brand-primary-hover: #17303f;
+  --brand-primary-active: #101f29;
 
   /* --- typographie */
   --font-sans: 'Inter', 'IBM Plex Sans Arabic', system-ui, sans-serif;

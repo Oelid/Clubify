@@ -1,0 +1,46 @@
+<div class="auth">
+  <div class="auth__carte">
+    <div class="auth__marque">
+      <span class="auth__logo">C</span>
+      <span>Clubify</span>
+    </div>
+
+    <h1 class="auth__titre">Connexion</h1>
+    <p class="auth__sous-titre">Espace du personnel du club.</p>
+
+    <form class="auth__form" (ngSubmit)="$event.preventDefault()">
+      <label class="champ">
+        <span class="champ__libelle">Adresse électronique</span>
+        <input
+          class="champ__saisie"
+          type="email"
+          name="email"
+          autocomplete="username"
+          placeholder="prenom.nom@exemple.test"
+          autofocus
+        />
+      </label>
+
+      <label class="champ">
+        <span class="champ__libelle">Mot de passe</span>
+        <input
+          class="champ__saisie"
+          type="password"
+          name="motDePasse"
+          autocomplete="current-password"
+          placeholder="Au moins 12 caractères"
+        />
+      </label>
+
+      <a class="auth__oubli" routerLink="/connexion">Mot de passe oublié ?</a>
+
+      <button class="bouton bouton--primaire" type="submit" routerLink="/second-facteur">
+        Se connecter
+      </button>
+    </form>
+  </div>
+
+  <p class="auth__pied">
+    Vos données et celles des familles sont chiffrées et leur accès est journalisé.
+  </p>
+</div>

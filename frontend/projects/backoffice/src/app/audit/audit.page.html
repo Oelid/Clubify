@@ -1,0 +1,75 @@
+<header class="page__entete">
+  <div>
+    <h1 class="page__titre">Journal d'audit</h1>
+    <p class="page__sous-titre">
+      En ajout seul : une entrée ne se modifie ni ne se supprime, jamais.
+    </p>
+  </div>
+  <button class="bouton bouton--discret" type="button">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" />
+    </svg>
+    Exporter
+  </button>
+</header>
+
+<div class="filtres">
+  <label class="champ champ--compact">
+    <span class="champ__libelle">Auteur</span>
+    <select class="champ__saisie">
+      <option>Tous</option>
+      <option>Nadia B.</option>
+      <option>Younes T.</option>
+      <option>Système</option>
+    </select>
+  </label>
+  <label class="champ champ--compact">
+    <span class="champ__libelle">Type d'action</span>
+    <select class="champ__saisie">
+      <option>Toutes</option>
+      <option>Authentification</option>
+      <option>Paramètres</option>
+      <option>Utilisateurs</option>
+      <option>Exports</option>
+    </select>
+  </label>
+  <label class="champ champ--compact">
+    <span class="champ__libelle">Du</span>
+    <input class="champ__saisie numeric" value="14/09/2026" />
+  </label>
+  <label class="champ champ--compact">
+    <span class="champ__libelle">Au</span>
+    <input class="champ__saisie numeric" value="20/09/2026" />
+  </label>
+</div>
+
+<div class="tableau">
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Horodatage</th>
+        <th scope="col">Auteur</th>
+        <th scope="col">Type</th>
+        <th scope="col">Action</th>
+        <th scope="col">Détail</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (e of entrees(); track e.heure + e.action) {
+        <tr>
+          <td class="tableau__discret numeric">{{ e.heure }}</td>
+          <td class="tableau__fort">{{ e.auteur }}</td>
+          <td>
+            @if (e.type === 'Système') {
+              <span class="puce puce--info">Système</span>
+            } @else {
+              <span class="puce puce--neutre">Utilisateur</span>
+            }
+          </td>
+          <td><code>{{ e.action }}</code></td>
+          <td class="tableau__discret">{{ e.cible }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
