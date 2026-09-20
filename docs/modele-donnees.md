@@ -16,14 +16,41 @@ Les noms techniques sont ceux de `docs/glossaire.md`.
 
 ## Socle plateforme
 
-- **Club** : le tenant ; possède tout le reste.
-- **Site** : appartient à un club ; porte lieux, caisses et plannings.
-- **User** : personne qui se connecte au staff ; peut être rattachée à plusieurs clubs avec un rôle par club (PLT-02).
-- **Role** : ensemble de permissions attribué à un utilisateur pour un club.
-- **AuditLog** : trace non modifiable de chaque action sensible, liée à l'utilisateur et à l'entité touchée.
-- **ClubSetting** : valeur d'une règle configurable (section 9.8) pour un club.
-- **StoredFile** : pièce ou PDF généré, privé, lié à l'entité qui le possède (PLT-05).
-- **DomainEvent** : fait métier publié une fois, consommé par notifications, tâches et rapports.
+**Livré par F01** (migrations `V202609200900` à `V202609200930`). Quatorze tables,
+les seules dont les attributs soient arrêtés à ce jour.
+
+| Table | Rôle | À retenir |
+| --- | --- | --- |
+| `club` | Le tenant ; possède tout le reste | Fuseau, devise et langue par défaut y vivent (ADM-01) |
+| `site` | Appartient à un club ; portera lieux, caisses et plannings | Créé dès R1 par invariant, sans écran (PLT-03 écarté) |
+| `user_account` | Personne qui se connecte | **Sans `club_id`** : un compte peut servir plusieurs clubs (PLT-02) |
+| `membership` | Rattachement d'un compte à un club, avec son rôle | Porte le `club_id` et le rôle ; c'est elle que le discriminant filtre |
+| `user_permission_override` | Surcharge d'un droit pour un utilisateur | Le rôle donne le jeu par défaut, la surcharge l'ajuste (0028) |
+| `refresh_token` | Session ouverte, révocable | Seule l'empreinte est conservée ; rotation à chaque renouvellement |
+| `mfa_challenge` | Défi de second facteur en cours | À usage unique, expirant |
+| `trusted_device` | Appareil reconnu, pour ne pas redemander de code | Durée réglable par le club (benchmark B4) |
+| `recovery_code` | Code de secours à usage unique | Sans eux, un téléphone perdu ferme le club (B5) |
+| `club_setting` | Valeur d'une règle configurable (9.8) | Ne contient que ce qu'un club a saisi ; le défaut vit dans le code |
+| `stored_file` | Pièce ou PDF, privé | Contenu chiffré avant d'atteindre le support (SEC-03) |
+| `file_link` | Lien signé et expirant vers un fichier | Seul chemin de lecture d'un fichier (C23) |
+| `outbox_event` | Effet externe en attente | Publié dans la transaction, produit ensuite, rejouable |
+| `audit_log` | Trace non modifiable des actions sensibles | En ajout seul, garanti par un déclencheur ; `club_id` nul admis pour l'authentification |
+
+Colonnes communes à toute table métier : `club_id`, `created_at`, `created_by`,
+`updated_at`, `updated_by`, `deleted_at`. Identifiants en UUID v7. Les entités
+touchant à l'argent porteront `version`.
+
+Deux points appris à l'implémentation, qui valent pour tout le modèle à venir :
+
+- `user_account` est la seule table sans `club_id`, et l'authentification est le
+  seul chemin qui interroge `membership` hors contexte de club — la requête est
+  isolée et commentée dans `MembershipRepository`. Aucun autre code ne contourne
+  le discriminant.
+- Le jeton d'accès porte l'adresse de son titulaire, reportée dans `audit_log` :
+  une trace reste lisible après un renommage de compte.
+
+**Non encore modélisé** : ce qui suit reste un brouillon d'entités pressenties,
+sans attributs, précisé feature par feature.
 
 ## Familles et adhérents
 

@@ -537,6 +537,51 @@ déjà satisfaits par `tokens.css`. Le droite-à-gauche se tient dès le premier
 Reste à écrire : les stories Storybook, une fois les premiers composants de `ui`
 implémentés à l'étape 5.
 
+## Livraison
+
+Étape 5 close le 2026-09-20. **121 tests verts : 66 backend, 55 frontend.**
+Parcours vérifié de bout en bout dans un navigateur, contre le backend réel :
+connexion, activation du second facteur, paramètres du club, utilisateurs,
+journal d'audit filtrable.
+
+### Ce que l'implémentation a tranché
+
+Six points laissés ouverts par la fiche et par la décision 0029 ; tous consignés
+dans **la décision 0030** : jeton de renouvellement en cookie `HttpOnly`,
+activation du second facteur ouvrant la session, horodatage d'émission à la
+milliseconde et adresse dans le jeton, couleurs de marque en règles
+configurables, auteur nommé sur une connexion, objets de transfert aux
+frontières de service.
+
+### Défauts trouvés à l'usage, et fermés par un test
+
+Trois défauts qu'aucun test ne couvrait, trouvés en parcourant l'application :
+
+| Défaut | Conséquence | Test qui le ferme |
+| --- | --- | --- |
+| L'écran de second facteur déduisait l'étape de l'existence d'un jeton | Un compte déjà inscrit voyait son secret et ses codes de secours régénérés en silence | `mfa.page.spec.ts` |
+| Le journal attribuait les connexions au « système », sans auteur | La colonne que le gérant regarde en premier restait vide (B3) | `AuditApiTest.c16c` |
+| Une tolérance d'une seconde sur la borne de révocation | Un jeton survivait à la fermeture de ses sessions | `UsersApiTest.c8b` |
+
+Un quatrième, trouvé à l'amorçage : les écritures hors transaction se
+validaient une à une, laissant un club créé sans trace d'audit. La commande
+ouvre désormais sa transaction explicitement — la règle 17 tient.
+
+### Reste à faire dans F01
+
+- Stories Storybook des composants de `ui`, support de validation des maquettes
+  avec l'accueil et le gérant (`frontend/CLAUDE.md`).
+- Parcours Playwright `premiere-connexion`, à brancher sur un backend de test.
+- Création d'utilisateur et export depuis l'écran : les boutons sont posés et
+  protégés par droit, l'action reste à écrire.
+
+### Questions toujours ouvertes
+
+- Chemin d'amorçage en production, à cadrer avec le choix d'hébergement.
+- Dépôt CNDP avant janvier 2027, lieu d'hébergement, fournisseur WhatsApp
+  (questions de 0023, hors périmètre de F01).
+
 ## Statut
 
-En cours — 2026-09-20. Étapes 1 à 4 closes : 79 tests en place (64 backend, 15 frontend), rouges sauf les cinq invariants du système de design ; étape 5 (implémentation) à faire.
+Étape 5 close — 2026-09-20. En attente de validation d'Omar (définition de
+« terminé », `CLAUDE.md` section 6).
