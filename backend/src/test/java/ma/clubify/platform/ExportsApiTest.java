@@ -12,11 +12,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** Exports de listes (INT-03), colonnes sensibles exclues (SEC-03, benchmark B7). */
@@ -76,6 +78,28 @@ class ExportsApiTest {
         String coach = api.login(Fixtures.COACH_A_EMAIL, Fixtures.VALID_PASSWORD);
 
         api.send(coach, post("/api/v1/exports"), Map.of("dataset", "users", "format", "CSV"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("C33c — accorder la lecture d'une liste n'ouvre jamais son export")
+    void c33c_lectureNouvrePasLExport() throws Exception {
+        String admin = adminToken();
+        UUID accueil = seeder.user(clubA, Fixtures.FRONT_DESK_A_EMAIL, "FRONT_DESK",
+                Fixtures.VALID_PASSWORD);
+
+        // Le gérant n'accorde qu'une chose : ouvrir la liste.
+        api.send(admin, put("/api/v1/users/" + accueil + "/permissions"),
+                        List.of(Map.of("code", "users.consulter", "granted", true)))
+                .andExpect(status().isOk());
+
+        String jeton = api.login(Fixtures.FRONT_DESK_A_EMAIL, Fixtures.VALID_PASSWORD);
+        api.getAs(jeton, "/users?page=0&size=5").andExpect(status().isOk());
+
+        // Un export quitte l'application et ne se rattrape pas : il se demande
+        // à part (critère C33b, benchmark B7).
+        api.send(jeton, post("/api/v1/exports"),
+                        Map.of("dataset", "users", "format", "CSV"))
                 .andExpect(status().isForbidden());
     }
 

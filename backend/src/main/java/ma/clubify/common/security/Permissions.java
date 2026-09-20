@@ -60,9 +60,12 @@ public final class Permissions {
                 AUDIT_CONSULTER,
                 FILES_DEPOSER, FILES_CONSULTER));
 
+        // L'accueil ne gère pas le personnel : ni liste, ni export. Lui laisser
+        // « users.exporter » sans « users.consulter » donnait un droit inopérant,
+        // qui s'activait dès qu'on lui accordait la simple lecture — l'inverse de
+        // ce que dit le critère C33b. Le gérant peut l'accorder au cas par cas.
         PAR_ROLE.put(FRONT_DESK, Set.of(
                 CLUB_SETTINGS_CONSULTER,
-                USERS_EXPORTER,
                 FILES_DEPOSER, FILES_CONSULTER));
 
         PAR_ROLE.put(COACH, Set.of());

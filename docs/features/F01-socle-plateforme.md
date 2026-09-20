@@ -170,6 +170,7 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C32 | 32 | Compte administratif | Il tente de changer le fuseau du club | Refus |
 | C33 | 33 | Liste des utilisateurs de A | La gérante exporte en CSV puis en Excel | Deux fichiers avec les mêmes lignes, en-têtes traduits en FR, aucune ligne de B |
 | C33b | 33 | Compte coach pouvant consulter une liste de test | Il tente de l'exporter | Refus : consulter n'emporte pas exporter |
+| C33c | 33 | Accueil sans droit sur la liste du personnel | L'administrateur lui accorde « consulter », et rien d'autre | Il ouvre la liste ; l'export reste refusé. Un export quitte l'application et se demande à part (benchmark B7) |
 | C34 | 33 | Une liste comportant une colonne marquée sensible (test) | Export par la gérante | La colonne est absente du fichier ; aucun rôle ne peut l'inclure |
 | C35 | 34 | Export effectué | Lecture du journal | Entrée : utilisateur, liste, filtres, nombre de lignes, horodatage |
 | C36 | 35 | Une erreur de validation survient | Réponse de l'API | Elle porte un code stable et un message en FR ; aucun libellé n'est écrit en dur dans le code |

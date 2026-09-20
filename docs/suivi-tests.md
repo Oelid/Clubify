@@ -89,9 +89,10 @@ de revenir. Une anomalie sans test de non-régression n'est pas close.
 | F01 | Un renouvellement de jeton se comportait comme une connexion : date de dernière connexion réécrite, entrée au journal | Recette S01 | Le gérant lit « connecté il y a une minute » d'un onglet resté ouvert, et le journal se noie | Test technique `AuthApiTest.c8d` | Close |
 | F01 | Deux sessions simultanées d'une même personne se heurtaient sur un verrou optimiste : erreur serveur à la connexion | Recette S01, S05 | Quelqu'un connecté au comptoir et sur son téléphone voit « L'action n'a pas pu aboutir » | S01 et S05, joués en parallèle | Close |
 | F01 | Les champs que l'accueil ne peut pas enregistrer avaient l'air modifiables | Recette S08 | On saisit dans une case qui n'enregistrera rien | S08 | Close |
+| F01 | L'accueil détenait `users.exporter` sans `users.consulter` : un droit inopérant, qui s'activait dès qu'on lui accordait la simple lecture | Question soulevée par la recette S08, démontrée par l'API | Le gérant accorde « consulter la liste » et ouvre sans le savoir l'export de la liste du personnel, contre le critère C33b | Tests techniques `ExportsApiTest.c33c` et `ArchitectureTest.exporterSupposeConsulter` | Close |
 
 ## Questions ouvertes
 
 | Feature | Question | Trouvée par | Pourquoi elle compte |
 | --- | --- | --- | --- |
-| F01 | L'accueil détient `users.exporter` sans détenir `users.consulter` : il peut exporter la liste du personnel sans pouvoir l'ouvrir. Est-ce voulu ? | Recette S08 | Un export est une sortie de données ; le droit d'exporter sans droit de consulter est incohérent, dans un sens comme dans l'autre (critère C33b) |
+| F01 | *(refermée le 2026-09-20)* L'accueil détenait `users.exporter` sans `users.consulter`. Vérification faite, il ne pouvait pas exporter — mais accorder la simple lecture ouvrait l'export. Le droit a été retiré du jeu par défaut : le gérant peut l'accorder au cas par cas. À confirmer : l'accueil doit-il pouvoir ouvrir la liste du personnel ? | Recette S08 | Un export quitte l'application et ne se rattrape pas (C33b) |

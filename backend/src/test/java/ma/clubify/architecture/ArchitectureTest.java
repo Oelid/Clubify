@@ -6,9 +6,14 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import ma.clubify.common.security.Permissions;
+import ma.clubify.platform.model.Role;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
@@ -73,6 +78,28 @@ class ArchitectureTest {
                 .because("décision 0028 : aucun point d'entrée sans permission déclarée ; "
                         + "les points d'entrée ouverts portent @PreAuthorize(\"permitAll()\")");
         regle.check(CLASSES);
+    }
+
+    /**
+     * Un rôle ne reçoit jamais un droit qu'il ne peut pas exercer. Un droit
+     * inopérant se réveille au premier ajustement : accorder la lecture d'une
+     * liste ouvrirait alors son export sans que personne l'ait voulu.
+     */
+    @Test
+    @DisplayName("Aucun rôle ne reçoit « exporter » sans « consulter »")
+    void exporterSupposeConsulter() {
+        for (Role role : Role.values()) {
+            Set<String> defauts = Permissions.parDefaut(role);
+            for (String permission : defauts) {
+                if (!permission.endsWith(".exporter")) {
+                    continue;
+                }
+                String lecture = permission.replace(".exporter", ".consulter");
+                assertThat(defauts)
+                        .as("%s détient %s : il lui faut %s", role, permission, lecture)
+                        .contains(lecture);
+            }
+        }
     }
 
     @Test
