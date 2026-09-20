@@ -11,6 +11,9 @@ import ma.clubify.platform.model.Role;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -100,6 +103,29 @@ class ArchitectureTest {
                         .contains(lecture);
             }
         }
+    }
+
+    /**
+     * Chaque droit est expliqué dans les mots du club.
+     *
+     * <p>Un droit sans description est un droit que personne ne peut accorder en
+     * connaissance de cause. La matrice de `docs/matrice-droits.xlsx` se
+     * régénère depuis ces deux sources : les laisser diverger la rendrait
+     * fausse.
+     */
+    @Test
+    @DisplayName("Chaque droit du catalogue est décrit dans docs/droits.md")
+    void chaqueDroitEstDecrit() throws Exception {
+        Path descriptions = Path.of("..", "docs", "droits.md");
+        String texte = Files.readString(descriptions);
+
+        List<String> sansDescription = Permissions.CATALOGUE.stream()
+                .filter(droit -> !texte.contains("| " + droit + " |"))
+                .toList();
+
+        assertThat(sansDescription)
+                .as("droits à décrire dans docs/droits.md")
+                .isEmpty();
     }
 
     @Test

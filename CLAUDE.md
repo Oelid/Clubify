@@ -24,6 +24,8 @@ C'est un logiciel d'école d'activités, pas un logiciel de salle de sport.
 | `docs/suivi-features.xlsx` | Suivi de l'avancement : état, dates de cycle, date de production ; régénéré par `tools/generer-suivi.py` |
 | `docs/suivi-tests.xlsx` | Recette fonctionnelle : scénarios joués depuis les écrans, résultats réels, couverture des critères, anomalies ; régénéré par `tools/generer-suivi-tests.py` |
 | `docs/suivi-tests.md` | Les scénarios de recette en langage métier, et comment la lancer. Source du classeur ci-dessus |
+| `docs/matrice-droits.xlsx` | Qui peut quoi : tous les droits et leur attribution par défaut par rôle ; régénéré par `tools/generer-matrice-droits.py` |
+| `docs/droits.md` | Ce que chaque droit ouvre, dans les mots du club. Source du classeur ci-dessus |
 | `docs/recette.md` | Comment lancer l'application : environnement de recette en conteneurs, ou serveurs de développement |
 | `docs/processus-feature.md` | Les six étapes d'implémentation d'une feature, avec leurs points d'arrêt |
 | `docs/features/` | Une fiche par feature, à partir de `_gabarit.md` |
@@ -69,6 +71,7 @@ Une feature est terminée quand :
 - les critères d'acceptation de sa fiche passent, avec des tests automatisés pour chaque règle métier et pour chaque régression identifiée ;
 - le contrat d'API, `docs/modele-donnees.md` et la fiche sont à jour ;
 - les règles configurables par club le sont, avec une valeur par défaut documentée ;
+- les droits que la feature introduit sont décrits dans `docs/droits.md`, avec leur attribution par défaut ; `docs/matrice-droits.xlsx` est régénéré ;
 - les libellés sont dans les fichiers i18n, aucun en dur ;
 - l'audit et l'isolation par club sont couverts par un test ;
 - la ligne de la feature dans `docs/suivi-features.xlsx` est passée à « Production » avec sa date ;
