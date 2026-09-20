@@ -42,7 +42,7 @@ public class ExportService {
         this.json = json;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public Resultat exporter(String liste, String format) {
         AuthenticatedUser utilisateur = PermissionChecker.requis();
         String permission = liste + ".exporter";

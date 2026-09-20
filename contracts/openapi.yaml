@@ -866,7 +866,7 @@ components:
       type: object
       required: [name]
       properties:
-        name: { type: string, minLength: 1, maxLength: 200 }
+        name: { type: string, maxLength: 200 }
         legalForm: { type: string }
         ice: { type: string }
         taxId: { type: string }

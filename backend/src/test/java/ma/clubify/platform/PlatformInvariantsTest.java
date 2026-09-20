@@ -69,6 +69,8 @@ class PlatformInvariantsTest {
     private MessagingProvider messagerie;
     @Autowired
     private PaymentProvider paiement;
+    @Autowired
+    private ma.clubify.common.security.TenantContext contexte;
 
     private UUID clubA;
 
@@ -77,11 +79,15 @@ class PlatformInvariantsTest {
         seeder.reset();
         clubA = seeder.club(Fixtures.CLUB_A);
         seeder.user(clubA, Fixtures.ADMIN_A_EMAIL, "ACCOUNT_ADMIN", Fixtures.VALID_PASSWORD);
+        // Hors demande servie, le club se pose à la main : c'est ce que fait
+        // le filtre d'authentification dans la vraie vie.
+        contexte.set(clubA);
     }
 
     @AfterEach
     void desarmer() {
         interrupteur.desarmer();
+        contexte.clear();
     }
 
     @Test

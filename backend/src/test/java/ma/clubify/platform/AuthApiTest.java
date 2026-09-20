@@ -1,6 +1,7 @@
 package ma.clubify.platform;
 
 import ma.clubify.support.Api;
+import ma.clubify.support.Auth;
 import ma.clubify.support.Fixtures;
 import ma.clubify.support.IntegrationTest;
 import ma.clubify.support.TestSeeder;
@@ -32,6 +33,8 @@ class AuthApiTest {
     private TestSeeder seeder;
     @Autowired
     private JdbcTemplate jdbc;
+    @Autowired
+    private Auth auth;
     @Autowired
     private ma.clubify.common.security.TotpService totp;
 
@@ -126,11 +129,11 @@ class AuthApiTest {
     @Test
     @DisplayName("C6d — appareil de confiance : plus de code, sauf après expiration")
     void c6d_appareilDeConfiance() throws Exception {
-        Activation activation = activer(Fixtures.FRONT_DESK_A_EMAIL);
+        Auth.Activation activation = activer(Fixtures.FRONT_DESK_A_EMAIL);
 
         String corps = api.send(null, post("/api/v1/auth/mfa/verify"), Map.of(
                         "mfaChallengeId", defiPour(Fixtures.FRONT_DESK_A_EMAIL),
-                        "code", totp.codeCourant(activation.secret()),
+                        "code", auth.codeCourant(activation.secret()),
                         "trustDevice", true, "deviceLabel", "PC accueil"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
@@ -150,7 +153,7 @@ class AuthApiTest {
     @Test
     @DisplayName("C6e — un code de secours ne sert qu'une fois")
     void c6e_codesDeSecours() throws Exception {
-        Activation activation = activer(Fixtures.FRONT_DESK_A_EMAIL);
+        Auth.Activation activation = activer(Fixtures.FRONT_DESK_A_EMAIL);
         String code = activation.codesDeSecours().getFirst();
 
         api.send(null, post("/api/v1/auth/mfa/verify"), Map.of(
@@ -235,54 +238,14 @@ class AuthApiTest {
 
     private String adminToken() throws Exception {
         seeder.user(clubA, Fixtures.ADMIN_A_EMAIL, "ACCOUNT_ADMIN", Fixtures.VALID_PASSWORD);
-        // L'administrateur doit activer son second facteur avant tout accès (C6b).
-        return activer(Fixtures.ADMIN_A_EMAIL).jeton();
+        return auth.jetonDe(Fixtures.ADMIN_A_EMAIL);
     }
 
-    /**
-     * Active le second facteur par le parcours réel : le secret vient de l'URI
-     * otpauth que l'API retourne, et le code s'en calcule. Aucune fonction de
-     * test ne va le chercher en base.
-     */
-    private Activation activer(String email) throws Exception {
-        String provisoire = jetonDe(api.loginRaw(email, Fixtures.VALID_PASSWORD));
-
-        String preparation = api.send(provisoire, post("/api/v1/profile/mfa/setup"), null)
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-        var noeud = api.json().readTree(preparation);
-
-        String secret = secretDe(noeud.path("otpauthUri").asString());
-        List<String> codesDeSecours = new java.util.ArrayList<>();
-        noeud.path("recoveryCodes").forEach(code -> codesDeSecours.add(code.asString()));
-
-        api.send(provisoire, post("/api/v1/profile/mfa/confirm"),
-                        Map.of("code", totp.codeCourant(secret)))
-                .andExpect(status().isNoContent());
-
-        return new Activation(secret, codesDeSecours, provisoire);
-    }
-
-    /** Le secret partagé, extrait de l'URI otpauth. */
-    private static String secretDe(String otpauthUri) {
-        var trouve = java.util.regex.Pattern.compile("secret=([^&]+)").matcher(otpauthUri);
-        assertThat(trouve.find()).as("secret dans %s", otpauthUri).isTrue();
-        return trouve.group(1);
-    }
-
-    private String jetonDe(org.springframework.test.web.servlet.ResultActions reponse)
-            throws Exception {
-        String corps = reponse.andReturn().getResponse().getContentAsString();
-        return api.json().readTree(corps).path("tokens").path("accessToken").asString();
+    private Auth.Activation activer(String email) throws Exception {
+        return auth.activer(email);
     }
 
     private String defiPour(String email) throws Exception {
-        String corps = api.loginRaw(email, Fixtures.VALID_PASSWORD)
-                .andReturn().getResponse().getContentAsString();
-        return api.json().readTree(corps).path("mfaChallengeId").asString();
-    }
-
-    /** Ce qu'une activation de second facteur laisse entre les mains du test. */
-    private record Activation(String secret, List<String> codesDeSecours, String jeton) {
+        return auth.defiPour(email);
     }
 }

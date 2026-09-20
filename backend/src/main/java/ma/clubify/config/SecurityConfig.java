@@ -1,5 +1,6 @@
 package ma.clubify.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import ma.clubify.common.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +36,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/files/download/**").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .anyRequest().authenticated())
+                .exceptionHandling(erreurs -> erreurs
+                        // Sans jeton valable, la réponse est « non authentifié »,
+                        // et non « interdit » : la nuance compte pour le client.
+                        .authenticationEntryPoint((demande, reponse, echec) ->
+                                reponse.sendError(HttpServletResponse.SC_UNAUTHORIZED)))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

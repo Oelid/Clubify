@@ -31,6 +31,9 @@ public class Auth {
     @Autowired
     private TotpService totp;
 
+    /** Secrets des comptes déjà activés, pour répondre aux défis suivants. */
+    private final Map<String, String> secrets = new java.util.concurrent.ConcurrentHashMap<>();
+
     /** Jeton pleinement utilisable, second facteur activé si le rôle l'exige. */
     public String jetonDe(String email) throws Exception {
         String corps = api.loginRaw(email, Fixtures.VALID_PASSWORD)
@@ -42,6 +45,15 @@ public class Auth {
         }
         if ("MFA_ENROLLMENT_REQUIRED".equals(issue)) {
             return activer(email).jeton();
+        }
+        if ("MFA_REQUIRED".equals(issue)) {
+            String secret = secrets.get(email);
+            assertThat(secret).as("second facteur déjà activé pour %s", email).isNotNull();
+            String defi = api.json().readTree(corps).path("mfaChallengeId").asString();
+            String finale = api.send(null, post("/api/v1/auth/mfa/verify"),
+                            Map.of("mfaChallengeId", defi, "code", totp.codeCourant(secret)))
+                    .andReturn().getResponse().getContentAsString();
+            return api.json().readTree(finale).path("accessToken").asString();
         }
         throw new IllegalStateException(
                 "Connexion inattendue pour " + email + " : " + issue);
@@ -74,6 +86,7 @@ public class Auth {
                 .andReturn().getResponse().getContentAsString();
         String jeton = api.json().readTree(finale).path("accessToken").asString();
 
+        secrets.put(email, secret);
         return new Activation(secret, codesDeSecours, jeton);
     }
 

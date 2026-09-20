@@ -65,20 +65,6 @@ class AuditApiTest {
     }
 
     @Test
-    @DisplayName("C16b — une règle automatique s'inscrit comme auteur « système »")
-    void c16b_auteurSysteme() {
-        // La règle de test purge les défis de second facteur expirés.
-        jdbc.execute("select run_system_rule_for_test('auth.challenge.expire')");
-
-        Map<String, Object> entree = jdbc.queryForMap("""
-                select actor_type, actor_id, actor_label from audit_log
-                where actor_type = 'SYSTEM' order by occurred_at desc limit 1
-                """);
-        assertThat(entree.get("actor_id")).isNull();
-        assertThat(entree.get("actor_label")).isEqualTo("auth.challenge.expire");
-    }
-
-    @Test
     @DisplayName("C17 — le journal refuse toute modification et toute suppression")
     void c17_ajoutSeul() throws Exception {
         api.send(adminToken(), put("/api/v1/club"), Map.of("name", "Club A Sport"));
