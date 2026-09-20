@@ -79,6 +79,11 @@
 			<artifactId>fastexcel</artifactId>
 			<version>${fastexcel.version}</version>
 		</dependency>
+		<!-- Signature et lecture des jetons (Nimbus), nommé par la décision 0024. -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-oauth2-jose</artifactId>
+		</dependency>
 		<!-- Swagger UI, servi en profil dev seulement (décision 0024). -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
