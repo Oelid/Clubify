@@ -88,7 +88,7 @@ Chaque règle cite sa source. « À confirmer » renvoie aux questions de la sec
 24. Types et taille maximale des fichiers sont des paramètres du club. Valeurs par défaut : PDF, JPEG, PNG ; 10 Mo. — PLT-05, 9.8 (par extension) ; tranché le 2026-09-20 (Q7).
 25. Un fichier se supprime logiquement ; la purge physique relève des durées de conservation (SEC-06, R4). — 9.6, SEC-06.
 26. Premier fichier livré par F01 : le logo du club (ADM-01). — ADM-01, PLT-05.
-27. Le stockage des fichiers est écrit derrière une interface unique ; cible : stockage objet compatible S3, disque local en développement et en test. Le lieu d'hébergement (Maroc ou Europe) reste à valider avec le juriste du club avant la mise en service (décision 0018) ; il ne bloque pas l'étape 3. — Section 5 (Hébergement), décision 0018 ; approche tranchée le 2026-09-20 (Q6).
+27. Le stockage des fichiers est écrit derrière une interface unique ; F01 livre le disque local et une implémentation mémoire pour les tests ; la cible S3 compatible et sa dépendance viendront avec le choix d'hébergement. Le lieu d'hébergement (Maroc ou Europe) reste à valider avec le juriste du club avant la mise en service (décision 0018) ; il ne bloque pas l'étape 3. — Section 5 (Hébergement), décision 0018 ; approche tranchée le 2026-09-20 (Q6).
 
 ### Paramètres du club
 
@@ -160,7 +160,7 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C24 | 23 | Un lien valide obtenu par la gérante de A | Un utilisateur de B l'utilise | Refus |
 | C25 | 24 | Valeurs par défaut du club | Dépôt d'un PDF de 12 Mo, puis d'un fichier `.exe` de 1 Mo, puis d'un PNG de 2 Mo | Deux refus avec un code d'erreur stable, puis acceptation |
 | C26 | 25 | Un fichier existe | Suppression | Le fichier n'est plus servi ; sa ligne reste, marquée supprimée |
-| C27 | 26, 27 | Club sans logo, profil `test` sur disque local | La gérante dépose un logo | Le logo est un fichier privé du club, affiché dans le backoffice ; le même test passe sur un stockage compatible S3 sans changement de code |
+| C27 | 26, 27 | Club sans logo | La gérante dépose un logo | Le logo est un fichier privé du club, affiché dans le backoffice ; le même test passe sur l'implémentation disque et sur l'implémentation mémoire sans changement des appels, ce qui garantit qu'une implémentation S3 s'ajoutera sans refonte |
 | C28 | 28 | Club sans identité | La gérante renseigne nom, adresse, téléphone, courriel, forme juridique, ICE, IF, RC | Les valeurs sont enregistrées ; le téléphone est normalisé en E.164 ; un ICE mal formé est refusé |
 | C29 | 29 | Club au fuseau `Africa/Casablanca` | Une date est enregistrée à 10 h 00 heure locale | Stockée en UTC ; restituée à 10 h 00 dans le fuseau du club |
 | C30 | 30 | Paramètres de numérotation | La gérante fixe un préfixe de reçu et l'exercice de départ | Enregistré et audité ; aucun numéro n'est encore émis (F09) |
@@ -283,7 +283,7 @@ Dans cet ordre, chaque brique avec son test :
 6. Paramètres : `SettingRegistry` en code (clé, type, portée club ou plateforme, défaut), valeurs de club en base (`club_setting`, JSONB), lecture typée avec repli sur le défaut, changement audité (C31).
 7. Données sensibles : `EncryptedStringConverter` AES-256-GCM, clé par variable d'environnement avec identifiant de clé pour rotation ; chiffrement des fichiers au dépôt et déchiffrement à la lecture ; masquage dans les logs (C13, C15).
 8. i18n et erreurs : `MessageSource`, `messages_fr.properties`, `GlobalExceptionHandler` en `ProblemDetail` avec `code` (C36).
-9. Fichiers : interface `FileStorage`, implémentations disque local (`dev`, `test`) et S3 compatible (`prod`), liens signés à durée limitée (C23 à C27).
+9. Fichiers : interface `FileStorage`, implémentations disque local (`dev`, `prod` provisoire) et mémoire (`test`), liens signés à durée limitée (C23 à C27). L'implémentation S3 compatible arrive avec le choix d'hébergement (0018), hors F01.
 10. Connecteurs : interfaces `MessagingProvider` et `PaymentProvider`, implémentation `noop` (C39).
 11. Validation : téléphone E.164 avec +212 par défaut (C37).
 
@@ -321,7 +321,7 @@ Contrat, `docs/modele-donnees.md` (entités ci-dessous), fiche, tests verts, `do
 | Feature déjà livrée | Maîtrisé | Aucune |
 | Nouvelle dépendance | **Majeur** | Quatre demandées (M6) |
 
-Points majeurs, chacun à valider explicitement par Omar :
+Points majeurs, validés par Omar le 2026-09-20 (décision 0029), sauf le client S3 de M6, non retenu pour F01 :
 
 | # | Point | Choix proposé | Alternative |
 | --- | --- | --- | --- |
@@ -330,7 +330,7 @@ Points majeurs, chacun à valider explicitement par Omar :
 | M3 | Audit synchrone et bloquant | L'abonné audit s'exécute dans la transaction de l'action (`BEFORE_COMMIT`) : si l'audit échoue, l'action échoue. Une action sur l'argent sans trace ne doit pas exister. C'est l'unique exception à la règle 21 ; les abonnés externes (messages, exports) passent par l'outbox et ne bloquent jamais. **C22 est réécrit** : l'abonné rendu défaillant est un abonné outbox, pas l'audit | Audit dérivé de l'outbox, asynchrone, rejouable : cohérent avec la règle 21 mais fenêtre où l'action est validée sans ligne d'audit |
 | M4 | Rôles, permissions et paramètres définis en code, surcharges et valeurs en base | Le catalogue est versionné avec les features qui le déclarent ; la base ne porte que ce qui varie par club ou par utilisateur | Tout en base : administrable sans livraison, mais rien ne garantit qu'une feature déclare ses permissions |
 | M5 | Chiffrement applicatif des fichiers et des champs sensibles | AES-256-GCM, clé par environnement hors dépôt, identifiant de clé stocké pour rotation ; le stockage ne voit jamais le clair (C13) | Chiffrement côté stockage seulement : le clair transite et dépend de l'hébergeur (0018) |
-| M6 | Nouvelles dépendances | Bouncy Castle (Argon2, exigé par Spring Security), `fastexcel` (Excel, léger) ou Apache POI, client S3 (AWS SDK v2 ou MinIO), `angularx-qrcode` (QR du second facteur côté frontend). TOTP implémenté avec le JDK, sans dépendance | BCrypt intégré à la place d'Argon2 ; CSV seul en R1 ; QR généré côté backend avec ZXing |
+| M6 | Nouvelles dépendances | Validées : Bouncy Castle (Argon2, exigé par Spring Security), `fastexcel` (Excel), `angularx-qrcode` (QR du second facteur côté frontend). TOTP implémenté avec le JDK, sans dépendance. **Client S3 non retenu pour F01** : F01 livre l'interface `FileStorage` avec l'implémentation disque et une implémentation mémoire pour les tests ; l'implémentation S3 et sa dépendance viendront avec le choix d'hébergement (0018) | BCrypt intégré à la place d'Argon2 ; CSV seul en R1 ; QR généré côté backend avec ZXing |
 | M7 | Row-Level Security PostgreSQL | Activée dès F01 : `SET LOCAL app.club_id` par transaction, rôle de base non superutilisateur ; seconde ligne derrière `@TenantId` | Reporter : l'isolation ne tiendrait que par l'application |
 | M8 | Export synchrone | Génération à la demande, réponse directe ; listes de R1 petites | File d'attente : inutile avant des milliers de lignes |
 
@@ -436,4 +436,4 @@ Toutes tranchées le 2026-09-20. Reste ouvert hors F01 : le lieu d'hébergement 
 
 ## Statut
 
-Cadrée — 2026-09-20. Étapes 1 et 2 closes ; étape 3 rédigée, en attente de validation des huit points majeurs M1 à M8.
+En cours — 2026-09-20. Étapes 1 à 3 closes, plan et points majeurs validés (décision 0029) ; étape 4 (tests d'abord) à faire.

@@ -6,7 +6,7 @@ Workspace Angular unique pour les trois interfaces : backoffice de l'accueil et 
 
 - Angular, version stable courante à l'initialisation ; TypeScript strict.
 - PrimeNG (mode thémable par jetons de design) + Tailwind CSS.
-- Transloco pour l'i18n. Lucide pour les icônes. Polices Inter et IBM Plex Sans Arabic, auto-hébergées.
+- Transloco pour l'i18n. Lucide pour les icônes. Polices Inter et IBM Plex Sans Arabic, auto-hébergées. angularx-qrcode pour le QR du second facteur (décision 0029).
 - Client d'API généré par openapi-generator (typescript-angular) depuis `../contracts/openapi.yaml`.
 - Tests : Vitest, Storybook, Playwright.
 - Toute dépendance absente de cette liste est demandée à Omar avant d'être ajoutée (`../CLAUDE.md` §5).

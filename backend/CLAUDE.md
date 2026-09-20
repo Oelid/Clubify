@@ -9,6 +9,7 @@ Backend unique : il sert le backoffice, l'application coach et le portail parent
 - Spring MVC pour l'API REST. Spring Security. Spring Boot DevTools en développement seulement.
 - Lombok, limité (voir « Conventions de code »).
 - Contrat : OpenAPI dans `../contracts/`, interfaces et modèles générés par `openapi-generator-maven-plugin`. springdoc pour Swagger UI en profil `dev` uniquement.
+- Bouncy Castle (Argon2), fastexcel (export Excel). Validées pour F01 (décision 0029). Client S3 : à demander avec le choix d'hébergement.
 - Tests : JUnit 5, AssertJ, Spring Boot Test, Testcontainers PostgreSQL, ArchUnit.
 - Toute dépendance absente de cette liste est demandée à Omar avant d'être ajoutée (`../CLAUDE.md` §5).
 
@@ -102,10 +103,10 @@ Entité : état et invariants propres à l'objet ; pas d'accès aux services.
 ## Sécurité et multi-tenant
 
 - Authentification : JWT auto-émis, stateless (OAuth2 Resource Server, clés propres). Claims : `sub`, `club_id`, `site_id` (optionnel), rôles. Refresh token stocké en base, révocable. Mots de passe : `DelegatingPasswordEncoder` avec Argon2 par défaut. Second facteur optionnel pour le staff (SEC-01). Code à usage unique pour les parents (R8, même mécanisme d'émission).
-- Isolation par club : schéma partagé, colonne `club_id` sur chaque table. Hibernate `@TenantId` sur la colonne, `CurrentTenantIdentifierResolver` alimenté par `TenantContext`, lui-même alimenté par le jeton au filtre de sécurité. Aucune requête sans filtre de club ; aucune méthode de repository ne prend `club_id` en paramètre. Row-Level Security PostgreSQL activée sur les tables métier en seconde ligne.
+- Isolation par club : schéma partagé, colonne `club_id` sur chaque table, à une exception près : `user_account` est global (un compte peut appartenir à plusieurs clubs, PLT-02) et c'est `membership` qui porte `club_id` et le rôle (décision 0029). Hibernate `@TenantId` sur la colonne, `CurrentTenantIdentifierResolver` alimenté par `TenantContext`, lui-même alimenté par le jeton au filtre de sécurité. Aucune requête sans filtre de club ; aucune méthode de repository ne prend `club_id` en paramètre. Row-Level Security PostgreSQL activée sur les tables métier en seconde ligne.
 - Les identifiants de club et de site viennent de l'authentification, jamais de la requête du client.
 - Permissions fines (SEC-02, décision 0028) : `@PreAuthorize` sur les services (pas seulement sur les contrôleurs). Rôles : administrateur (titulaire du compte, tous droits, non retirables), gérant, administratif, coach, comptable, parent. Le rôle donne le jeu par défaut ; une surcharge par utilisateur est possible, auditée. Grammaire des permissions : `domaine.objet.action`, actions fermées (`consulter`, `creer`, `modifier`, `desactiver`, `valider`, `exporter`) plus actions sensibles nommées ; une permission peut porter un paramètre (plafond). Granularité : un droit par décision engageant l'argent, un droit d'une personne ou une donnée sensible ; un droit par écran ou liste ; jamais par champ. Chaque feature déclare ses permissions dans sa fiche. **Aucun point d'entrée sans permission déclarée**, vérifié par ArchUnit.
-- Journal d'audit (SEC-04) : table `audit_log` en ajout seul (entité, action, avant, après, auteur, motif, horodatage), écrite dans la même transaction que l'action, via un événement métier. L'utilisateur de base de l'application n'a ni `UPDATE` ni `DELETE` sur cette table. Obligatoire sur tout ce qui touche à l'argent, aux remises, aux dérogations et aux données sensibles.
+- Journal d'audit (SEC-04) : table `audit_log` en ajout seul (entité, action, avant, après, auteur, motif, horodatage), écrite dans la même transaction que l'action par un abonné `BEFORE_COMMIT` à l'événement métier. **Si l'audit échoue, l'action échoue** : c'est l'unique exception à la règle « un abonné en échec ne bloque pas le métier » (décision 0029). L'auteur est un utilisateur, un parent ou le système avec la règle identifiée ; `club_id` n'est nullable que pour les événements d'authentification. L'utilisateur de base de l'application n'a ni `UPDATE` ni `DELETE` sur cette table. Obligatoire sur tout ce qui touche à l'argent, aux remises, aux dérogations et aux données sensibles.
 - Données sensibles (SEC-03) : santé, CIN, pièces chiffrées au champ par `AttributeConverter` (AES-GCM), clé fournie par variable d'environnement, jamais dans le dépôt. Chaque lecture est journalisée. Jamais dans les logs.
 - Suppression logique uniquement. Facture et paiement jamais supprimés : avoir ou contre-passation.
 - Connecteurs : interfaces `MessagingProvider` et `PaymentProvider` dans `common`, implémentation `noop` en R1 ; aucun prestataire codé en dur. Un canal en échec ne bloque pas le métier.
@@ -114,7 +115,7 @@ Entité : état et invariants propres à l'objet ; pas d'accès aux services.
 
 - Un seul moteur (PLT-04) : chaque fait métier est publié une fois par le service, via `ApplicationEventPublisher`, à la validation de la transaction (`@TransactionalEventListener`).
 - Table outbox pour les effets externes (messages, exports) : l'événement est persisté dans la transaction, traité ensuite, rejoué en cas d'échec.
-- L'audit, les notifications, les tâches et les rapports s'abonnent aux événements ; un domaine n'appelle jamais directement le service d'un autre pour ces effets.
+- L'audit, les notifications, les tâches et les rapports s'abonnent aux événements ; un domaine n'appelle jamais directement le service d'un autre pour ces effets. L'audit est synchrone et bloquant (`BEFORE_COMMIT`) ; tout autre abonné passe par l'outbox et ne bloque jamais.
 
 ## Règles propres
 
