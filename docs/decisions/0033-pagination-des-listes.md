@@ -12,8 +12,13 @@ factures et le journal d'audit seront tous plus longs encore.
 
 ## Décision
 
+**Règle générale, valable pour toute liste rendue par l'API, aujourd'hui comme
+dans les features à venir.**
+
 - Toute liste de l'API est paginée **par la base**, qui ne rend que la page
-  demandée et compte le total à part.
+  demandée et compte le total à part. Jamais de `findAll()` découpé en
+  mémoire : charger mille familles pour en afficher vingt coûte autant que de
+  les afficher toutes.
 - Le nombre de lignes par page est une règle configurable du club :
   `ui.page_size`, par défaut **20**.
 - **Plafond absolu de 100 lignes**, qu'aucun réglage de club ni aucun appelant
@@ -62,6 +67,23 @@ un poste modeste, et que la valeur ronde se retient.
 
 Section 9.8 (règles configurables), section 6 de `backend/CLAUDE.md`
 (pagination par `page`, `size`, `sort`).
+
+## Comment la règle tient
+
+Une règle que seule la discipline fait respecter finit par être oubliée, et
+l'oubli ne se voit qu'en production, le jour où un club a mille familles.
+`PaginationTest` la rend vérifiable, à trois niveaux :
+
+| Contrôle | Ce qu'il empêche |
+| --- | --- |
+| Aucun contrôleur ne dépend de `PageRequest` | Fabriquer une pagination à la main, donc contourner la borne |
+| Tout point d'entrée rendant une page appelle `PaginationPolicy` | Rendre une liste sans borne |
+| Toute opération du contrat rendant une page déclare `page` et `size` | Livrer une liste que le client ne peut pas parcourir |
+
+Chacun a été éprouvé en le faisant échouer. Le troisième se vérifie sur un
+contrat fabriqué pour l'occasion : abîmer le vrai contrat arrêterait la
+compilation avant le test, le générateur imposant d'implémenter toute opération
+déclarée.
 
 ## Écarts ou points ouverts
 

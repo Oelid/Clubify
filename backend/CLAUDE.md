@@ -89,7 +89,13 @@ Entité : état et invariants propres à l'objet ; pas d'accès aux services.
 
 - Source de vérité : `../contracts/openapi.yaml` (un fichier par domaine possible, référencés depuis l'index). Modifié en premier dans chaque feature, dans la même livraison.
 - Le plugin `openapi-generator` produit les interfaces de contrôleurs et les modèles ; les contrôleurs implémentent ces interfaces. Le code généré n'est jamais modifié à la main ni commité.
-- Préfixe `/api/v1`. Ressources au pluriel, en anglais, kebab-case. Pagination par `page`, `size`, `sort`.
+- Préfixe `/api/v1`. Ressources au pluriel, en anglais, kebab-case.
+- **Toute liste est paginée, et sa taille est bornée par le serveur** (décision 0033). Sans exception, et pour toute feature à venir :
+  - l'opération déclare `$ref: '#/components/parameters/Page'` et `Size` ;
+  - le contrôleur obtient sa pagination de `PaginationPolicy.de(page, size)`, jamais d'une `PageRequest` fabriquée à la main ;
+  - le service pagine **dans la base** : jamais de `findAll()` découpé en mémoire, qui charge tout le club pour en afficher vingt ;
+  - la taille est ramenée dans les bornes plutôt que refusée — au-delà de 100, cent ; en dessous de 1, une ; page négative, la première ; absente, celle que le club a retenue (`ui.page_size`).
+  - `PaginationTest` vérifie les trois premiers points, sur le code comme sur le contrat.
 - Le contrat porte des codes, jamais des libellés. Montants en centimes avec devise, dates en UTC ISO-8601.
 - Les identifiants de club et de site n'apparaissent jamais dans le contrat : ils viennent du jeton.
 

@@ -73,6 +73,7 @@ Une feature est terminée quand :
 - le contrat d'API, `docs/modele-donnees.md` et la fiche sont à jour ;
 - les règles configurables par club le sont, avec une valeur par défaut documentée ;
 - les droits que la feature introduit sont décrits dans `docs/droits.md`, avec leur attribution par défaut ; `docs/matrice-droits.xlsx` est régénéré ;
+- toute liste que la feature ajoute est paginée et bornée par le serveur (décision 0033), ce que `PaginationTest` vérifie ;
 - les libellés sont dans les fichiers i18n, aucun en dur ;
 - l'audit et l'isolation par club sont couverts par un test ;
 - la ligne de la feature dans `docs/suivi-features.xlsx` est passée à « Production » avec sa date ;
