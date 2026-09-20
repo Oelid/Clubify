@@ -41,6 +41,8 @@ class FilesApiTest {
     private TestSeeder seeder;
     @Autowired
     private JdbcTemplate jdbc;
+    @Autowired
+    private ma.clubify.platform.service.FileService fichiers;
 
     private UUID clubA;
 
@@ -186,13 +188,14 @@ class FilesApiTest {
         return api.json().readTree(body).path("url").asString();
     }
 
-    /** Lit l'octet-à-octet tel qu'il est conservé, sans passer par l'application. */
+    /**
+     * Lit le contenu tel qu'il est conservé sur le support, sans passer par le
+     * déchiffrement : c'est ce qui prouve que le clair n'y figure pas.
+     */
     private byte[] contenuBrutSurLeSupport(UUID fichier) {
-        List<byte[]> contenus = jdbc.query(
-                "select raw_content_for_test(storage_key) from stored_file where id = ?",
-                (rs, i) -> rs.getBytes(1), fichier);
-        assertThat(contenus).hasSize(1);
-        return contenus.getFirst();
+        String cle = jdbc.queryForObject(
+                "select storage_key from stored_file where id = ?", String.class, fichier);
+        return fichiers.contenuBrut(cle);
     }
 
     private String adminToken() throws Exception {

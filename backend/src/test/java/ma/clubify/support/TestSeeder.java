@@ -84,6 +84,9 @@ public class TestSeeder {
         jdbc.update("delete from audit_log");
         jdbc.execute("alter table audit_log enable trigger user");
 
+        // Le club référence son logo : on délie avant de supprimer les fichiers.
+        jdbc.update("update club set logo_file_id = null");
+
         for (String table : TABLES) {
             jdbc.update("delete from " + table);
         }
