@@ -304,6 +304,13 @@ paths:
         - name: active
           in: query
           schema: { type: boolean }
+        - name: search
+          in: query
+          description: >-
+            Cherche dans le nom, le prénom et l'adresse électronique, sans tenir
+            compte de la casse. Le filtrage se fait dans la base, jamais après
+            coup sur la page rendue.
+          schema: { type: string }
       responses:
         '200':
           description: Page d'utilisateurs
@@ -482,6 +489,20 @@ paths:
               schema:
                 type: array
                 items: { $ref: '#/components/schemas/PermissionDefinition' }
+
+  /roles:
+    get:
+      tags: [users]
+      operationId: listRoles
+      summary: Décrit les rôles et lesquels sont attribuables aujourd'hui
+      responses:
+        '200':
+          description: Rôles
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/RoleDefinition' }
 
   # ---------------------------------------------------------------- audit
   /audit-entries:
@@ -1003,6 +1024,21 @@ components:
         lastName: { type: string, minLength: 1 }
         phone: { type: string }
         language: { type: string }
+
+    RoleDefinition:
+      type: object
+      description: >-
+        Un rôle et ce que l'application en fait aujourd'hui. « assignable » dit
+        si un compte peut lui être attribué : certains rôles existent dans le
+        modèle avant que leur application n'arrive (coach en R4, parent en R8).
+        L'interface ne propose que ceux-là, plutôt que de recopier la règle.
+      required: [role, assignable]
+      properties:
+        role: { $ref: '#/components/schemas/Role' }
+        assignable: { type: boolean }
+        requiresSecondFactor:
+          type: boolean
+          description: Le rôle attend un second facteur (décisions 0027 et 0031).
 
     PermissionDefinition:
       type: object

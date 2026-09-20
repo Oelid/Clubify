@@ -63,8 +63,10 @@ public class ExportService {
     }
 
     private Resultat exporterUtilisateurs(String format) {
+        // Un export porte sur la liste entière, sans filtre ni pagination : c'est
+        // ce qu'on attend d'un fichier qu'on ouvre dans un tableur.
         List<UserDto> vues = utilisateurs
-                .lister(org.springframework.data.domain.Pageable.unpaged())
+                .lister(null, null, null, org.springframework.data.domain.Pageable.unpaged())
                 .getContent();
 
         List<Colonne<UserDto>> colonnes = List.of(

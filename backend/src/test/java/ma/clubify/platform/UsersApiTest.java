@@ -137,6 +137,64 @@ class UsersApiTest {
     }
 
     @Test
+    @DisplayName("C12c — l'API dit quels rôles sont attribuables, plutôt que l'écran le devine")
+    void c12c_rolesAttribuables() throws Exception {
+        api.getAs(adminToken(), "/roles")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(6))
+                // Le parent et le comptable existent au modèle, sans compte avant R8.
+                .andExpect(jsonPath("$[?(@.role == 'PARENT')].assignable").value(false))
+                .andExpect(jsonPath("$[?(@.role == 'ACCOUNTANT')].assignable").value(false))
+                .andExpect(jsonPath("$[?(@.role == 'FRONT_DESK')].assignable").value(true))
+                // Et lesquels attendent un second facteur (décisions 0027 et 0031).
+                .andExpect(jsonPath("$[?(@.role == 'MANAGER')].requiresSecondFactor").value(true))
+                .andExpect(jsonPath("$[?(@.role == 'COACH')].requiresSecondFactor").value(false));
+    }
+
+    @Test
+    @DisplayName("C41 — la liste se filtre par rôle, par statut et par recherche")
+    void c41_filtres() throws Exception {
+        String admin = adminToken();
+        seeder.user(clubA, "coach.judo@exemple.test", "COACH", Fixtures.VALID_PASSWORD);
+        UUID retraite = seeder.user(clubA, "coach.parti@exemple.test", "COACH",
+                Fixtures.VALID_PASSWORD);
+        api.send(admin, put("/api/v1/users/" + retraite + "/status"),
+                Map.of("active", false)).andExpect(status().isNoContent());
+
+        // Par rôle.
+        api.getAs(admin, "/users?role=COACH")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page.totalElements").value(2));
+
+        // Par statut : le compte fermé ne compte plus parmi les actifs.
+        api.getAs(admin, "/users?role=COACH&active=true")
+                .andExpect(jsonPath("$.page.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].email").value("coach.judo@exemple.test"));
+
+        // Par recherche, sans tenir compte de la casse, sur l'adresse comme le nom.
+        api.getAs(admin, "/users?search=JUDO")
+                .andExpect(jsonPath("$.page.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].email").value("coach.judo@exemple.test"));
+
+        // Une recherche sans résultat rend une page vide, pas une erreur.
+        api.getAs(admin, "/users?search=personne-de-ce-nom")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page.totalElements").value(0));
+    }
+
+    @Test
+    @DisplayName("C41b — un filtre ne laisse jamais passer un compte d'un autre club")
+    void c41b_filtreCloisonne() throws Exception {
+        UUID clubB = seeder.club(Fixtures.CLUB_B);
+        seeder.user(clubB, "coach.autre-club@exemple.test", "COACH", Fixtures.VALID_PASSWORD);
+
+        // Le filtre s'ajoute au discriminant de club, il ne s'y substitue pas.
+        api.getAs(adminToken(), "/users?role=COACH")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page.totalElements").value(0));
+    }
+
+    @Test
     @DisplayName("C7 — aucun compte ne peut exister pour un adhérent mineur")
     void c7_aucunCompteEnfant() throws Exception {
         // Le rôle PARENT existe dans le catalogue mais ne reçoit aucun compte avant R8,

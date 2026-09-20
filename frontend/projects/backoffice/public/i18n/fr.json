@@ -102,7 +102,23 @@
     "never": "Jamais",
     "empty": "Aucun utilisateur.",
     "sensitiveNote": "Les colonnes sensibles au sens de SEC-03 — santé, CIN, pièces — ne figurent dans aucun export.",
-    "countDisabled": "Dont désactivés : {{disabled}}."
+    "countDisabled": "Dont désactivés : {{disabled}}.",
+    "newTitle": "Nouvel utilisateur",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "phone": "Téléphone",
+    "password": "Mot de passe",
+    "passwordHelp": "Au moins 12 caractères. La personne pourra le changer.",
+    "create": "Créer le compte",
+    "creating": "Création…",
+    "cancel": "Annuler",
+    "created": "Compte créé. {{nom}} peut se connecter.",
+    "exporting": "Export en cours…",
+    "exported": "Export téléchargé.",
+    "search": "Rechercher",
+    "searchPlaceholder": "Nom, prénom ou adresse",
+    "allRoles": "Tous les rôles",
+    "allStatuses": "Tous les statuts"
   },
   "role": {
     "ACCOUNT_ADMIN": "Administrateur du compte",
@@ -302,6 +318,12 @@
     "ui.page_size": {
       "label": "Lignes par page",
       "description": "Nombre de lignes affichées dans les listes. Au-delà de 100, l'affichage devient lent : c'est la limite. Exemple : 20."
+    }
+  },
+  "access": {
+    "none": {
+      "title": "Votre espace n’est pas encore ouvert",
+      "text": "Votre compte existe et fonctionne, mais aucun écran ne correspond encore à votre rôle. Rapprochez-vous du club si vous pensez qu’il s’agit d’une erreur."
     }
   }
 }

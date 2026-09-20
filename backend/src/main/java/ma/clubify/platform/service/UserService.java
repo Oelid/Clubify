@@ -70,9 +70,12 @@ public class UserService {
 
     @Transactional(readOnly = true)
     @PreAuthorize("@perm.a('users.consulter')")
-    public Page<UserDto> lister(Pageable pagination) {
-        // La base découpe la page et compte le total : rien de plus ne remonte.
-        return appartenances.pageDuClub(pagination)
+    public Page<UserDto> lister(Role role, Boolean actif, String recherche, Pageable pagination) {
+        // La base filtre, découpe et compte : rien de plus ne remonte.
+        String motif = recherche == null || recherche.isBlank()
+                ? null
+                : "%" + recherche.trim().toLowerCase() + "%";
+        return appartenances.pageDuClub(role, actif, motif, pagination)
                 .map(appartenance -> comptes.findById(appartenance.getUserId())
                         .map(compte -> vers(new Vue(compte, appartenance)))
                         .orElse(null));

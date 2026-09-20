@@ -5,6 +5,7 @@ import ma.clubify.generated.model.PageMeta;
 import ma.clubify.generated.model.PermissionDefinition;
 import ma.clubify.generated.model.PermissionOverride;
 import ma.clubify.generated.model.Role;
+import ma.clubify.generated.model.RoleDefinition;
 import ma.clubify.generated.model.SetUserRoleRequest;
 import ma.clubify.generated.model.SetUserStatusRequest;
 import ma.clubify.generated.model.User;
@@ -52,8 +53,11 @@ public class UsersController implements UsersApi {
 
     @Override
     @PreAuthorize("@perm.a('users.consulter')")
-    public ResponseEntity<UserPage> listUsers(Integer page, Integer size, Role role, Boolean active) {
-        Page<UserDto> trouvees = utilisateurs.lister(pagination.de(page, size));
+    public ResponseEntity<UserPage> listUsers(Integer page, Integer size, Role role,
+                                              Boolean active, String search) {
+        Page<UserDto> trouvees = utilisateurs.lister(
+                role == null ? null : ma.clubify.platform.model.Role.valueOf(role.getValue()),
+                active, search, pagination.de(page, size));
 
         UserPage reponse = new UserPage();
         reponse.setContent(trouvees.getContent().stream().map(UsersController::versContrat).toList());
@@ -150,6 +154,28 @@ public class UsersController implements UsersApi {
                 })
                 .toList();
         return ResponseEntity.ok(catalogue);
+    }
+
+    /**
+     * Les rôles, et lesquels sont attribuables aujourd'hui.
+     *
+     * <p>Sans ce point d'entrée, l'interface recopierait la règle « attribuable
+     * en R1 » et divergerait le jour où le coach arrivera (R4).
+     */
+    @Override
+    @PreAuthorize("@perm.authentifie()")
+    public ResponseEntity<List<RoleDefinition>> listRoles() {
+        List<RoleDefinition> roles = java.util.Arrays.stream(
+                        ma.clubify.platform.model.Role.values())
+                .map(role -> {
+                    RoleDefinition definition = new RoleDefinition();
+                    definition.setRole(Role.fromValue(role.name()));
+                    definition.setAssignable(role.attribuableEnR1());
+                    definition.setRequiresSecondFactor(role.exigeSecondFacteur());
+                    return definition;
+                })
+                .toList();
+        return ResponseEntity.ok(roles);
     }
 
     // ------------------------------------------------------- conversions

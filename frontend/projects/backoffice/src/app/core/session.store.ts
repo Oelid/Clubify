@@ -86,6 +86,21 @@ export class SessionStore {
     }
   }
 
+  /**
+   * Premier écran que cet utilisateur peut ouvrir.
+   *
+   * <p>Un rôle sans aucun droit — le coach, tant que son application n'existe
+   * pas — n'est pas renvoyé d'écran en écran : on le lui dit.
+   */
+  readonly premierEcran = computed(() => {
+    const ouverts: [string, string][] = [
+      ['club.settings.consulter', '/club'],
+      ['users.consulter', '/utilisateurs'],
+      ['audit.consulter', '/journal'],
+    ];
+    return ouverts.find(([droit]) => this.permet(droit))?.[1] ?? '/sans-acces';
+  });
+
   /** L'utilisateur détient-il ce droit ? Le backend le vérifie de son côté. */
   permet(code: string): boolean {
     return this.utilisateur()?.permissions.includes(code) ?? false;

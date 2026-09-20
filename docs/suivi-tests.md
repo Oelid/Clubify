@@ -69,6 +69,11 @@ fiche de feature, pour que la recette et la fiche ne divergent pas.
 | S19 | F01 | Le gérant change la couleur du club | La couleur s'applique à l'écran dès l'enregistrement et survit au rechargement | C28b | Automatisé |
 | S20 | F01 | Le gérant modifie une règle configurable | La valeur saisie est retenue, survit au rechargement, et l'origine passe à « choix du club » | C31b | Automatisé |
 | S21 | F01 | La liste des utilisateurs se parcourt page par page | La page s'ouvre à la taille retenue par le club, la plage affichée est juste, et changer la taille ramène au début | C40, C40c | Automatisé |
+| S22 | F01 | Le gérant crée un compte depuis l'écran | Le compte est créé, retrouvé par la recherche, et la personne peut se connecter | C12 | Automatisé |
+| S23 | F01 | Une adresse déjà utilisée est refusée | Message lisible en français, formulaire conservé | C36 | Automatisé |
+| S24 | F01 | Les rôles proposés sont ceux que l'application sait attribuer | Ni parent ni comptable, qui n'ont pas encore d'application | C12c | Automatisé |
+| S25 | F01 | Le gérant exporte la liste du personnel | Le fichier se télécharge, en-têtes en français, sans colonne sensible | C33, C34 | Automatisé |
+| S26 | F01 | Le gérant retrouve un compte parmi des dizaines | La recherche et les filtres réduisent la liste ; réinitialiser la rend entière | C41 | Automatisé |
 
 ## Recette manuelle — passages
 
@@ -87,13 +92,14 @@ de revenir. Une anomalie sans test de non-régression n'est pas close.
 | F01 | L'écran de second facteur déduisait l'étape de l'existence d'un jeton, au lieu de suivre l'issue du backend | Parcours en navigateur | Le secret et les codes de secours d'un compte déjà inscrit régénérés en silence ; son téléphone cesse de fonctionner | S04 | Close |
 | F01 | Le journal d'audit n'attribuait aucun auteur aux connexions | Parcours en navigateur | La colonne que le gérant regarde en premier reste vide (SEC-04) | S05 | Close |
 | F01 | Tolérance d'une seconde sur la borne de révocation des jetons | Suite technique devenue instable | Un jeton survit à la fermeture des sessions demandée par le gérant | Test technique `UsersApiTest.c8b` | Close |
-| F01 | L'amorçage écrivait hors transaction : un club créé sans trace d'audit | Vérification en base | Une action sensible sans trace, contre la règle 17 | À écrire | Ouverte |
+| F01 | L'amorçage écrivait hors transaction : un club créé sans trace d'audit | Vérification en base | Une action sensible sans trace, contre la règle 17 | Test technique `ClubSeederTest.c42b` | Close |
 | F01 | Les contrôleurs manipulaient des entités JPA | Test d'architecture | Relations paresseuses et cycle de vie transactionnel dans la couche web | Test technique `ArchitectureTest` | Close |
 | F01 | Quinze codes d'erreur du backend n'avaient aucune traduction : l'écran affichait « error.auth.mfa.codeInvalid » | Recette S01 | L'accueil lit un code technique au lieu d'une phrase, et ne sait pas quoi faire | Test technique `i18n.spec.ts`, qui compare les deux listes | Close |
 | F01 | Préparer une activation écrasait le second facteur d'un compte déjà inscrit, avant toute confirmation | Recette S01 | Le téléphone du gérant cesse de fonctionner sans qu'il ait rien fait | Test technique `AuthApiTest.c6f` | Close |
 | F01 | Un renouvellement de jeton se comportait comme une connexion : date de dernière connexion réécrite, entrée au journal | Recette S01 | Le gérant lit « connecté il y a une minute » d'un onglet resté ouvert, et le journal se noie | Test technique `AuthApiTest.c8d` | Close |
 | F01 | Deux sessions simultanées d'une même personne se heurtaient sur un verrou optimiste : erreur serveur à la connexion | Recette S01, S05 | Quelqu'un connecté au comptoir et sur son téléphone voit « L'action n'a pas pu aboutir » | S01 et S05, joués en parallèle | Close |
 | F01 | Les champs que l'accueil ne peut pas enregistrer avaient l'air modifiables | Recette S08 | On saisit dans une case qui n'enregistrera rien | S08 | Close |
+| F01 | Un rôle sans aucun droit — le coach — tournait en boucle de redirections à la connexion | Recette S22 | La personne croit s'être trompée et appelle le club ; rien ne lui dit ce qui se passe | S22 | Close |
 | F01 | L'accueil détenait `users.exporter` sans `users.consulter` : un droit inopérant, qui s'activait dès qu'on lui accordait la simple lecture | Question soulevée par la recette S08, démontrée par l'API | Le gérant accorde « consulter la liste » et ouvre sans le savoir l'export de la liste du personnel, contre le critère C33b | Tests techniques `ExportsApiTest.c33c` et `ArchitectureTest.exporterSupposeConsulter` | Close |
 
 ## Questions ouvertes

@@ -592,11 +592,15 @@ ouvre désormais sa transaction explicitement — la règle 17 tient.
 
 ### Reste à faire dans F01
 
-- Stories Storybook des composants de `ui`, support de validation des maquettes
-  avec l'accueil et le gérant (`frontend/CLAUDE.md`).
-- Parcours Playwright `premiere-connexion`, à brancher sur un backend de test.
-- Création d'utilisateur et export depuis l'écran : les boutons sont posés et
-  protégés par droit, l'action reste à écrire.
+- **Stories Storybook** : reportées à la première feature qui crée un composant
+  dans `ui`. La bibliothèque n'y contient aujourd'hui que les jetons, le thème
+  et les pipes — il n'y a pas encore de composant à mettre en vitrine.
+  Les maquettes se valident en attendant sur l'application elle-même
+  (scénario manuel S15).
+- **Tri des listes** : le paramètre `sort` du contrat n'est pas câblé ; le tri
+  est fixe, par nom puis prénom (décision 0033).
+- **Modifier et désactiver un utilisateur depuis l'écran** : les points d'entrée
+  existent et sont éprouvés, l'écran ne les propose pas encore.
 
 ### Questions toujours ouvertes
 

@@ -3,6 +3,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AuthSession } from '../core/auth.service';
+import { SessionStore } from '../core/session.store';
 import { provideTranslocoDeTest } from '../core/transloco.testing';
 import { LoginPage } from './login.page';
 
@@ -54,7 +55,23 @@ describe('LoginPage', () => {
     return fixture;
   };
 
-  it('ouvre le club quand la connexion suffit', async () => {
+  it("ouvre le premier écran que le rôle permet", async () => {
+    // Le gérant lit les paramètres du club : c'est là qu'il arrive.
+    TestBed.inject(SessionStore).poserUtilisateur({
+      id: '00000000-0000-7000-8000-000000000001',
+      email: 'gerant@exemple.test',
+      firstName: 'Recette',
+      lastName: 'Gérant',
+      role: 'MANAGER',
+      permissions: ['club.settings.consulter'],
+      club: {
+        id: '00000000-0000-7000-8000-0000000000aa',
+        name: 'Club A',
+        timezone: 'Africa/Casablanca',
+        currency: 'MAD',
+      },
+    });
+
     await soumettre();
 
     expect(router.navigate).toHaveBeenCalledWith(['/club']);

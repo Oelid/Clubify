@@ -34,5 +34,7 @@ export const exigeDroit = (code: string): CanActivateFn => () => {
   const session = inject(SessionStore);
   const router = inject(Router);
 
-  return session.permet(code) ? true : router.createUrlTree(['/utilisateurs']);
+  // Vers le premier écran qui lui est ouvert, et non vers un écran au hasard
+   // qui le renverrait ailleurs : un rôle sans droit tournerait en rond.
+  return session.permet(code) ? true : router.createUrlTree([session.premierEcran()]);
 };

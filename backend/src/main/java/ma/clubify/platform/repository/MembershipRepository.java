@@ -37,12 +37,28 @@ public interface MembershipRepository extends JpaRepository<Membership, UUID> {
     @Query(value = """
             select m from Membership m, UserAccount u
             where u.id = m.userId
+              and (:role is null or m.role = :role)
+              and (:actif is null or u.active = :actif)
+              and (:recherche is null
+                   or lower(u.lastName) like :recherche
+                   or lower(u.firstName) like :recherche
+                   or lower(u.email) like :recherche)
             order by lower(u.lastName), lower(u.firstName)
             """,
             countQuery = """
-            select count(m) from Membership m, UserAccount u where u.id = m.userId
+            select count(m) from Membership m, UserAccount u
+            where u.id = m.userId
+              and (:role is null or m.role = :role)
+              and (:actif is null or u.active = :actif)
+              and (:recherche is null
+                   or lower(u.lastName) like :recherche
+                   or lower(u.firstName) like :recherche
+                   or lower(u.email) like :recherche)
             """)
-    Page<Membership> pageDuClub(Pageable pagination);
+    Page<Membership> pageDuClub(@Param("role") Role role,
+                                @Param("actif") Boolean actif,
+                                @Param("recherche") String recherche,
+                                Pageable pagination);
 
     long countByRoleAndActiveTrue(Role role);
 

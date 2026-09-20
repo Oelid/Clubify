@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { codeDErreur } from '../core/api-errors';
 import { AuthSession } from '../core/auth.service';
+import { SessionStore } from '../core/session.store';
 
 /**
  * Connexion du staff (SEC-01). Pensée clavier : la mise au point part sur le
@@ -17,6 +18,7 @@ import { AuthSession } from '../core/auth.service';
 export class LoginPage {
   private readonly auth = inject(AuthSession);
   private readonly router = inject(Router);
+  private readonly session = inject(SessionStore);
 
   protected readonly email = signal('');
   protected readonly motDePasse = signal('');
@@ -32,8 +34,9 @@ export class LoginPage {
     try {
       const issue = await this.auth.connecter(this.email(), this.motDePasse());
       // Le backend dit s'il faut un second facteur : l'écran ne le devine pas.
+      // Et l'on ouvre le premier écran que le rôle permet, pas toujours le même.
       await this.router.navigate([
-        issue === 'AUTHENTICATED' ? '/club' : '/second-facteur',
+        issue === 'AUTHENTICATED' ? this.session.premierEcran() : '/second-facteur',
       ]);
     } catch (echec) {
       this.erreur.set(codeDErreur(echec));

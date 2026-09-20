@@ -11,22 +11,190 @@
     </div>
     <div class="page__actions">
       @if (peutExporter()) {
-        <button class="bouton bouton--discret" type="button">
+        <button
+          class="bouton bouton--discret"
+          type="button"
+          data-testid="exporter"
+          [disabled]="exportEnCours()"
+          (click)="exporter('CSV')"
+        >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" />
           </svg>
-          {{ t('users.export') }}
+          {{ exportEnCours() ? t('users.exporting') : t('users.export') }}
         </button>
       }
       @if (peutCreer()) {
-        <button class="bouton bouton--primaire" type="button">{{ t('users.add') }}</button>
+        <button
+          class="bouton bouton--primaire"
+          type="button"
+          data-testid="ajouter"
+          (click)="ouvrirLeFormulaire()"
+        >
+          {{ t('users.add') }}
+        </button>
       }
     </div>
   </header>
 
+  @if (succes(); as nom) {
+    <p class="page__succes" role="status" aria-live="polite">
+      {{ t('users.created', { nom }) }}
+    </p>
+  }
+
+  @if (formulaireOuvert()) {
+    <section class="carte" data-testid="formulaire-utilisateur">
+      <h2 class="carte__titre">{{ t('users.newTitle') }}</h2>
+      <form class="carte__corps" (ngSubmit)="creer()">
+        <div class="champ__paire">
+          <label class="champ">
+            <span class="champ__libelle">{{ t('users.firstName') }}</span>
+            <input
+              class="champ__saisie"
+              name="firstName"
+              required
+              autofocus
+              [ngModel]="nouveau().firstName"
+              (ngModelChange)="champ('firstName', $event)"
+            />
+          </label>
+          <label class="champ">
+            <span class="champ__libelle">{{ t('users.lastName') }}</span>
+            <input
+              class="champ__saisie"
+              name="lastName"
+              required
+              [ngModel]="nouveau().lastName"
+              (ngModelChange)="champ('lastName', $event)"
+            />
+          </label>
+        </div>
+
+        <div class="champ__paire">
+          <label class="champ">
+            <span class="champ__libelle">{{ t('users.email') }}</span>
+            <input
+              class="champ__saisie"
+              type="email"
+              name="email"
+              required
+              [ngModel]="nouveau().email"
+              (ngModelChange)="champ('email', $event)"
+            />
+          </label>
+          <label class="champ">
+            <span class="champ__libelle">{{ t('users.phone') }}</span>
+            <input
+              class="champ__saisie numeric"
+              name="phone"
+              inputmode="tel"
+              [ngModel]="nouveau().phone"
+              (ngModelChange)="champ('phone', $event)"
+            />
+          </label>
+        </div>
+
+        <div class="champ__paire">
+          <label class="champ">
+            <span class="champ__libelle">{{ t('users.role') }}</span>
+            <select
+              class="champ__saisie"
+              name="role"
+              data-testid="role"
+              [ngModel]="nouveau().role"
+              (ngModelChange)="champ('role', $event)"
+            >
+              @for (definition of roles.value() ?? []; track definition.role) {
+                <option [value]="definition.role">{{ t('role.' + definition.role) }}</option>
+              }
+            </select>
+          </label>
+          <label class="champ">
+            <span class="champ__libelle">{{ t('users.password') }}</span>
+            <input
+              class="champ__saisie"
+              type="password"
+              name="password"
+              autocomplete="new-password"
+              required
+              minlength="12"
+              [ngModel]="nouveau().password"
+              (ngModelChange)="champ('password', $event)"
+            />
+            <span class="champ__aide">{{ t('users.passwordHelp') }}</span>
+          </label>
+        </div>
+
+        <div class="page__actions">
+          <button class="bouton bouton--discret" type="button" (click)="fermerLeFormulaire()">
+            {{ t('users.cancel') }}
+          </button>
+          <button class="bouton bouton--primaire" type="submit" [disabled]="enCours()">
+            {{ enCours() ? t('users.creating') : t('users.create') }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+
   @if (erreur()) {
     <p class="page__erreur" role="alert">{{ t('error.' + erreur()) }}</p>
   }
+
+  <div class="filtres">
+    <label class="champ champ--compact">
+      <span class="champ__libelle">{{ t('users.search') }}</span>
+      <input
+        class="champ__saisie"
+        type="search"
+        name="recherche"
+        data-testid="recherche"
+        [placeholder]="t('users.searchPlaceholder')"
+        [ngModel]="criteres().recherche"
+        [ngModelOptions]="{ standalone: true }"
+        (ngModelChange)="filtrer('recherche', $event)"
+      />
+    </label>
+    <label class="champ champ--compact">
+      <span class="champ__libelle">{{ t('users.role') }}</span>
+      <select
+        class="champ__saisie"
+        name="filtreRole"
+        data-testid="filtre-role"
+        [ngModel]="criteres().role"
+        [ngModelOptions]="{ standalone: true }"
+        (ngModelChange)="filtrer('role', $event)"
+      >
+        <option value="">{{ t('users.allRoles') }}</option>
+        @for (definition of tousLesRoles.value() ?? []; track definition.role) {
+          <option [value]="definition.role">{{ t('role.' + definition.role) }}</option>
+        }
+      </select>
+    </label>
+    <label class="champ champ--compact">
+      <span class="champ__libelle">{{ t('users.status') }}</span>
+      <select
+        class="champ__saisie"
+        name="filtreStatut"
+        data-testid="filtre-statut"
+        [ngModel]="criteres().actif"
+        [ngModelOptions]="{ standalone: true }"
+        (ngModelChange)="filtrer('actif', $event)"
+      >
+        <option value="">{{ t('users.allStatuses') }}</option>
+        <option value="true">{{ t('users.active') }}</option>
+        <option value="false">{{ t('users.disabled') }}</option>
+      </select>
+    </label>
+    @if (filtreActif()) {
+      <div class="filtres__actions">
+        <button class="bouton bouton--discret" type="button" (click)="reinitialiserLesFiltres()">
+          {{ t('audit.reset') }}
+        </button>
+      </div>
+    }
+  </div>
 
   <div class="tableau">
     <table>
