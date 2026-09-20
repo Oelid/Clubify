@@ -516,9 +516,27 @@ Ce que les tests exigent du code de l'étape 5, au-delà des règles de la fiche
   `/test/effet-externe`, `/test/notifier`), pour éprouver le socle sans attendre une feature
   métier ; même contrainte.
 
-Reste à écrire à l'étape 4 : les tests du frontend (Vitest, Storybook en FR et en RTL,
-Playwright sur la première connexion), qui attendent la création du workspace Angular.
+### Frontend
+
+Workspace Angular créé (Angular 21, PrimeNG 21, Tailwind 4, Transloco, Playwright).
+**15 tests Vitest : 10 rouges, 5 verts.**
+
+| Sujet | Fichier | État |
+| --- | --- | --- |
+| Montants en centimes formatés dans la devise du club | `money.pipe.spec.ts` | 5 rouges |
+| Instants UTC affichés dans le fuseau du club, dates pures inchangées | `club-date.pipe.spec.ts` | 5 rouges |
+| Aucune propriété physique gauche ou droite dans les feuilles de style | `tokens.spec.ts` | vert |
+| Jetons sémantiques présents, marque du club par-dessus Clubify | `tokens.spec.ts` | 2 verts |
+| Mouvement coupé sur `prefers-reduced-motion`, chiffres tabulaires | `tokens.spec.ts` | 2 verts |
+| Première connexion : mot de passe, second facteur imposé, journal | `e2e/premiere-connexion.spec.ts` | rouge |
+
+Les cinq verts ne sont pas un oubli : ce sont des invariants du système de design,
+déjà satisfaits par `tokens.css`. Le droite-à-gauche se tient dès le premier jour
+(PLT-08) ; le contrôle échouera si un écran introduit un `margin-left`.
+
+Reste à écrire : les stories Storybook, une fois les premiers composants de `ui`
+implémentés à l'étape 5.
 
 ## Statut
 
-En cours — 2026-09-20. Étapes 1 à 3 closes ; étape 4 en cours : 64 tests backend en place et rouges, tests frontend à écrire après la création du workspace Angular.
+En cours — 2026-09-20. Étapes 1 à 4 closes : 79 tests en place (64 backend, 15 frontend), rouges sauf les cinq invariants du système de design ; étape 5 (implémentation) à faire.
