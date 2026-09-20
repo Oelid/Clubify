@@ -26,6 +26,11 @@ export class AuthSession {
   private defi: string | null = null;
 
   async connecter(email: string, motDePasse: string): Promise<Connexion> {
+    // Une nouvelle connexion remplace la précédente : sans cela, une session
+    // reprise depuis le cookie fausserait la suite du parcours.
+    this.session.vider();
+    this.defi = null;
+
     const reponse = await firstValueFrom(
       this.api.login({ loginRequest: { email, password: motDePasse } }),
     );
@@ -102,17 +107,17 @@ export class AuthSession {
     if (reponse.outcome === 'MFA_ENROLLMENT_REQUIRED' && reponse.tokens) {
       // Jeton provisoire : il ne sert qu'à activer le second facteur (C6b).
       this.session.poserJeton(reponse.tokens.accessToken);
-      this.session.attendreSecondFacteur(true);
+      this.session.attendreSecondFacteur('ACTIVATION');
       return 'MFA_ENROLLMENT_REQUIRED';
     }
     this.defi = reponse.mfaChallengeId ?? null;
-    this.session.attendreSecondFacteur(true);
+    this.session.attendreSecondFacteur('VERIFICATION');
     return 'MFA_REQUIRED';
   }
 
   private async ouvrir(jetons: TokenPair): Promise<void> {
     this.session.poserJeton(jetons.accessToken);
-    this.session.attendreSecondFacteur(false);
+    this.session.attendreSecondFacteur(null);
     const courant = await firstValueFrom(this.api.getCurrentUser());
     this.session.poserUtilisateur(courant);
     // La langue de l'utilisateur emporte la direction du document (PLT-08).

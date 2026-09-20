@@ -68,6 +68,17 @@ public class AuditListener {
                 && authentification.getPrincipal() instanceof AuthenticatedUser utilisateur) {
             entree.setActorType(AuditLog.ActorType.USER);
             entree.setActorId(utilisateur.userId());
+            // Le libellé est figé à l'instant de l'action : un compte renommé ne
+            // doit pas réécrire l'histoire.
+            entree.setActorLabel(utilisateur.email());
+            return;
+        }
+
+        UserActor.Auteur auteur = UserActor.courant();
+        if (auteur != null) {
+            entree.setActorType(AuditLog.ActorType.USER);
+            entree.setActorId(auteur.userId());
+            entree.setActorLabel(auteur.libelle());
             return;
         }
         // Hors de toute demande authentifiée : c'est le système qui agit, et la

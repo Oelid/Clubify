@@ -71,6 +71,7 @@ public class TokenService {
         var maintenant = horloge.instant();
         JWTClaimsSet revendications = new JWTClaimsSet.Builder()
                 .subject(utilisateur.userId().toString())
+                .claim("email", utilisateur.email())
                 .claim("club_id", utilisateur.clubId().toString())
                 .claim("membership_id", utilisateur.membershipId().toString())
                 .claim("role", utilisateur.role().name())
@@ -111,6 +112,7 @@ public class TokenService {
             String permissions = revendications.getStringClaim("perms");
             return new AuthenticatedUser(
                     UUID.fromString(revendications.getSubject()),
+                    revendications.getStringClaim("email"),
                     UUID.fromString(revendications.getStringClaim("club_id")),
                     UUID.fromString(revendications.getStringClaim("membership_id")),
                     Role.valueOf(revendications.getStringClaim("role")),

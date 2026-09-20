@@ -27,7 +27,7 @@ describe('Gardes de routes', () => {
 
   it('renvoie au second facteur tant qu\u2019il reste à franchir', () => {
     session.poserJeton('jeton-provisoire');
-    session.attendreSecondFacteur(true);
+    session.attendreSecondFacteur('VERIFICATION');
 
     expect((executer(sessionOuverte) as UrlTree).toString()).toBe('/second-facteur');
   });

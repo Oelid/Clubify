@@ -65,6 +65,23 @@ class AuditApiTest {
     }
 
     @Test
+    @DisplayName("C16c — une connexion réussie nomme son auteur, et non « système »")
+    void c16c_auteurDUneConnexion() throws Exception {
+        auth.jetonDe(Fixtures.ADMIN_A_EMAIL);
+
+        Map<String, Object> entree = jdbc.queryForMap("""
+                select actor_type, actor_id, actor_label from audit_log
+                where action = 'auth.login.succeeded' order by occurred_at desc limit 1
+                """);
+
+        // Sans cela, la colonne « auteur » du journal resterait vide là où le
+        // gérant en a le plus besoin (SEC-04, benchmark B3).
+        assertThat(entree.get("actor_type")).isEqualTo("USER");
+        assertThat(entree.get("actor_id")).isNotNull();
+        assertThat(entree.get("actor_label")).isEqualTo(Fixtures.ADMIN_A_EMAIL);
+    }
+
+    @Test
     @DisplayName("C17 — le journal refuse toute modification et toute suppression")
     void c17_ajoutSeul() throws Exception {
         api.send(adminToken(), put("/api/v1/club"), Map.of("name", "Club A Sport"));

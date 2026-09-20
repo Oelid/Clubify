@@ -10,6 +10,9 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - clubify-pg:/var/lib/postgresql/data
+      # PostgreSQL 18 attend un montage unique sur /var/lib/postgresql, et non
+      # sur son sous-dossier data : c'est ce qui rend « pg_upgrade --link »
+      # possible plus tard, sans franchir de frontière de montage.
+      - clubify-pg:/var/lib/postgresql
 volumes:
   clubify-pg:

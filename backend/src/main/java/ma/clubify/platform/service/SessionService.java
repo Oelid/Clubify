@@ -1,5 +1,6 @@
 package ma.clubify.platform.service;
 
+import ma.clubify.common.audit.UserActor;
 import ma.clubify.common.event.DomainEvent;
 import ma.clubify.common.event.DomainEvents;
 import ma.clubify.common.exception.BusinessRuleException;
@@ -173,15 +174,18 @@ public class SessionService {
                                      Instant maintenant, String jetonAppareil) {
         compte.setLastLoginAt(maintenant);
         Tokens emis = emettre(compte, appartenance, maintenant, false, jetonAppareil);
-        evenements.publish(DomainEvent.of(appartenance.getClubId(), "auth.login.succeeded",
-                "UserAccount", compte.getId()));
+        // Au moment où la connexion réussit, aucun jeton n'est encore posé :
+        // l'auteur s'annonce, sinon le journal dirait « système » (SEC-04).
+        UserActor.executer(compte.getId(), compte.getEmail(), () ->
+                evenements.publish(DomainEvent.of(appartenance.getClubId(),
+                        "auth.login.succeeded", "UserAccount", compte.getId())));
         return new AuthOutcome(AuthOutcome.Kind.AUTHENTICATED, emis, null);
     }
 
     private Tokens emettre(UserAccount compte, Membership appartenance, Instant maintenant,
                            boolean secondFacteurEnAttente, String jetonAppareil) {
         AuthenticatedUser utilisateur = new AuthenticatedUser(
-                compte.getId(), appartenance.getClubId(), appartenance.getId(),
+                compte.getId(), compte.getEmail(), appartenance.getClubId(), appartenance.getId(),
                 appartenance.getRole(),
                 secondFacteurEnAttente ? Set.of() : permissions.effectives(appartenance),
                 compte.getLanguage(), secondFacteurEnAttente);

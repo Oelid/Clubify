@@ -1,10 +1,11 @@
 import { Routes } from '@angular/router';
-import { exigeDroit, sessionOuverte } from './core/auth.guard';
+import { exigeDroit, sessionFermee, sessionOuverte } from './core/auth.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'connexion' },
   {
     path: 'connexion',
+    canActivate: [sessionFermee],
     loadComponent: () => import('./auth/login.page').then((m) => m.LoginPage),
   },
   {

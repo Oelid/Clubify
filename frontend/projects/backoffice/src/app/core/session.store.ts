@@ -2,6 +2,9 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { CurrentUser } from 'api-client';
 import { ClubContext, ClubTheme } from 'ui';
 
+/** Ce que le backend attend avant d'ouvrir la session, ou rien. */
+export type EtapeSecondFacteur = 'ACTIVATION' | 'VERIFICATION' | null;
+
 /**
  * Session en cours : jeton d'accès, utilisateur, club.
  *
@@ -18,13 +21,18 @@ export class SessionStore {
   private readonly jeton = signal<string | null>(null);
   private readonly utilisateur = signal<CurrentUser | null>(null);
 
-  /** Vrai dès que le second facteur reste à franchir ou à activer. */
-  private readonly attenteSecondFacteur = signal(false);
+  /**
+   * Étape de second facteur attendue, telle que le backend l'a nommée. Jamais
+   * devinée : l'activer alors qu'une simple vérification était demandée
+   * régénérerait le secret et les codes de secours d'un compte déjà inscrit.
+   */
+  private readonly etapeSecondFacteur = signal<EtapeSecondFacteur>(null);
 
   readonly accessToken = this.jeton.asReadonly();
   readonly current = this.utilisateur.asReadonly();
   readonly authentifie = computed(() => this.jeton() !== null);
-  readonly secondFacteurAttendu = this.attenteSecondFacteur.asReadonly();
+  readonly etape = this.etapeSecondFacteur.asReadonly();
+  readonly secondFacteurAttendu = computed(() => this.etapeSecondFacteur() !== null);
 
   readonly nomComplet = computed(() => {
     const courant = this.utilisateur();
@@ -40,8 +48,8 @@ export class SessionStore {
     this.jeton.set(jeton);
   }
 
-  attendreSecondFacteur(attendu: boolean): void {
-    this.attenteSecondFacteur.set(attendu);
+  attendreSecondFacteur(etape: EtapeSecondFacteur): void {
+    this.etapeSecondFacteur.set(etape);
   }
 
   /**
@@ -74,7 +82,7 @@ export class SessionStore {
   vider(): void {
     this.jeton.set(null);
     this.utilisateur.set(null);
-    this.attenteSecondFacteur.set(false);
+    this.etapeSecondFacteur.set(null);
     this.theme.reset();
   }
 }

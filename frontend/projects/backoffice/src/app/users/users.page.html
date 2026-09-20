@@ -3,7 +3,10 @@
     <div>
       <h1 class="page__titre">{{ t('users.title') }}</h1>
       <p class="page__sous-titre">
-        {{ t('users.count', { count: utilisateurs().length, disabled: desactives() }) }}
+        {{ t('users.count', { count: utilisateurs().length }) }}
+        @if (desactives() > 0) {
+          {{ t('users.countDisabled', { disabled: desactives() }) }}
+        }
       </p>
     </div>
     <div class="page__actions">

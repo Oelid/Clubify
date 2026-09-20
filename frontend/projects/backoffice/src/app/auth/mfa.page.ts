@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -33,8 +33,12 @@ export class MfaPage {
   protected readonly enCours = signal(false);
   protected readonly erreur = signal<string | null>(null);
 
-  /** Activation en cours : l'écran porte alors le QR et les codes de secours. */
-  protected readonly activation = signal(false);
+  /**
+   * Activation en cours : l'écran porte alors le QR et les codes de secours.
+   * L'étape vient du backend ; la deviner reviendrait à régénérer le secret
+   * d'un compte déjà inscrit.
+   */
+  protected readonly activation = computed(() => this.session.etape() === 'ACTIVATION');
 
   constructor() {
     void this.preparer();
@@ -66,10 +70,9 @@ export class MfaPage {
    * simple vérification n'a rien à préparer : le défi est déjà ouvert.
    */
   private async preparer(): Promise<void> {
-    if (!this.session.accessToken()) {
+    if (!this.activation()) {
       return;
     }
-    this.activation.set(true);
     try {
       const preparation = await this.auth.preparerSecondFacteur();
       this.otpauthUri.set(preparation.otpauthUri);

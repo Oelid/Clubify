@@ -16,6 +16,19 @@ export const sessionOuverte: CanActivateFn = () => {
   return router.createUrlTree([session.secondFacteurAttendu() ? '/second-facteur' : '/connexion']);
 };
 
+/**
+ * Écrans d'authentification : inutiles quand la session est déjà ouverte, et
+ * trompeurs, puisque s'y reconnecter effacerait la session en cours.
+ */
+export const sessionFermee: CanActivateFn = () => {
+  const session = inject(SessionStore);
+  const router = inject(Router);
+
+  return session.authentifie() && !session.secondFacteurAttendu()
+    ? router.createUrlTree(['/club'])
+    : true;
+};
+
 /** Garde d'un écran qui exige un droit précis. */
 export const exigeDroit = (code: string): CanActivateFn => () => {
   const session = inject(SessionStore);

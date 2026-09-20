@@ -74,7 +74,7 @@
   },
   "users": {
     "title": "Utilisateurs",
-    "count": "{{count}} comptes, dont {{disabled}} désactivé(s).",
+    "count": "Comptes : {{count}}.",
     "add": "Ajouter un utilisateur",
     "export": "Exporter",
     "name": "Nom",
@@ -89,7 +89,8 @@
     "lastLogin": "Dernière connexion",
     "never": "Jamais",
     "empty": "Aucun utilisateur.",
-    "sensitiveNote": "Les colonnes sensibles au sens de SEC-03 — santé, CIN, pièces — ne figurent dans aucun export."
+    "sensitiveNote": "Les colonnes sensibles au sens de SEC-03 — santé, CIN, pièces — ne figurent dans aucun export.",
+    "countDisabled": "Dont désactivés : {{disabled}}."
   },
   "role": {
     "ACCOUNT_ADMIN": "Administrateur du compte",
