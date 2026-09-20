@@ -116,7 +116,8 @@ Depuis `frontend/` :
 
 | Commande | Effet |
 | --- | --- |
-| `npm install --legacy-peer-deps` | Installe les dépendances. **Le drapeau est nécessaire** : npm 10.9.4 échoue sur le graphe de dépendances pairs de Vitest 4 (`Cannot read properties of null (reading 'edgesOut')`). Il disparaîtra avec npm 11. |
+| `npm ci` | Installe les dépendances depuis le lock. **npm 11 au minimum** : npm 10 échoue sur le graphe de dépendances pairs de Vitest 4 (`Cannot read properties of null (reading 'edgesOut')`). Mettre à jour par `npm install -g npm@11`. Ne jamais recourir à `--legacy-peer-deps` : le lock produit ainsi est désynchronisé et `npm ci` le refuse. |
+| `npm install` | À réserver à l'ajout d'une dépendance, après accord (`../CLAUDE.md` §5). |
 | `npm run api` | Régénère `projects/api-client/` depuis `../contracts/openapi.yaml`. À relancer après toute modification du contrat. Le dossier n'est jamais commité. |
 | `npm start` | Sert le backoffice sur `http://localhost:4200`. |
 | `npm run build` | Construit le backoffice. |
