@@ -84,21 +84,32 @@ class UsersApiTest {
     }
 
     @Test
-    @DisplayName("C40b — une page démesurée est refusée, avec un message lisible")
+    @DisplayName("C40b — le serveur borne toute taille demandée, quelle qu'elle soit")
     void c40b_plafond() throws Exception {
         String admin = adminToken();
 
-        // Un appel direct à l'API ne doit pas pouvoir demander mille lignes,
-        // et le refus doit se lire : une erreur serveur laisserait croire à une panne.
+        // Un appel direct à l'API, écrit à la main, ne peut pas obtenir davantage
+        // que la borne : elle est posée côté serveur, pas côté client.
         api.getAs(admin, "/users?page=0&size=5000")
-                .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.code").value("validation.failed"))
-                .andExpect(jsonPath("$.errors[0].field").value("size"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page.size").value(100));
 
-        // La borne haute, elle, passe.
         api.getAs(admin, "/users?page=0&size=100")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.page.size").value(100));
+
+        // En dessous aussi : une page de zéro ligne ne veut rien dire.
+        api.getAs(admin, "/users?size=0")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page.size").value(1));
+        api.getAs(admin, "/users?size=-10")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page.size").value(1));
+
+        // Et un numéro de page négatif rend la première page.
+        api.getAs(admin, "/users?page=-3&size=20")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page.page").value(0));
     }
 
     @Test

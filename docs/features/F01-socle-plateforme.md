@@ -186,7 +186,7 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C38 | 37 | Toute table créée par F01 | Inspection du schéma | `club_id` non nul indexé, colonnes d'audit, `deleted_at`, identifiants UUID |
 | C39 | 38 | Aucun prestataire configuré | Un événement qui déclencherait un message | L'implémentation vide reçoit l'appel, l'action métier réussit |
 | C40 | 32 | Club comptant plus de comptes qu'une page n'en tient | Demande de la première page, puis de la dernière | Chaque page rend le nombre de lignes demandé, le total compte tout le club, et la base ne renvoie que la page (décision 0033) |
-| C40b | 32 | — | Demande d'une page de cinq mille lignes | Refus lisible, jamais une erreur serveur ; cent lignes restent acceptées |
+| C40b | 32 | — | Appel direct à l'API avec une taille de cinq mille, puis zéro, puis une page négative | Le serveur borne sans refuser : cent lignes, une ligne, première page. La borne est côté serveur, hors de portée de l'appelant (décision 0033) |
 | C40c | 32 | Club ayant retenu trente lignes par page | Liste demandée sans taille | Trente lignes ; l'interface reçoit cette taille à la connexion |
 | C40d | 32 | Club ayant réglé cinq cents lignes par page | Liste demandée sans taille | Ramenée à cent : aucun réglage ne dépasse la borne |
 

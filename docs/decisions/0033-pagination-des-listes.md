@@ -16,9 +16,13 @@ factures et le journal d'audit seront tous plus longs encore.
   demandée et compte le total à part.
 - Le nombre de lignes par page est une règle configurable du club :
   `ui.page_size`, par défaut **20**.
-- **Plafond absolu de 100 lignes**, qu'aucun réglage de club ne dépasse. Une
-  taille demandée au-delà est refusée par le contrat, avec un message lisible ;
-  un réglage de club au-delà est ramené à 100.
+- **Plafond absolu de 100 lignes**, qu'aucun réglage de club ni aucun appelant
+  ne dépasse. Le serveur **borne sans refuser** : au-delà de 100, la taille est
+  ramenée à 100 ; en dessous de 1, à 1 ; une page négative devient la première ;
+  une taille absente prend celle du club.
+- La borne est posée à un seul endroit, `PaginationPolicy`, que tout chemin de
+  lecture traverse. Un appel écrit à la main ne peut donc pas la contourner :
+  il ne peut pas contourner ce chemin.
 - L'interface propose **20, 30, 50, 100**. Changer la taille ramène à la
   première page.
 - Le club annonce sa taille de page dans `ClubSummary`, pour que l'interface
@@ -43,10 +47,14 @@ un poste modeste, et que la valeur ronde se retient.
   ça tient tant qu'un club a vingt comptes, et pas au-delà.
 - **Fixer la taille en dur.** Le comptoir et le bureau n'ont ni le même écran ni
   le même usage.
-- **Ramener silencieusement une taille démesurée à cent** plutôt que la refuser.
-  Le contrat annonce la borne ; la respecter en silence masquerait une erreur
-  d'appel au lieu de la signaler. Le réglage de club, lui, est borné sans bruit :
-  il n'y a personne à prévenir au moment où il s'applique.
+- **Refuser une taille démesurée** plutôt que la ramener dans les bornes.
+  Essayé, puis écarté : un refus oblige chaque appelant à connaître la borne et
+  à la respecter, alors que c'est au serveur de se protéger. Borner donne
+  toujours une réponse utilisable, et la taille réellement appliquée figure dans
+  la réponse — un client attentif la voit.
+
+  Conséquence assumée : un client qui demande 5 000 lignes en reçoit 100 sans
+  avertissement. Il lui appartient de lire `page.size`, que la réponse porte.
 - **Un défilement infini.** Illisible pour une liste qu'on imprime ou qu'on
   parcourt à la recherche d'un nom.
 

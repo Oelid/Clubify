@@ -632,15 +632,19 @@ components:
     Page:
       name: page
       in: query
-      schema: { type: integer, minimum: 0, default: 0 }
+      description: >-
+        Numéro de page, à partir de zéro. Une valeur négative est ramenée à zéro.
+      schema: { type: integer, default: 0 }
     Size:
       name: size
       in: query
       description: >-
-        Lignes par page. Ramenée dans les bornes si elle les dépasse : une page
-        de mille lignes coûte autant au serveur qu'au navigateur, et personne ne
-        la lit. Sans valeur, la taille retenue par le club s'applique.
-      schema: { type: integer, minimum: 1, maximum: 100 }
+        Lignes par page, entre 1 et 100. **Le serveur borne sans refuser** : une
+        valeur plus grande est ramenée à 100, une valeur plus petite à 1. Une
+        page de mille lignes coûte autant au serveur qu'au navigateur, et
+        personne ne la lit ; la borne ne dépend donc pas de la bonne volonté du
+        client. Sans valeur, la taille retenue par le club s'applique.
+      schema: { type: integer, example: 20 }
     UserId:
       name: userId
       in: path

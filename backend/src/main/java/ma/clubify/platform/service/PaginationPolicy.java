@@ -35,8 +35,14 @@ public class PaginationPolicy {
     /**
      * Pagination à appliquer, à partir de ce que le client a demandé.
      *
-     * <p>Une taille hors bornes est ramenée dans les bornes plutôt que refusée :
-     * l'appelant obtient une page utilisable, et le serveur reste protégé.
+     * <p>Rien n'est refusé : une taille absente prend celle du club, une taille
+     * hors bornes y est ramenée, une page négative devient la première. C'est
+     * ici, et nulle part ailleurs, que la borne s'applique — un appel direct à
+     * l'API, écrit à la main ou mal intentionné, ne peut pas la contourner,
+     * puisqu'il ne peut pas contourner ce chemin.
+     *
+     * @param page   numéro demandé, ou {@code null} pour la première
+     * @param taille lignes demandées, ou {@code null} pour celle du club
      */
     public Pageable de(Integer page, Integer taille) {
         int demandee = taille == null ? tailleDuClub() : taille;
