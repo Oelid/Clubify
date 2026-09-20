@@ -11,12 +11,16 @@ import java.util.UUID;
  * <p>La création du premier club et de son administrateur passe par une commande
  * d'amorçage, pas par l'API (fiche F01, Q1) : les tests reproduisent cet état de
  * départ sans emprunter un chemin qui n'existe pas.
- *
- * <p>Tant que les migrations de F01 ne sont pas écrites, ces insertions échouent :
- * c'est l'état rouge attendu à l'étape 4.
  */
 @Component
 public class TestSeeder {
+
+    /** Ordre de suppression : les enfants avant les parents. */
+    private static final String[] TABLES = {
+            "file_link", "outbox_event", "user_permission_override", "refresh_token",
+            "trusted_device", "recovery_code", "club_setting", "membership",
+            "stored_file", "site", "user_account", "club"
+    };
 
     private final JdbcTemplate jdbc;
 
@@ -44,12 +48,19 @@ public class TestSeeder {
      * @param role ACCOUNT_ADMIN, MANAGER, FRONT_DESK, COACH, ACCOUNTANT
      */
     public UUID user(UUID clubId, String email, String role, String rawPassword) {
-        UUID userId = UUID.randomUUID();
-        jdbc.update("""
-                insert into user_account (id, email, first_name, last_name, password_hash,
-                                          language, active, mfa_enabled, created_at, updated_at)
-                values (?, ?, 'Prenom', 'Nom', ?, 'fr', true, false, now(), now())
-                """, userId, email, PasswordHashes.of(rawPassword));
+        UUID userId = jdbc.query(
+                "select id from user_account where lower(email) = lower(?) and deleted_at is null",
+                rs -> rs.next() ? rs.getObject(1, UUID.class) : null, email);
+
+        if (userId == null) {
+            userId = UUID.randomUUID();
+            jdbc.update("""
+                    insert into user_account (id, email, first_name, last_name, password_hash,
+                                              language, active, mfa_enabled, created_at, updated_at)
+                    values (?, ?, 'Prenom', 'Nom', ?, 'fr', true, false, now(), now())
+                    """, userId, email, PasswordHashes.of(rawPassword));
+        }
+
         jdbc.update("""
                 insert into membership (id, club_id, user_id, role, active, created_at, updated_at)
                 values (?, ?, ?, ?, true, now(), now())
@@ -57,12 +68,21 @@ public class TestSeeder {
         return userId;
     }
 
-    public void truncateAll() {
-        jdbc.execute("""
-                truncate table membership, user_permission_override, refresh_token,
-                               trusted_device, recovery_code, club_setting, stored_file,
-                               outbox_event, site, user_account, club restart identity cascade
-                """);
+    /**
+     * Remet la base à blanc entre deux tests.
+     *
+     * <p>Le journal d'audit refuse toute suppression, y compris par cascade : c'est
+     * la règle 17, et le déclencheur la tient même face à un superutilisateur. Le
+     * vider ici exige donc de le désactiver explicitement — un geste réservé aux
+     * tests, jamais accessible à l'application.
+     */
+    public void reset() {
+        for (String table : TABLES) {
+            jdbc.update("delete from " + table);
+        }
+        jdbc.execute("alter table audit_log disable trigger user");
+        jdbc.update("delete from audit_log");
+        jdbc.execute("alter table audit_log enable trigger user");
     }
 
     /** Le journal d'audit ne se vide jamais par l'application (règle 17). */

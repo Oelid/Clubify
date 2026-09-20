@@ -13,6 +13,6 @@ clubify:
     jwt:
       secret: test-secret-de-signature-pour-les-tests-uniquement-32o
   encryption:
-    key: dGVzdC1rZXktMzItb2N0ZXRzLXBvdXItQUVTLUdDTS0xMjM0NTY=
+    key: Y2x1YmlmeS1jbGUtZGUtdGVzdC0zMi1vY3RldHMhISE=
   files:
     storage: memory

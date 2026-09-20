@@ -34,7 +34,7 @@ class ExportsApiTest {
 
     @BeforeEach
     void seed() {
-        seeder.truncateAll();
+        seeder.reset();
         clubA = seeder.club(Fixtures.CLUB_A);
         UUID clubB = seeder.club(Fixtures.CLUB_B);
         seeder.user(clubA, Fixtures.ADMIN_A_EMAIL, "ACCOUNT_ADMIN", Fixtures.VALID_PASSWORD);

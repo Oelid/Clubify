@@ -39,7 +39,7 @@ class PlatformInvariantsTest {
 
     @BeforeEach
     void seed() {
-        seeder.truncateAll();
+        seeder.reset();
         clubA = seeder.club(Fixtures.CLUB_A);
         seeder.user(clubA, Fixtures.ADMIN_A_EMAIL, "ACCOUNT_ADMIN", Fixtures.VALID_PASSWORD);
     }

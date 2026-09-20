@@ -38,7 +38,7 @@ class AuditApiTest {
 
     @BeforeEach
     void seed() {
-        seeder.truncateAll();
+        seeder.reset();
         clubA = seeder.club(Fixtures.CLUB_A);
         seeder.user(clubA, Fixtures.ADMIN_A_EMAIL, "ACCOUNT_ADMIN", Fixtures.VALID_PASSWORD);
         seeder.user(clubA, Fixtures.FRONT_DESK_A_EMAIL, "FRONT_DESK", Fixtures.VALID_PASSWORD);

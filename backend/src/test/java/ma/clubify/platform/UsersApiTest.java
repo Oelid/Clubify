@@ -42,7 +42,7 @@ class UsersApiTest {
 
     @BeforeEach
     void seed() {
-        seeder.truncateAll();
+        seeder.reset();
         clubA = seeder.club(Fixtures.CLUB_A);
         admin = seeder.user(clubA, Fixtures.ADMIN_A_EMAIL, "ACCOUNT_ADMIN", Fixtures.VALID_PASSWORD);
         manager = seeder.user(clubA, Fixtures.MANAGER_A_EMAIL, "MANAGER", Fixtures.VALID_PASSWORD);
