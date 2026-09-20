@@ -636,7 +636,11 @@ components:
     Size:
       name: size
       in: query
-      schema: { type: integer, minimum: 1, maximum: 200, default: 20 }
+      description: >-
+        Lignes par page. Ramenée dans les bornes si elle les dépasse : une page
+        de mille lignes coûte autant au serveur qu'au navigateur, et personne ne
+        la lit. Sans valeur, la taille retenue par le club s'applique.
+      schema: { type: integer, minimum: 1, maximum: 100 }
     UserId:
       name: userId
       in: path
@@ -886,6 +890,12 @@ components:
             n'en a pas choisi : l'interface garde alors les jetons Clubify.
           example: '#F08840'
         brandSecondary: { type: string, example: '#307890' }
+        pageSize:
+          type: integer
+          description: >-
+            Lignes par page retenues par le club, pour que l'interface ouvre les
+            listes à la bonne taille sans lire les réglages. Bornée à 100.
+          example: 20
 
     Club:
       allOf:

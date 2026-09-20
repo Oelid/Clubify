@@ -6,8 +6,8 @@ import ma.clubify.generated.model.AuditEntryPage;
 import ma.clubify.generated.model.PageMeta;
 import ma.clubify.platform.model.dto.AuditEntryDto;
 import ma.clubify.platform.service.AuditQueryService;
+import ma.clubify.platform.service.PaginationPolicy;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,9 +26,11 @@ import java.util.UUID;
 public class AuditController implements AuditApi {
 
     private final AuditQueryService journal;
+    private final PaginationPolicy pagination;
 
-    public AuditController(AuditQueryService journal) {
+    public AuditController(AuditQueryService journal, PaginationPolicy pagination) {
         this.journal = journal;
+        this.pagination = pagination;
     }
 
     @Override
@@ -41,7 +43,7 @@ public class AuditController implements AuditApi {
                 actorId, action, entityType, entityId,
                 from == null ? null : from.toInstant(),
                 to == null ? null : to.toInstant(),
-                PageRequest.of(page == null ? 0 : page, size == null ? 20 : size));
+                pagination.de(page, size));
 
         AuditEntryPage reponse = new AuditEntryPage();
         reponse.setContent(trouvees.getContent().stream().map(AuditController::versContrat).toList());

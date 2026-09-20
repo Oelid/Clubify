@@ -2,6 +2,8 @@ package ma.clubify.platform.repository;
 
 import ma.clubify.platform.model.entity.Membership;
 import ma.clubify.platform.model.Role;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,6 +25,24 @@ public interface MembershipRepository extends JpaRepository<Membership, UUID> {
     Optional<Membership> findByUserId(UUID userId);
 
     List<Membership> findAllByRole(Role role);
+
+    /**
+     * Une page d'appartenances du club, triées par le nom de la personne.
+     *
+     * <p>Le tri porte sur {@code user_account}, que {@code membership} ne
+     * référence que par son identifiant : d'où la jointure explicite. La page
+     * est découpée par la base, et non en mémoire — une liste de mille comptes
+     * ne doit pas traverser l'application pour en afficher vingt.
+     */
+    @Query(value = """
+            select m from Membership m, UserAccount u
+            where u.id = m.userId
+            order by lower(u.lastName), lower(u.firstName)
+            """,
+            countQuery = """
+            select count(m) from Membership m, UserAccount u where u.id = m.userId
+            """)
+    Page<Membership> pageDuClub(Pageable pagination);
 
     long countByRoleAndActiveTrue(Role role);
 

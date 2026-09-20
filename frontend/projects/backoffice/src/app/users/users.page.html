@@ -75,5 +75,45 @@
     </table>
   </div>
 
+  @if (total() > 0) {
+    <div class="pagination">
+      <label class="pagination__taille">
+        {{ t('app.pageSize') }}
+        <select
+          class="champ__saisie champ__saisie--compact"
+          data-testid="lignes-par-page"
+          [ngModel]="taille()"
+          [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="changerLaTaille($event)"
+        >
+          @for (palier of paliers; track palier) {
+            <option [value]="palier">{{ palier }}</option>
+          }
+        </select>
+      </label>
+
+      <span class="pagination__etat numeric" data-testid="plage">
+        {{ t('app.range', { premier: premier(), dernier: dernier(), total: total() }) }}
+      </span>
+
+      <button
+        class="bouton bouton--discret"
+        type="button"
+        [disabled]="numero() <= 1"
+        (click)="allerA(numero() - 2)"
+      >
+        {{ t('app.previous') }}
+      </button>
+      <button
+        class="bouton bouton--discret"
+        type="button"
+        [disabled]="numero() >= pages()"
+        (click)="allerA(numero())"
+      >
+        {{ t('app.next') }}
+      </button>
+    </div>
+  }
+
   <p class="page__note">{{ t('users.sensitiveNote') }}</p>
 </ng-container>

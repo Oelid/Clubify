@@ -68,6 +68,7 @@ fiche de feature, pour que la recette et la fiche ne divergent pas.
 | S18 | F01 | L'accueil n'est jamais invitée à activer un second facteur | Le rappel ne s'adresse qu'aux rôles sensibles | C6k | Automatisé |
 | S19 | F01 | Le gérant change la couleur du club | La couleur s'applique à l'écran dès l'enregistrement et survit au rechargement | C28b | Automatisé |
 | S20 | F01 | Le gérant modifie une règle configurable | La valeur saisie est retenue, survit au rechargement, et l'origine passe à « choix du club » | C31b | Automatisé |
+| S21 | F01 | La liste des utilisateurs se parcourt page par page | La page s'ouvre à la taille retenue par le club, la plage affichée est juste, et changer la taille ramène au début | C40, C40c | Automatisé |
 
 ## Recette manuelle — passages
 

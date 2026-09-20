@@ -71,14 +71,11 @@ public class UserService {
     @Transactional(readOnly = true)
     @PreAuthorize("@perm.a('users.consulter')")
     public Page<UserDto> lister(Pageable pagination) {
-        List<UserDto> vues = appartenances.findAll().stream()
+        // La base découpe la page et compte le total : rien de plus ne remonte.
+        return appartenances.pageDuClub(pagination)
                 .map(appartenance -> comptes.findById(appartenance.getUserId())
-                        .map(compte -> new Vue(compte, appartenance)))
-                .flatMap(Optional::stream)
-                .sorted(java.util.Comparator.comparing(v -> v.compte().getLastName()))
-                .map(UserService::vers)
-                .toList();
-        return new org.springframework.data.domain.PageImpl<>(vues, pagination, vues.size());
+                        .map(compte -> vers(new Vue(compte, appartenance)))
+                        .orElse(null));
     }
 
     @Transactional(readOnly = true)

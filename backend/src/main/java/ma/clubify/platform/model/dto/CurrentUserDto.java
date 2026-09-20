@@ -36,6 +36,7 @@ public record CurrentUserDto(
             String currency,
             UUID logoFileId,
             String brandPrimary,
-            String brandSecondary) {
+            String brandSecondary,
+            int pageSize) {
     }
 }

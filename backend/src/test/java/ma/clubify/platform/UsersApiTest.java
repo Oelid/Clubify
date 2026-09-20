@@ -62,6 +62,70 @@ class UsersApiTest {
     }
 
     @Test
+    @DisplayName("C40 — la liste se rend par pages, et la base ne renvoie que la page")
+    void c40_paginationReelle() throws Exception {
+        String admin = adminToken();
+        for (int rang = 0; rang < 8; rang += 1) {
+            seeder.user(clubA, "coach" + rang + "@exemple.test", "COACH", Fixtures.VALID_PASSWORD);
+        }
+
+        api.getAs(admin, "/users?page=0&size=5")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(5))
+                .andExpect(jsonPath("$.page.size").value(5))
+                .andExpect(jsonPath("$.page.page").value(0))
+                // Le total compte tout le club, pas seulement la page rendue.
+                .andExpect(jsonPath("$.page.totalElements").value(11))
+                .andExpect(jsonPath("$.page.totalPages").value(3));
+
+        api.getAs(admin, "/users?page=2&size=5")
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.page.page").value(2));
+    }
+
+    @Test
+    @DisplayName("C40b — une page démesurée est refusée, avec un message lisible")
+    void c40b_plafond() throws Exception {
+        String admin = adminToken();
+
+        // Un appel direct à l'API ne doit pas pouvoir demander mille lignes,
+        // et le refus doit se lire : une erreur serveur laisserait croire à une panne.
+        api.getAs(admin, "/users?page=0&size=5000")
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("validation.failed"))
+                .andExpect(jsonPath("$.errors[0].field").value("size"));
+
+        // La borne haute, elle, passe.
+        api.getAs(admin, "/users?page=0&size=100")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page.size").value(100));
+    }
+
+    @Test
+    @DisplayName("C40c — sans taille demandée, celle que le club a retenue s'applique")
+    void c40c_tailleDuClub() throws Exception {
+        String admin = adminToken();
+        seeder.reglage(clubA, "ui.page_size", "30");
+
+        api.getAs(admin, "/users")
+                .andExpect(jsonPath("$.page.size").value(30));
+
+        // Et l'interface la reçoit à la connexion, pour ouvrir la liste juste.
+        api.getAs(admin, "/auth/me")
+                .andExpect(jsonPath("$.club.pageSize").value(30));
+    }
+
+    @Test
+    @DisplayName("C40d — un club qui demande plus de cent lignes reste borné")
+    void c40d_reglageBorne() throws Exception {
+        String admin = adminToken();
+        seeder.reglage(clubA, "ui.page_size", "500");
+
+        api.getAs(admin, "/users")
+                .andExpect(jsonPath("$.page.size").value(100));
+    }
+
+    @Test
     @DisplayName("C7 — aucun compte ne peut exister pour un adhérent mineur")
     void c7_aucunCompteEnfant() throws Exception {
         // Le rôle PARENT existe dans le catalogue mais ne reçoit aucun compte avant R8,

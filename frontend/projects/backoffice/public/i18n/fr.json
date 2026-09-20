@@ -6,7 +6,11 @@
     "loading": "Chargement…",
     "signOut": "Se déconnecter",
     "yes": "Oui",
-    "no": "Non"
+    "no": "Non",
+    "pageSize": "Lignes par page",
+    "range": "{{premier}}–{{dernier}} sur {{total}}",
+    "previous": "Précédente",
+    "next": "Suivante"
   },
   "nav": {
     "club": "Paramètres du club",
@@ -294,6 +298,10 @@
     "billing.fiscal_year_start_month": {
       "label": "Premier mois de l'exercice",
       "description": "Mois où commence l'exercice comptable, de 1 à 12. La numérotation des factures repart à cette date. Exemple : 1 pour janvier."
+    },
+    "ui.page_size": {
+      "label": "Lignes par page",
+      "description": "Nombre de lignes affichées dans les listes. Au-delà de 100, l'affichage devient lent : c'est la limite. Exemple : 20."
     }
   }
 }

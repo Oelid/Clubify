@@ -27,6 +27,37 @@ test.describe('F01 — Utilisateurs et journal', () => {
     await expect(ligne.locator('td').last()).toHaveText(/\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}|Jamais/);
   });
 
+  test('S21 — La liste des utilisateurs se parcourt page par page', async ({ page }) => {
+    // Assez de comptes pour que la pagination ait un sens.
+    const api = await ApiDeRecette.enTantQuAdministrateur();
+    for (let rang = 0; rang < 3; rang += 1) {
+      await api.creerUtilisateur('COACH', `${marqueDuPassage()}${rang}`);
+    }
+    await api.fermer();
+
+    await entrerCommeAdministrateur(page);
+    await page.getByRole('link', { name: 'Utilisateurs' }).click();
+
+    // Vingt lignes par page : la valeur que le club a retenue.
+    await expect(page.getByTestId('lignes-par-page')).toHaveValue('20');
+
+    // On resserre à la plus petite page possible pour éprouver le parcours.
+    await page.getByTestId('lignes-par-page').selectOption('20');
+    const lignes = page.locator('tbody tr');
+    const plage = page.getByTestId('plage');
+    await expect(plage).toContainText('sur');
+
+    const total = Number((await plage.innerText()).split('sur')[1].trim());
+    expect(total).toBeGreaterThan(3);
+
+    // La page rendue ne dépasse jamais la taille demandée.
+    expect(await lignes.count()).toBeLessThanOrEqual(20);
+
+    // Changer la taille ramène à la première page.
+    await page.getByTestId('lignes-par-page').selectOption('30');
+    await expect(plage).toContainText('1–');
+  });
+
   test("S08 — L'accueil consulte sans modifier, et n'atteint pas le journal", async ({ page }) => {
     const api = await ApiDeRecette.enTantQuAdministrateur();
     const accueil = await api.creerUtilisateur('FRONT_DESK', marqueDuPassage());

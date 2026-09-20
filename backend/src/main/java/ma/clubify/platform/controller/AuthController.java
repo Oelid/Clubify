@@ -134,6 +134,7 @@ public class AuthController implements AuthApi {
         club.setLogoFileId(courant.club().logoFileId());
         club.setBrandPrimary(courant.club().brandPrimary());
         club.setBrandSecondary(courant.club().brandSecondary());
+        club.setPageSize(courant.club().pageSize());
         contrat.setClub(club);
         return contrat;
     }

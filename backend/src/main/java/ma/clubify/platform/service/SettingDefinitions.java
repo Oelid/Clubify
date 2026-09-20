@@ -40,6 +40,9 @@ public final class SettingDefinitions {
         // remplace ces deux valeurs depuis l'écran des paramètres (décision 0032).
         declarer("club.brand.primary", Type.STRING, Scope.CLUB, "#307890", "0032");
         declarer("club.brand.secondary", Type.STRING, Scope.CLUB, "#F08840", "0032");
+        // Lignes par page dans les listes. Borné à 100 par PaginationPolicy :
+        // au-delà, la page coûte cher au serveur et personne ne la lit.
+        declarer("ui.page_size", Type.INTEGER, Scope.CLUB, 20, "0033");
 
         declarer("security.mfa.trusted_device_days", Type.INTEGER, Scope.CLUB, 30,
                 "F01 règle 5 / benchmark B4");

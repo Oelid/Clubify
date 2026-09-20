@@ -29,15 +29,17 @@ public class UserQueryService {
     private final ClubRepository clubs;
     private final ClubSettingService reglages;
     private final MfaPolicy politique;
+    private final PaginationPolicy pagination;
 
     public UserQueryService(UserAccountRepository comptes, MembershipRepository appartenances,
                             ClubRepository clubs, ClubSettingService reglages,
-                            MfaPolicy politique) {
+                            MfaPolicy politique, PaginationPolicy pagination) {
         this.comptes = comptes;
         this.appartenances = appartenances;
         this.clubs = clubs;
         this.reglages = reglages;
         this.politique = politique;
+        this.pagination = pagination;
     }
 
     @Transactional(readOnly = true)
@@ -64,6 +66,7 @@ public class UserQueryService {
         return new CurrentUserDto.ClubIdentity(club.getId(), club.getName(), club.getTimezone(),
                 club.getCurrency(), club.getLogoFileId(),
                 reglages.texte("club.brand.primary"),
-                reglages.texte("club.brand.secondary"));
+                reglages.texte("club.brand.secondary"),
+                pagination.tailleDuClub());
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -49,6 +50,30 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         refus.refus(demande.getRequestURI());
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(probleme(HttpStatus.FORBIDDEN, "security.permission.denied", null));
+    }
+
+    /**
+     * Paramètre de requête hors bornes — une taille de page de mille, par
+     * exemple. Le contrat le refuse ; sans ce traitement, le refus sortait en
+     * erreur serveur, ce qui laisse croire à une panne.
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ProblemDetail> onContrainteViolee(ConstraintViolationException echec) {
+        List<Map<String, String>> champs = echec.getConstraintViolations().stream()
+                .map(violation -> Map.of(
+                        "field", dernierSegment(violation.getPropertyPath().toString()),
+                        "message", violation.getMessage()))
+                .toList();
+
+        ProblemDetail probleme = probleme(HttpStatus.UNPROCESSABLE_ENTITY,
+                "validation.failed", null);
+        probleme.setProperty("errors", champs);
+        return ResponseEntity.unprocessableEntity().body(probleme);
+    }
+
+    private static String dernierSegment(String chemin) {
+        int point = chemin.lastIndexOf('.');
+        return point < 0 ? chemin : chemin.substring(point + 1);
     }
 
     @Override

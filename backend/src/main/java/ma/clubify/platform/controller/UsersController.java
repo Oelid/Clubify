@@ -16,9 +16,9 @@ import ma.clubify.common.security.Permissions;
 import ma.clubify.platform.model.dto.PermissionsDto;
 import ma.clubify.platform.model.dto.UserDto;
 import ma.clubify.platform.service.MfaService;
+import ma.clubify.platform.service.PaginationPolicy;
 import ma.clubify.platform.service.UserService;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,17 +41,19 @@ public class UsersController implements UsersApi {
 
     private final UserService utilisateurs;
     private final MfaService secondFacteur;
+    private final PaginationPolicy pagination;
 
-    public UsersController(UserService utilisateurs, MfaService secondFacteur) {
+    public UsersController(UserService utilisateurs, MfaService secondFacteur,
+                           PaginationPolicy pagination) {
         this.utilisateurs = utilisateurs;
         this.secondFacteur = secondFacteur;
+        this.pagination = pagination;
     }
 
     @Override
     @PreAuthorize("@perm.a('users.consulter')")
     public ResponseEntity<UserPage> listUsers(Integer page, Integer size, Role role, Boolean active) {
-        Page<UserDto> trouvees = utilisateurs.lister(
-                PageRequest.of(page == null ? 0 : page, size == null ? 20 : size));
+        Page<UserDto> trouvees = utilisateurs.lister(pagination.de(page, size));
 
         UserPage reponse = new UserPage();
         reponse.setContent(trouvees.getContent().stream().map(UsersController::versContrat).toList());

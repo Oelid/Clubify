@@ -185,6 +185,10 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C37 | 36 | Saisie de « 06 12 34 56 78 » | Enregistrement | Stocké « +212612345678 » ; « +33 6 12 34 56 78 » est accepté ; « 1234 » est refusé |
 | C38 | 37 | Toute table créée par F01 | Inspection du schéma | `club_id` non nul indexé, colonnes d'audit, `deleted_at`, identifiants UUID |
 | C39 | 38 | Aucun prestataire configuré | Un événement qui déclencherait un message | L'implémentation vide reçoit l'appel, l'action métier réussit |
+| C40 | 32 | Club comptant plus de comptes qu'une page n'en tient | Demande de la première page, puis de la dernière | Chaque page rend le nombre de lignes demandé, le total compte tout le club, et la base ne renvoie que la page (décision 0033) |
+| C40b | 32 | — | Demande d'une page de cinq mille lignes | Refus lisible, jamais une erreur serveur ; cent lignes restent acceptées |
+| C40c | 32 | Club ayant retenu trente lignes par page | Liste demandée sans taille | Trente lignes ; l'interface reçoit cette taille à la connexion |
+| C40d | 32 | Club ayant réglé cinq cents lignes par page | Liste demandée sans taille | Ramenée à cent : aucun réglage ne dépasse la borne |
 
 Les critères C1, C11, C11b, C14, C16 et C17 constituent le test d'isolation, le test de permissions et le test d'audit exigés par `CLAUDE.md` §6 ; leur mécanique est réutilisable par toutes les features suivantes.
 
