@@ -29,6 +29,27 @@ public class TestSeeder {
         this.jdbc = jdbc;
     }
 
+    /**
+     * Fixe une règle configurable du club, comme le ferait le gérant.
+     *
+     * <p>Écrit directement en base : le test veut poser un décor, pas rejouer
+     * l'écran des paramètres, qui a ses propres tests.
+     */
+    public void reglage(UUID clubId, String cle, String valeurJson) {
+        jdbc.update("delete from club_setting where club_id = ? and setting_key = ?",
+                clubId, cle);
+        jdbc.update("""
+                insert into club_setting (id, club_id, setting_key, value, created_at, updated_at)
+                values (?, ?, ?, ?::jsonb, now(), now())
+                """, UUID.randomUUID(), clubId, cle, valeurJson);
+    }
+
+    /** Recule la date de création d'un compte, pour éprouver les délais. */
+    public void creeIlYA(String email, int jours) {
+        jdbc.update("update user_account set created_at = now() - (? || ' days')::interval"
+                + " where lower(email) = lower(?)", jours, email);
+    }
+
     /** Crée un club, son site par défaut, et retourne l'identifiant du club. */
     public UUID club(String name) {
         UUID clubId = UUID.randomUUID();

@@ -1,6 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { ClubDatePipe } from 'ui';
 import { AuthSession } from '../core/auth.service';
 import { SessionStore } from '../core/session.store';
 
@@ -11,18 +12,26 @@ import { SessionStore } from '../core/session.store';
  */
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslocoDirective],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslocoDirective, ClubDatePipe],
   templateUrl: './shell.html',
   styleUrl: './shell.css',
 })
 export class Shell {
   private readonly session = inject(SessionStore);
   private readonly auth = inject(AuthSession);
+  private readonly routeur = inject(Router);
 
   protected readonly club = computed(() => this.session.current()?.club ?? null);
   protected readonly nom = this.session.nomComplet;
   protected readonly initiales = this.session.initiales;
   protected readonly role = computed(() => this.session.current()?.role ?? null);
+
+  /**
+   * Rappel du second facteur, non masquable et présent sur chaque écran
+   * (décision 0031). Le masquer une fois reviendrait à ne l'afficher jamais.
+   */
+  protected readonly rappel = this.session.rappelSecondFacteur;
+  protected readonly exigeLe = this.session.secondFacteurExigeLe;
 
   /**
    * La navigation ne montre que ce que l'utilisateur a le droit d'ouvrir : un
@@ -53,5 +62,11 @@ export class Shell {
 
   protected async deconnecter(): Promise<void> {
     await this.auth.deconnecter();
+  }
+
+  /** Conduit à l'activation, depuis l'intérieur de l'application. */
+  protected async activerLeSecondFacteur(): Promise<void> {
+    this.session.attendreSecondFacteur('ACTIVATION');
+    await this.routeur.navigate(['/second-facteur']);
   }
 }

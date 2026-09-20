@@ -126,10 +126,16 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C5 | 4, 7 | Compte créé avec un mot de passe | Connexion avec le bon mot de passe, puis avec un mauvais | Succès puis échec ; la base ne contient qu'un haché Argon2 ; aucun mot de passe dans les logs |
 | C5b | 7 | Création d'un compte | Mot de passe de 11 caractères, puis de 12 | Refus avec un code stable, puis acceptation ; aucune exigence de caractère spécial |
 | C6 | 5 | Second facteur activé sur un compte administratif | Connexion avec mot de passe seul | Refus tant que le code n'est pas fourni |
-| C6b | 5 | Compte gérant créé, second facteur non encore activé | Première connexion | Le seul écran accessible est l'activation du second facteur ; rien d'autre avant |
+| C6b | 5 | Club ayant posé `security.mfa.required`, délai de grâce écoulé | Connexion du gérant sans second facteur | Le seul écran accessible est l'activation ; rien d'autre avant (décision 0031) |
 | C6c | 5 | Gérant ayant perdu son téléphone | L'administrateur réinitialise son second facteur | Réinitialisation effective, entrée d'audit avec l'auteur et la cible |
 | C6d | 5 | Gérant connecté avec code, « se souvenir de cet appareil » coché, durée à 30 jours | Reconnexion le lendemain sur le même navigateur, puis 31 jours plus tard, puis après révocation de l'appareil par l'administrateur | Pas de code le lendemain ; code exigé à 31 jours ; code exigé après révocation ; chaque révocation auditée |
 | C6e | 5 | Second facteur activé, codes de secours remis | Connexion avec un code de secours, puis réutilisation du même code | Succès, puis refus ; l'usage est audité ; l'utilisateur peut régénérer la série, ce qui invalide l'ancienne |
+| C6f | 5 | Compte dont le second facteur est déjà actif | Demande d'une nouvelle activation | Refus : préparer écraserait le secret que son téléphone connaît (décision 0030) |
+| C6g | 5 | Gérant sans second facteur, club aux valeurs par défaut | Connexion | La session s'ouvre entièrement, et chaque écran porte un rappel permanent, non masquable (décision 0031) |
+| C6h | 5 | Club ayant posé `security.mfa.required`, compte plus vieux que le délai | Connexion du gérant | Blocage : retour au comportement de la décision 0027 |
+| C6i | 5 | Club ayant posé `security.mfa.required`, compte récent | Connexion du gérant | La session s'ouvre, et le rappel annonce la date à partir de laquelle ce sera exigé |
+| C6j | 5 | Club imposant le second facteur avec un délai nul | Première connexion du gérant | Blocage immédiat |
+| C6k | 5 | Accueil ou coach sans second facteur | Connexion | Aucun rappel : il ne s'adresse qu'aux rôles qui ouvrent l'argent et les données sensibles |
 | C7 | 6 | Une famille avec un enfant existe (F02) | Recherche d'un compte au nom de l'enfant | Aucun compte n'existe et aucun ne peut être créé pour un adhérent mineur |
 | C8 | 8 | Utilisateur connecté | Déconnexion, puis réutilisation de l'ancien jeton de rafraîchissement | Refus |
 | C8b | 8 | Utilisateur connecté sur deux appareils | L'administrateur ferme ses sessions sans le désactiver | Les deux jetons sont révoqués ; l'utilisateur peut se reconnecter ; entrée d'audit |
@@ -462,6 +468,12 @@ Trois classes forment le harnais réutilisable exigé par le `CLAUDE.md` §6 : `
 | C6c | `AuthApiTest` | `c6c_reinitialisation` |
 | C6d | `AuthApiTest` | `c6d_appareilDeConfiance` |
 | C6e | `AuthApiTest` | `c6e_codesDeSecours` |
+| C6f | `AuthApiTest` | `c6f_pasDeReinscriptionSilencieuse` |
+| C6g | `AuthApiTest`, recette S17 | `c6g_rappelSansBlocage` |
+| C6h | `AuthApiTest` | `c6h_delaiEcoule` |
+| C6i | `AuthApiTest` | `c6i_delaiAnnonce` |
+| C6j | `AuthApiTest` | `c6j_delaiNul` |
+| C6k | `AuthApiTest`, recette S18 | `c6k_rappelReserveAuxRolesSensibles` |
 | C7 | `UsersApiTest` | `c7_aucunCompteEnfant` |
 | C8 | `AuthApiTest` | `c8_deconnexion` |
 | C8b | `UsersApiTest` | `c8b_fermetureDesSessions` |

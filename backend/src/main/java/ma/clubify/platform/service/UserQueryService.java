@@ -28,13 +28,16 @@ public class UserQueryService {
     private final MembershipRepository appartenances;
     private final ClubRepository clubs;
     private final ClubSettingService reglages;
+    private final MfaPolicy politique;
 
     public UserQueryService(UserAccountRepository comptes, MembershipRepository appartenances,
-                            ClubRepository clubs, ClubSettingService reglages) {
+                            ClubRepository clubs, ClubSettingService reglages,
+                            MfaPolicy politique) {
         this.comptes = comptes;
         this.appartenances = appartenances;
         this.clubs = clubs;
         this.reglages = reglages;
+        this.politique = politique;
     }
 
     @Transactional(readOnly = true)
@@ -47,9 +50,13 @@ public class UserQueryService {
         Club club = clubs.findById(authentifie.clubId())
                 .orElseThrow(() -> new NotFoundException("club.notFound"));
 
+        MfaPolicy.Etat etat = politique.etatDe(compte, appartenance.getRole());
         return new CurrentUserDto(compte.getId(), compte.getEmail(), compte.getFirstName(),
                 compte.getLastName(), compte.getLanguage(), appartenance.getRole().name(),
-                compte.isMfaEnabled(), new ArrayList<>(authentifie.permissions()),
+                compte.isMfaEnabled(),
+                new CurrentUserDto.MfaStatut(etat.actif(), etat.attendu(), etat.bloquant(),
+                        etat.exigeA()),
+                new ArrayList<>(authentifie.permissions()),
                 resume(club));
     }
 

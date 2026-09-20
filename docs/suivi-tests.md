@@ -64,6 +64,8 @@ fiche de feature, pour que la recette et la fiche ne divergent pas.
 | S14 | F01 | Lire les écrans sur un téléphone, en portrait | Rien n'est coupé, la navigation reste utilisable | — | Manuel |
 | S15 | F01 | Valider les libellés FR avec l'accueil et le gérant | Le vocabulaire est celui du club, pas celui du logiciel | — | Manuel |
 | S16 | F01 | Imprimer la liste des utilisateurs | La feuille imprimée est lisible et tient sur la page | — | Manuel |
+| S17 | F01 | Le gérant entre sans second facteur et voit un rappel permanent | Rien ne bloque, le rappel est sur chaque écran et ne se ferme pas | C6g | Automatisé |
+| S18 | F01 | L'accueil n'est jamais invitée à activer un second facteur | Le rappel ne s'adresse qu'aux rôles sensibles | C6k | Automatisé |
 
 ## Recette manuelle — passages
 

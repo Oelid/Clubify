@@ -807,10 +807,33 @@ components:
         language: { type: string, example: fr }
         role: { $ref: '#/components/schemas/Role' }
         mfaEnabled: { type: boolean }
+        mfa: { $ref: '#/components/schemas/MfaStatus' }
         permissions:
           type: array
           items: { type: string }
         club: { $ref: '#/components/schemas/ClubSummary' }
+
+    MfaStatus:
+      type: object
+      description: >-
+        Où en est le second facteur de cet utilisateur. Permet à l'interface
+        d'inviter à l'activer, et de dire à partir de quand il sera exigé
+        (décision 0031).
+      required: [enabled, expected]
+      properties:
+        enabled: { type: boolean, description: Activé sur ce compte. }
+        expected:
+          type: boolean
+          description: Attendu du rôle, qu'il soit activé ou non.
+        blocking:
+          type: boolean
+          description: >-
+            Vrai quand le délai est écoulé : plus rien n'est accessible sans lui.
+        requiredFrom:
+          type: string
+          format: date-time
+          description: >-
+            Date à laquelle l'activation devient bloquante. Absente si jamais.
 
     MfaSetupResponse:
       type: object

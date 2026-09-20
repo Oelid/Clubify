@@ -39,6 +39,18 @@ export class SessionStore {
     return courant ? `${courant.firstName} ${courant.lastName}` : '';
   });
 
+  /**
+   * Faut-il rappeler d'activer le second facteur ? Le backend le décide : c'est
+   * lui qui connaît la règle du club (décision 0031).
+   */
+  readonly rappelSecondFacteur = computed(() => {
+    const mfa = this.utilisateur()?.mfa;
+    return mfa?.expected === true && mfa.enabled !== true;
+  });
+
+  /** Date à laquelle il deviendra obligatoire, quand le club l'impose. */
+  readonly secondFacteurExigeLe = computed(() => this.utilisateur()?.mfa?.requiredFrom ?? null);
+
   readonly initiales = computed(() => {
     const courant = this.utilisateur();
     return courant ? `${courant.firstName.charAt(0)}${courant.lastName.charAt(0)}` : '';

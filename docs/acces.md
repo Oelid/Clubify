@@ -29,23 +29,43 @@ Les deux fichiers d'accès sont à la racine et **ne sont pas versionnés**
 **Celui que vous voulez, c'est la recette.** Le développement est mon atelier :
 je le redémarre, j'y crée des comptes d'essai, j'y renomme le club.
 
-## Première connexion : le second facteur
+## Première connexion
 
-Le rôle « administrateur du compte » **exige** un second facteur (décision 0027).
-Vous ne pourrez rien faire tant qu'il n'est pas activé, et c'est voulu : ce
-compte ouvre la caisse, les soldes des familles et les données de santé.
+Vous entrez directement : le second facteur n'est pas imposé (décision 0031).
+L'application affiche en revanche un **rappel permanent**, sur chaque écran,
+tant qu'il n'est pas activé — et ce rappel ne se ferme pas.
 
-1. `.\tools\demarrer-recette.ps1`, puis http://localhost:4300
+1. `.	ools\demarrer-recette.ps1`, puis http://localhost:4300
 2. Connectez-vous avec le compte et le mot de passe affichés par le script
-3. L'application montre un code à scanner : ouvrez une application
-   d'authentification sur votre téléphone (Google Authenticator, Microsoft
-   Authenticator, ou celle de votre gestionnaire de mots de passe) et scannez-le
-4. **Notez les huit codes de secours.** Ils ne s'affichent qu'une fois
-5. Saisissez le code à six chiffres affiché par le téléphone
+3. Vous êtes dans l'application
+
+### Activer le second facteur
+
+Quand vous aurez votre téléphone sous la main, cliquez sur **« Activer
+maintenant »** dans le rappel :
+
+1. L'application montre un code à scanner : ouvrez une application
+   d'authentification (Google Authenticator, Microsoft Authenticator, ou celle
+   de votre gestionnaire de mots de passe) et scannez-le
+2. **Notez les huit codes de secours.** Ils ne s'affichent qu'une fois
+3. Saisissez le code à six chiffres affiché par le téléphone
 
 Aux connexions suivantes, seul le code à six chiffres est demandé. Vous pouvez
 cocher « ne plus demander sur cet appareil » : l'appareil reste reconnu trente
 jours, durée réglable dans les paramètres du club.
+
+Le rappel ne s'adresse qu'à l'administrateur du compte et au gérant : ce sont
+les rôles qui ouvrent la caisse, les soldes des familles et les données de
+santé. L'accueil et le coach ne le voient jamais.
+
+### Pour l'imposer
+
+Deux règles dans les paramètres du club :
+
+| Règle | Défaut | Effet |
+| --- | --- | --- |
+| `security.mfa.required` | `false` | À `true`, le second facteur devient bloquant |
+| `security.mfa.grace_days` | `7` | Délai laissé avant qu'il le devienne |
 
 ## Quand ça coince
 

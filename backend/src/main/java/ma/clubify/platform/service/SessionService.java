@@ -56,6 +56,7 @@ public class SessionService {
     private final TokenService jetons;
     private final TotpService totp;
     private final DomainEvents evenements;
+    private final MfaPolicy politique;
     private final Clock horloge;
 
     public SessionService(UserAccountRepository comptes, MfaChallengeRepository defis,
@@ -63,7 +64,7 @@ public class SessionService {
                           RecoveryCodeRepository codesDeSecours, PermissionResolver permissions,
                           ClubSettingService reglages, PasswordEncoder motsDePasse,
                           TokenService jetons, TotpService totp, DomainEvents evenements,
-                          Clock horloge) {
+                          MfaPolicy politique, Clock horloge) {
         this.comptes = comptes;
         this.defis = defis;
         this.sessions = sessions;
@@ -75,6 +76,7 @@ public class SessionService {
         this.jetons = jetons;
         this.totp = totp;
         this.evenements = evenements;
+        this.politique = politique;
         this.horloge = horloge;
     }
 
@@ -93,11 +95,14 @@ public class SessionService {
                     creerDefi(compte, appartenance, MfaChallenge.Purpose.LOGIN, maintenant));
         }
 
-        if (appartenance.getRole().exigeSecondFacteur()) {
+        if (politique.bloque(compte, appartenance.getRole())) {
             // Ce jeton n'ouvre que l'activation du second facteur (critère C6b).
             Tokens provisoires = emettre(compte, appartenance, maintenant, true, null);
             return new AuthOutcome(AuthOutcome.Kind.MFA_ENROLLMENT_REQUIRED, provisoires, null);
         }
+
+        // Pendant le délai, la session s'ouvre normalement ; l'interface affiche
+        // un message permanent jusqu'à l'activation (décision 0031).
 
         return authentifier(compte, appartenance, maintenant, null);
     }

@@ -41,7 +41,11 @@ public class Auth {
         String issue = api.json().readTree(corps).path("outcome").asString();
 
         if ("AUTHENTICATED".equals(issue)) {
-            return api.json().readTree(corps).path("tokens").path("accessToken").asString();
+            String jeton = api.json().readTree(corps).path("tokens").path("accessToken").asString();
+            // Depuis la décision 0031, la connexion aboutit pendant le délai de
+            // grâce. Un test qui demande un jeton veut une session complète :
+            // on active le second facteur quand le rôle l'attend encore.
+            return secondFacteurAttendu(jeton) ? activer(email).jeton() : jeton;
         }
         if ("MFA_ENROLLMENT_REQUIRED".equals(issue)) {
             return activer(email).jeton();
@@ -84,6 +88,13 @@ public class Auth {
 
         secrets.put(email, secret);
         return new Activation(secret, codesDeSecours, jeton);
+    }
+
+    /** Le rôle attend-il un second facteur que ce compte n'a pas encore ? */
+    private boolean secondFacteurAttendu(String jeton) throws Exception {
+        var mfa = api.json().readTree(api.getAs(jeton, "/auth/me")
+                .andReturn().getResponse().getContentAsString()).path("mfa");
+        return mfa.path("expected").asBoolean(false) && !mfa.path("enabled").asBoolean(false);
     }
 
     public String defiPour(String email) throws Exception {

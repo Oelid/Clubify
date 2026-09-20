@@ -7,6 +7,7 @@ import ma.clubify.generated.model.ClubSummary;
 import ma.clubify.generated.model.CurrentUser;
 import ma.clubify.generated.model.LoginRequest;
 import ma.clubify.generated.model.LoginResponse;
+import ma.clubify.generated.model.MfaStatus;
 import ma.clubify.generated.model.MfaVerifyRequest;
 import ma.clubify.generated.model.RefreshRequest;
 import ma.clubify.generated.model.TokenPair;
@@ -113,6 +114,16 @@ public class AuthController implements AuthApi {
         contrat.setLanguage(courant.language());
         contrat.setRole(ma.clubify.generated.model.Role.fromValue(courant.role()));
         contrat.setMfaEnabled(courant.mfaEnabled());
+
+        MfaStatus mfa = new MfaStatus();
+        mfa.setEnabled(courant.mfa().enabled());
+        mfa.setExpected(courant.mfa().expected());
+        mfa.setBlocking(courant.mfa().blocking());
+        if (courant.mfa().requiredFrom() != null) {
+            mfa.setRequiredFrom(courant.mfa().requiredFrom().atOffset(java.time.ZoneOffset.UTC));
+        }
+        contrat.setMfa(mfa);
+
         contrat.setPermissions(courant.permissions());
 
         ClubSummary club = new ClubSummary();

@@ -90,3 +90,44 @@ test.describe('F01 — Connexion', () => {
     await expect(page.getByRole('heading', { name: 'Connexion' })).toHaveCount(0);
   });
 });
+
+/**
+ * Rappel du second facteur (décision 0031) : le gérant entre sans l'avoir
+ * activé, et l'application le lui redit sur chaque écran.
+ */
+test.describe('F01 — Rappel du second facteur', () => {
+  test("S17 — Le gérant entre sans second facteur et voit un rappel permanent", async ({ page }) => {
+    const api = await ApiDeRecette.enTantQuAdministrateur();
+    const gerant = await api.creerUtilisateur('MANAGER', marqueDuPassage());
+    await api.fermer();
+
+    await seConnecter(page, gerant, MOT_DE_PASSE_JETABLE);
+
+    // Rien ne bloque : la session est pleine dès la première connexion.
+    await expect(page.getByRole('heading', { name: 'Paramètres du club' })).toBeVisible();
+
+    const rappel = page.getByTestId('rappel-second-facteur');
+    await expect(rappel).toBeVisible();
+    await expect(rappel).toContainText(/second facteur/i);
+    // Aucun bouton pour le fermer : un avertissement masquable n'avertit qu'une fois.
+    await expect(rappel.getByRole('button')).toHaveCount(1);
+    await expect(rappel.getByRole('button', { name: /activer/i })).toBeVisible();
+
+    // Et il suit d'écran en écran.
+    await page.getByRole('link', { name: "Journal d'audit" }).click();
+    await expect(page.getByRole('heading', { name: "Journal d'audit" })).toBeVisible();
+    await expect(page.getByTestId('rappel-second-facteur')).toBeVisible();
+  });
+
+  test("S18 — L'accueil n'est jamais invitée à activer un second facteur", async ({ page }) => {
+    const api = await ApiDeRecette.enTantQuAdministrateur();
+    const accueil = await api.creerUtilisateur('FRONT_DESK', marqueDuPassage());
+    await api.fermer();
+
+    await seConnecter(page, accueil, MOT_DE_PASSE_JETABLE);
+    await expect(page.getByRole('heading', { name: 'Paramètres du club' })).toBeVisible();
+
+    // Le rappel ne s'adresse qu'aux rôles qui ouvrent l'argent et le sensible.
+    await expect(page.getByTestId('rappel-second-facteur')).toHaveCount(0);
+  });
+});

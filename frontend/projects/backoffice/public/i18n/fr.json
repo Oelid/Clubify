@@ -38,7 +38,11 @@
       "submit": "Activer et continuer",
       "verifyTitle": "Code de vérification",
       "verifyWhy": "Saisissez le code affiché par votre application d'authentification.",
-      "verifySubmit": "Vérifier"
+      "verifySubmit": "Vérifier",
+      "reminderTitle": "Votre compte n’est pas protégé par un second facteur",
+      "reminderText": "Votre rôle ouvre la caisse, les soldes des familles et les données de santé des enfants. Un mot de passe seul ne suffit pas à les protéger.",
+      "reminderDeadline": "Il deviendra obligatoire le {{date}}.",
+      "reminderAction": "Activer maintenant"
     }
   },
   "club": {

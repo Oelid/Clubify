@@ -16,8 +16,17 @@ public record CurrentUserDto(
         String language,
         String role,
         boolean mfaEnabled,
+        MfaStatut mfa,
         List<String> permissions,
         ClubIdentity club) {
+
+    /**
+     * Où en est le second facteur, pour que l'écran sache s'il doit inviter à
+     * l'activer et jusqu'à quand (décision 0031).
+     */
+    public record MfaStatut(boolean enabled, boolean expected, boolean blocking,
+                            java.time.Instant requiredFrom) {
+    }
 
     /** Ce que l'interface a besoin de savoir du club, et rien de plus. */
     public record ClubIdentity(

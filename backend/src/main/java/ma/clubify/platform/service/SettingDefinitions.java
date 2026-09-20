@@ -42,6 +42,13 @@ public final class SettingDefinitions {
 
         declarer("security.mfa.trusted_device_days", Type.INTEGER, Scope.CLUB, 30,
                 "F01 règle 5 / benchmark B4");
+        // Le second facteur est attendu des rôles sensibles et rappelé en
+        // permanence, sans bloquer : la première configuration d'un club ne
+        // dépend pas d'un téléphone sous la main (décision 0031). Un club qui
+        // veut l'imposer pose « required » ; il devient alors bloquant après le
+        // délai de grâce.
+        declarer("security.mfa.required", Type.BOOLEAN, Scope.CLUB, false, "0031");
+        declarer("security.mfa.grace_days", Type.INTEGER, Scope.CLUB, 7, "0031");
         declarer("security.password.min_length", Type.INTEGER, Scope.PLATFORM, 12, "F01 règle 7");
         declarer("security.lockout.max_attempts", Type.INTEGER, Scope.PLATFORM, 5, "F01 règle 9");
         declarer("security.lockout.minutes", Type.INTEGER, Scope.PLATFORM, 15, "F01 règle 9");

@@ -171,9 +171,13 @@ class AuthApiTest {
     }
 
     @Test
-    @DisplayName("C6b — un gérant sans second facteur n'accède à rien avant de l'activer")
+    @DisplayName("C6b — le délai passé, un gérant sans second facteur n'accède à rien")
     void c6b_enrolementImpose() throws Exception {
         seeder.user(clubA, Fixtures.MANAGER_A_EMAIL, "MANAGER", Fixtures.VALID_PASSWORD);
+        // Le club impose le second facteur et le délai est dépassé : l'activation
+        // redevient bloquante (décision 0031, qui amende 0027).
+        seeder.reglage(clubA, "security.mfa.required", "true");
+        seeder.creeIlYA(Fixtures.MANAGER_A_EMAIL, 8);
 
         String body = api.loginRaw(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD)
                 .andExpect(status().isOk())
@@ -204,6 +208,88 @@ class AuthApiTest {
                         Map.of("mfaChallengeId", defi,
                                 "code", auth.codeCourant(activation.secret())))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("C6g — le gérant entre sans second facteur et voit un rappel permanent")
+    void c6g_rappelSansBlocage() throws Exception {
+        seeder.user(clubA, Fixtures.MANAGER_A_EMAIL, "MANAGER", Fixtures.VALID_PASSWORD);
+        // Compte ancien : sans obligation, l'âge ne change rien.
+        seeder.creeIlYA(Fixtures.MANAGER_A_EMAIL, 400);
+
+        String corps = api.loginRaw(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.outcome").value("AUTHENTICATED"))
+                .andReturn().getResponse().getContentAsString();
+
+        String jeton = api.json().readTree(corps).path("tokens").path("accessToken").asString();
+        api.getAs(jeton, "/auth/me")
+                .andExpect(status().isOk())
+                // L'écran sait qu'il doit inviter à activer, et jusqu'à quand.
+                .andExpect(jsonPath("$.mfa.enabled").value(false))
+                .andExpect(jsonPath("$.mfa.expected").value(true))
+                .andExpect(jsonPath("$.mfa.blocking").value(false))
+                // Aucune échéance annoncée : le club n'impose rien pour l'instant.
+                .andExpect(jsonPath("$.mfa.requiredFrom").doesNotExist());
+
+        // Et il travaille : la session est pleine, pas provisoire.
+        api.getAs(jeton, "/club").andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("C6h — le club l'impose et le délai est écoulé : plus rien sans lui")
+    void c6h_delaiEcoule() throws Exception {
+        seeder.user(clubA, Fixtures.MANAGER_A_EMAIL, "MANAGER", Fixtures.VALID_PASSWORD);
+        seeder.reglage(clubA, "security.mfa.required", "true");
+        seeder.creeIlYA(Fixtures.MANAGER_A_EMAIL, 8);
+
+        String corps = api.loginRaw(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.outcome").value("MFA_ENROLLMENT_REQUIRED"))
+                .andReturn().getResponse().getContentAsString();
+
+        // Le jeton délivré n'ouvre que l'activation (critère C6b).
+        String provisoire = api.json().readTree(corps).path("tokens").path("accessToken").asString();
+        api.getAs(provisoire, "/club").andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("C6i — un club qui l'impose laisse un délai, et l'annonce")
+    void c6i_delaiAnnonce() throws Exception {
+        seeder.user(clubA, Fixtures.MANAGER_A_EMAIL, "MANAGER", Fixtures.VALID_PASSWORD);
+        seeder.reglage(clubA, "security.mfa.required", "true");
+
+        String corps = api.loginRaw(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD)
+                .andExpect(jsonPath("$.outcome").value("AUTHENTICATED"))
+                .andReturn().getResponse().getContentAsString();
+
+        String jeton = api.json().readTree(corps).path("tokens").path("accessToken").asString();
+        api.getAs(jeton, "/auth/me")
+                .andExpect(jsonPath("$.mfa.blocking").value(false))
+                // L'écran peut dire à partir de quand ce sera exigé.
+                .andExpect(jsonPath("$.mfa.requiredFrom").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("C6k — l'accueil n'est jamais invitée à activer un second facteur")
+    void c6k_rappelReserveAuxRolesSensibles() throws Exception {
+        String jeton = api.login(Fixtures.FRONT_DESK_A_EMAIL, Fixtures.VALID_PASSWORD);
+
+        // Le rappel ne s'adresse qu'aux rôles qui ouvrent l'argent et le sensible.
+        api.getAs(jeton, "/auth/me")
+                .andExpect(jsonPath("$.mfa.expected").value(false))
+                .andExpect(jsonPath("$.mfa.blocking").value(false));
+    }
+
+    @Test
+    @DisplayName("C6j — un délai nul bloque dès la première connexion")
+    void c6j_delaiNul() throws Exception {
+        seeder.user(clubA, Fixtures.MANAGER_A_EMAIL, "MANAGER", Fixtures.VALID_PASSWORD);
+        seeder.reglage(clubA, "security.mfa.required", "true");
+        seeder.reglage(clubA, "security.mfa.grace_days", "0");
+
+        api.loginRaw(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD)
+                .andExpect(jsonPath("$.outcome").value("MFA_ENROLLMENT_REQUIRED"));
     }
 
     @Test
