@@ -133,6 +133,7 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C7 | 6 | Une famille avec un enfant existe (F02) | Recherche d'un compte au nom de l'enfant | Aucun compte n'existe et aucun ne peut être créé pour un adhérent mineur |
 | C8 | 8 | Utilisateur connecté | Déconnexion, puis réutilisation de l'ancien jeton de rafraîchissement | Refus |
 | C8b | 8 | Utilisateur connecté sur deux appareils | L'administrateur ferme ses sessions sans le désactiver | Les deux jetons sont révoqués ; l'utilisateur peut se reconnecter ; entrée d'audit |
+| C8c | 8 | Navigateur connecté | On inspecte le jeton de renouvellement depuis la page, puis on renouvelle avec le seul cookie | Illisible par un script (`HttpOnly`, `SameSite=Strict`, chemin borné) ; le renouvellement aboutit sans corps ; sans cookie ni corps, refus (décision 0030) |
 | C9 | 8, 13 | Utilisateur connecté | La gérante le désactive | Ses jetons sont révoqués ; il ne peut plus se connecter ; sa ligne existe toujours, marquée désactivée |
 | C10 | 9 | Compte existant | Trois connexions échouées | Trois entrées d'audit « connexion échouée » avec l'identifiant tenté, sans le mot de passe |
 | C10b | 9 | Compte existant | Cinq échecs consécutifs, puis le bon mot de passe | Refus pendant 15 minutes même avec le bon mot de passe ; entrée d'audit « compte verrouillé » ; succès après le délai |
@@ -148,6 +149,7 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C15 | 15 | Un utilisateur porte un téléphone | Toute opération le concernant | Le téléphone n'apparaît dans aucun log technique |
 | C16 | 16 | Paramètre « nom du club » = « Club A » | La gérante le change en « Club A Sport » | Entrée d'audit : gérante, `club.settings.updated`, avant « Club A », après « Club A Sport », horodatage UTC |
 | C16b | 16 | Une règle automatique de test agit sur une donnée | — | Entrée d'audit dont l'auteur est « système » avec l'identifiant de la règle, jamais un utilisateur |
+| C16c | 16 | Un utilisateur se connecte | — | Entrée d'audit dont l'auteur est cet utilisateur, avec son adresse, et non « système » : au moment où la connexion réussit, aucun jeton n'est encore posé (décision 0030) |
 | C17 | 17 | Une entrée d'audit existe | Tentative d'`UPDATE` puis de `DELETE` sur la table avec l'utilisateur de base de l'application | Les deux échouent |
 | C18 | 18 | — | Chaque action de la liste de la règle 18, une fois | Une entrée d'audit par action, avec les champs de la règle 16 |
 | C19 | 19 | Comptes administrateur, gérant et administratif | Chacun ouvre le journal | L'administrateur et le gérant le lisent ; l'administratif est refusé |

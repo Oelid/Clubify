@@ -4,7 +4,7 @@ Backend unique : il sert le backoffice, l'application coach et le portail parent
 
 ## Stack
 
-- Java 21, Spring Boot 4.0.x (dernière version de correctif), Maven.
+- Java 21, Spring Boot **4.1.1** (décision 0024), Maven.
 - PostgreSQL. Spring Data JPA (Hibernate 7). Flyway.
 - Spring MVC pour l'API REST. Spring Security. Spring Boot DevTools en développement seulement.
 - Lombok, limité (voir « Conventions de code »).

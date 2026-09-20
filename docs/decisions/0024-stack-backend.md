@@ -8,7 +8,7 @@ Le découpage en releases est acté (0023). Aucune feature ne peut être cadrée
 
 | Sujet | Choix |
 | --- | --- |
-| Langage et plateforme | Java 21, Spring Boot 4.0.x (dernière version de correctif au moment de l'initialisation) |
+| Langage et plateforme | Java 21, Spring Boot **4.1.1** (validée par Omar le 2026-09-20 ; voir « Écarts ») |
 | Build | Maven |
 | Base de données | PostgreSQL |
 | Persistance et migrations | Spring Data JPA (Hibernate 7) ; Flyway propriétaire du schéma, `ddl-auto=validate` |
@@ -47,7 +47,15 @@ Sections 6.2 (modules), 6.3, 9.5, 9.6 (à concevoir dès le départ), 9.8 ; PLT-
 - Nouvelles dépendances validées par Omar le 2026-09-19 : openapi-generator-maven-plugin, Testcontainers PostgreSQL, ArchUnit, springdoc-openapi (Swagger UI, dev). Toute dépendance supplémentaire repasse par lui.
 - La stack frontend fait l'objet d'une décision distincte, à prendre avant la première feature comportant un écran.
 - Hébergement et localisation des données (0018) : à choisir avant le premier client ; sans effet sur cette décision.
-- Version exacte de Spring Boot 4.0.x et compatibilité de chaque dépendance avec Spring Framework 7 / Jackson 3 / Hibernate 7 : à vérifier à l'initialisation du projet.
+- **Version retenue : 4.1.1, et non 4.0.x.** À l'initialisation du projet, 4.0.2
+  n'existait pas en tant que version Maven : l'identifiant `4.1.1.RELEASE` des
+  métadonnées de Spring Initializr n'est pas une coordonnée publiée, la version
+  réelle est `4.1.1`. Elle apporte Spring Framework 7, Jakarta EE 11, Hibernate 7
+  et Jackson 3, comme prévu. Validée par Omar le 2026-09-20.
+- Compatibilité de chaque dépendance avec Spring Framework 7 / Jackson 3 /
+  Hibernate 7 : vérifiée à l'implémentation de F01. Quatre déplacements de paquets
+  relevés (`AutoConfigureMockMvc`, `HibernatePropertiesCustomizer`) et
+  Testcontainers 2 dont `PostgreSQLContainer` n'est plus générique.
 
 ## Date
 

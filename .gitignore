@@ -20,3 +20,6 @@ docs/cahier-des-charges/sources/captures/
 # Fichiers temporaires
 *.log
 *.tmp
+
+# Rapports d'exécution des tests, lus par tools/generer-suivi-tests.py
+reports/
