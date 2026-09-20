@@ -20,6 +20,7 @@ public class ClubSetting extends ClubScopedEntity {
     @Column(name = "setting_key", nullable = false, length = 120)
     private String settingKey;
 
-    @Column(name = "value", nullable = false, columnDefinition = "jsonb")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "value", nullable = false)
     private String value;
 }

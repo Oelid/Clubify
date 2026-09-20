@@ -210,6 +210,9 @@ public class UserService {
             surcharge.setMembershipId(vue.appartenance().getId());
             surcharge.setPermissionCode(demande.code());
             surcharge.setGranted(demande.granted());
+            if (demande.parameter() != null) {
+                surcharge.setParameter(json.de(demande.parameter()));
+            }
             surcharges.save(surcharge);
         }
 

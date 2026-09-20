@@ -70,8 +70,10 @@ public class AuditListener {
             entree.setActorId(utilisateur.userId());
             return;
         }
-        // Hors de toute demande authentifiée : c'est le système qui agit.
+        // Hors de toute demande authentifiée : c'est le système qui agit, et la
+        // règle se nomme, sans quoi le journal dirait « système » sans dire quoi.
         entree.setActorType(AuditLog.ActorType.SYSTEM);
+        entree.setActorLabel(SystemActor.regleCourante());
     }
 
     private String identifiantDeDemande() {

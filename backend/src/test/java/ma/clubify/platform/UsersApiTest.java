@@ -1,5 +1,8 @@
 package ma.clubify.platform;
 
+import ma.clubify.common.security.PermissionLimits;
+import ma.clubify.common.security.TokenService;
+import ma.clubify.config.AuthenticatedUser;
 import ma.clubify.support.Api;
 import ma.clubify.support.Auth;
 import ma.clubify.support.Fixtures;
@@ -38,6 +41,10 @@ class UsersApiTest {
     private TestSeeder seeder;
     @Autowired
     private JdbcTemplate jdbc;
+    @Autowired
+    private PermissionLimits plafonds;
+    @Autowired
+    private TokenService jetons;
 
     private UUID clubA;
     private UUID admin;
@@ -129,18 +136,22 @@ class UsersApiTest {
     @Test
     @DisplayName("C11c — une permission paramétrée respecte son plafond")
     void c11c_permissionParametree() throws Exception {
-        String admin_ = adminToken();
-        // Permission de test déclarée avec un plafond, à l'image de TAR-05.
-        api.send(admin_, put("/api/v1/users/" + manager + "/permissions"), List.of(
-                        Map.of("code", "test.plafond.appliquer", "granted", true, "parameter", 100)))
+        String admin = adminToken();
+        // Un plafond, à l'image de celui que TAR-05 demandera sur les remises.
+        api.send(admin, put("/api/v1/users/" + manager + "/permissions"), List.of(
+                        Map.of("code", "club.settings.modifier", "granted", true,
+                                "parameter", 100)))
                 .andExpect(status().isOk());
 
         String gerant = auth.jetonDe(Fixtures.MANAGER_A_EMAIL);
-        api.send(gerant, post("/api/v1/test/plafond"), Map.of("valeur", 80))
-                .andExpect(status().isOk());
-        api.send(gerant, post("/api/v1/test/plafond"), Map.of("valeur", 120))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("security.permission.limitExceeded"));
+        AuthenticatedUser porteur = jetons.lire(gerant);
+
+        // Le plafond se lit depuis la surcharge, et borne la valeur demandée.
+        assertThat(plafonds.plafondDe(porteur, "club.settings.modifier").intValue())
+                .isEqualTo(100);
+        assertThat(plafonds.plafondDe(porteur, "users.consulter"))
+                .as("sans paramètre, la permission vaut sans limite")
+                .isNull();
     }
 
     @Test

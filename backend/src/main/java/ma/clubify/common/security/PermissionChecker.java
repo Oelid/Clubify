@@ -15,6 +15,12 @@ import org.springframework.stereotype.Component;
 @Component("perm")
 public class PermissionChecker {
 
+    private final PermissionLimits plafonds;
+
+    public PermissionChecker(PermissionLimits plafonds) {
+        this.plafonds = plafonds;
+    }
+
     /** L'utilisateur courant détient-il cette permission ? */
     public boolean a(String permission) {
         AuthenticatedUser utilisateur = courant();
@@ -37,6 +43,21 @@ public class PermissionChecker {
             }
         }
         return false;
+    }
+
+    /**
+     * Permission portant une valeur, tel un plafond de remise (TAR-05).
+     *
+     * <p>Le droit ne suffit pas : la valeur demandée doit tenir sous le plafond
+     * que la surcharge fixe. Sans paramètre, la permission vaut sans limite
+     * (critère C11c).
+     */
+    public boolean sous(String permission, Number valeur) {
+        if (!a(permission)) {
+            return false;
+        }
+        Number plafond = plafonds.plafondDe(PermissionChecker.requis(), permission);
+        return plafond == null || valeur.doubleValue() <= plafond.doubleValue();
     }
 
     /** Authentifié, second facteur éventuellement encore à activer. */

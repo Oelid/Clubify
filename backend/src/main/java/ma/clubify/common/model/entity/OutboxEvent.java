@@ -22,7 +22,8 @@ public class OutboxEvent extends ClubScopedEntity {
     @Column(name = "event_type", nullable = false, length = 160)
     private String eventType;
 
-    @Column(name = "payload", nullable = false, columnDefinition = "jsonb")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "payload", nullable = false)
     private String payload;
 
     @Column(name = "attempts", nullable = false)

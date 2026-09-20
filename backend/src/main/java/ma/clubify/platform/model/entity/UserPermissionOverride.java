@@ -30,6 +30,7 @@ public class UserPermissionOverride extends ClubScopedEntity {
     private boolean granted;
 
     /** Valeur portée par la permission, tel un plafond de remise (TAR-05). */
-    @Column(name = "parameter", columnDefinition = "jsonb")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "parameter")
     private String parameter;
 }
