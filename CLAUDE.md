@@ -27,6 +27,7 @@ C'est un logiciel d'école d'activités, pas un logiciel de salle de sport.
 | `docs/matrice-droits.xlsx` | Qui peut quoi : tous les droits et leur attribution par défaut par rôle ; régénéré par `tools/generer-matrice-droits.py` |
 | `docs/droits.md` | Ce que chaque droit ouvre, dans les mots du club. Source du classeur ci-dessus |
 | `docs/recette.md` | Comment lancer l'application : environnement de recette en conteneurs, ou serveurs de développement |
+| `docs/acces.md` | Avec quel compte se connecter, où est son mot de passe, que faire quand ça coince |
 | `docs/processus-feature.md` | Les six étapes d'implémentation d'une feature, avec leurs points d'arrêt |
 | `docs/features/` | Une fiche par feature, à partir de `_gabarit.md` |
 | `docs/decisions/` | Une fiche par décision, à partir de `0000-gabarit.md` |

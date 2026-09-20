@@ -34,3 +34,6 @@ frontend/playwright-report/
 
 # Secrets de l'environnement de recette, generes au premier demarrage
 .env
+
+# Acces a l instance de developpement, ecrit par tools/preparer-dev.ps1
+.env.dev

@@ -1,4 +1,30 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
+
+/**
+ * Accès de l'instance de développement, lus dans `.env.dev` à la racine.
+ *
+ * <p>Sans cela, il faudrait exporter trois variables à la main avant chaque
+ * passage, et le secret du second facteur finirait dans un historique de
+ * commandes. Le fichier n'est pas versionné ; ce qui est déjà dans
+ * l'environnement gagne, pour qu'une autre machine puisse l'emporter.
+ */
+const chargerLesAcces = (): void => {
+  try {
+    const contenu = readFileSync(resolve(__dirname, '..', '.env.dev'), 'utf-8');
+    for (const ligne of contenu.split(/\r?\n/)) {
+      const trouve = /^([A-Z0-9_]+)=(.*)$/.exec(ligne.trim());
+      if (trouve && !process.env[trouve[1]]) {
+        process.env[trouve[1]] = trouve[2];
+      }
+    }
+  } catch {
+    // Absent : la suite s'arrêtera d'elle-même, en disant ce qui manque.
+  }
+};
+
+chargerLesAcces();
 
 /**
  * Recette fonctionnelle : ce que l'accueil et le gérant font devant l'écran.

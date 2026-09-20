@@ -12,6 +12,10 @@ pendant que vous testez, ou que rien ne bouge sous vos yeux ?**
 
 L'interface s'ouvre sur **http://localhost:4300**.
 
+Les identifiants s'affichent à la fin du script, et se retrouvent ensuite par
+`.	oolsfficher-acces.ps1`. Le détail — première connexion, second facteur,
+que faire quand ça coince — est dans **`docs/acces.md`**.
+
 Tout tourne en conteneurs, avec **sa propre base**, séparée de celle du
 développement. Les corrections faites pendant que vous testez **n'y apparaissent
 pas** : il faut relancer le script pour prendre la dernière version (environ une
