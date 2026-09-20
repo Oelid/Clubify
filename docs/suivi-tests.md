@@ -66,6 +66,7 @@ fiche de feature, pour que la recette et la fiche ne divergent pas.
 | S16 | F01 | Imprimer la liste des utilisateurs | La feuille imprimée est lisible et tient sur la page | — | Manuel |
 | S17 | F01 | Le gérant entre sans second facteur et voit un rappel permanent | Rien ne bloque, le rappel est sur chaque écran et ne se ferme pas | C6g | Automatisé |
 | S18 | F01 | L'accueil n'est jamais invitée à activer un second facteur | Le rappel ne s'adresse qu'aux rôles sensibles | C6k | Automatisé |
+| S19 | F01 | Le gérant change la couleur du club | La couleur s'applique à l'écran dès l'enregistrement et survit au rechargement | C28b | Automatisé |
 
 ## Recette manuelle — passages
 

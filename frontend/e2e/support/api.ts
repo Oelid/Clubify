@@ -62,6 +62,41 @@ export class ApiDeRecette {
     return email;
   }
 
+  /**
+   * Crée un compte et lui active un second facteur, par le parcours réel.
+   *
+   * <p>Fabriquer le compte plutôt que d'en emprunter un rend le scénario
+   * autonome : il ne dépend d'aucun secret rangé quelque part, et le compte
+   * d'administration reste ouvrable au clavier seul.
+   */
+  async creerUtilisateurInscrit(role: string, marque: string):
+      Promise<{ email: string; secret: string }> {
+    const email = await this.creerUtilisateur(role, marque);
+
+    const connexion = await this.contexte.post('/api/v1/auth/login', {
+      data: { email, password: MOT_DE_PASSE_JETABLE },
+    });
+    const provisoire = (await connexion.json()).tokens.accessToken;
+
+    const preparation = await this.contexte.post('/api/v1/profile/mfa/setup', {
+      headers: { Authorization: `Bearer ${provisoire}` },
+    });
+    const uri = (await preparation.json()).otpauthUri as string;
+    const secret = /secret=([^&]+)/.exec(uri)?.[1] ?? '';
+
+    if (secondesRestantes() < 3) {
+      await new Promise((suite) => setTimeout(suite, 3_500));
+    }
+    const confirmation = await this.contexte.post('/api/v1/profile/mfa/confirm', {
+      headers: { Authorization: `Bearer ${provisoire}` },
+      data: { code: codeTotp(secret) },
+    });
+    if (!confirmation.ok()) {
+      throw new Error(`Activation du second facteur refusée : ${confirmation.status()}`);
+    }
+    return { email, secret };
+  }
+
   async fermer(): Promise<void> {
     await this.contexte.dispose();
   }

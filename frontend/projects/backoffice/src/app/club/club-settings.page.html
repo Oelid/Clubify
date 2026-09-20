@@ -121,21 +121,42 @@
         <div class="carte__corps">
           <p class="champ__aide">{{ t('club.brandHelp') }}</p>
           <div class="champ__paire">
-            <span class="champ">
+            <label class="champ">
               <span class="champ__libelle">{{ t('club.brandPrimary') }}</span>
               <span class="couleur">
-                <i [style.background]="marquePrincipale() ?? 'transparent'"></i>
-                {{ marquePrincipale() ?? t('club.brandUnset') }}
+                <input
+                  class="couleur__choix"
+                  type="color"
+                  name="brandPrimary"
+                  data-testid="couleur-principale"
+                  [disabled]="!peutModifier()"
+                  [ngModel]="marquePrincipale() ?? '#2e4057'"
+                  (ngModelChange)="choisirLaMarque('club.brand.primary', $event)"
+                  [attr.aria-label]="t('club.brandPrimary')"
+                />
+                <span class="numeric">{{ marquePrincipale() ?? t('club.brandUnset') }}</span>
               </span>
-            </span>
-            <span class="champ">
+            </label>
+            <label class="champ">
               <span class="champ__libelle">{{ t('club.brandSecondary') }}</span>
               <span class="couleur">
-                <i [style.background]="marqueSecondaire() ?? 'transparent'"></i>
-                {{ marqueSecondaire() ?? t('club.brandUnset') }}
+                <input
+                  class="couleur__choix"
+                  type="color"
+                  name="brandSecondary"
+                  data-testid="couleur-secondaire"
+                  [disabled]="!peutModifier()"
+                  [ngModel]="marqueSecondaire() ?? '#2e4057'"
+                  (ngModelChange)="choisirLaMarque('club.brand.secondary', $event)"
+                  [attr.aria-label]="t('club.brandSecondary')"
+                />
+                <span class="numeric">{{ marqueSecondaire() ?? t('club.brandUnset') }}</span>
               </span>
-            </span>
+            </label>
           </div>
+          @if (peutModifier()) {
+            <p class="champ__aide">{{ t('club.brandApplied') }}</p>
+          }
         </div>
       </section>
     </div>

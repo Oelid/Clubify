@@ -21,7 +21,7 @@ test.describe('F01 — Paramètres du club', () => {
     await page.getByLabel('Téléphone').fill('06 12 34 56 78');
     await page.getByRole('button', { name: 'Enregistrer' }).click();
 
-    await expect(page.getByRole('status')).toHaveText(/enregistrés/i);
+    await expect(page.locator('.page__succes')).toHaveText(/enregistrés/i);
     // Le backend normalise : l'écran montre ce qui a réellement été retenu.
     await expect(page.getByLabel('Téléphone')).toHaveValue('+212612345678');
 
@@ -42,6 +42,39 @@ test.describe('F01 — Paramètres du club', () => {
     // Rien n'a été enregistré : le nom d'origine revient au rechargement.
     await page.reload();
     await expect(page.getByLabel('Nom du club')).toHaveValue(avant);
+  });
+
+  test('S19 — Le gérant change la couleur du club', async ({ page }) => {
+    const choisie = '#8a2f6b';
+
+    await page.getByTestId('couleur-principale').fill(choisie);
+    await page.getByRole('button', { name: 'Enregistrer' }).click();
+    await expect(page.locator('.page__succes')).toBeVisible();
+
+    // L'accent change sous les yeux : c'est la preuve que c'est enregistré.
+    // Mesuré par sondage : la confirmation s'affiche avant que le jeton de
+    // marque ne soit reposé, et comparer une seule fois rendrait le test
+    // capricieux.
+    await expect
+      .poll(async () =>
+        (
+          await page.evaluate(() =>
+            getComputedStyle(document.documentElement).getPropertyValue('--brand-primary'),
+          )
+        )
+          .trim()
+          .toLowerCase(),
+      )
+      .toBe(choisie);
+
+    // Et la couleur survit au rechargement : elle vient bien du club.
+    await page.reload();
+    await expect(page.getByTestId('couleur-principale')).toHaveValue(choisie);
+
+    // On remet la palette du logo pour les scénarios suivants.
+    await page.getByTestId('couleur-principale').fill('#307890');
+    await page.getByRole('button', { name: 'Enregistrer' }).click();
+    await expect(page.locator('.page__succes')).toBeVisible();
   });
 
   test('S12 — Lire les règles configurables du club', async ({ page }) => {

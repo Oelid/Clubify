@@ -7,6 +7,7 @@
 export interface CompteDeRecette {
   readonly email: string;
   readonly motDePasse: string;
+  /** Vide quand le compte n'a pas de second facteur : c'est le cas courant. */
   readonly secretTotp: string;
 }
 
@@ -24,7 +25,10 @@ const lire = (nom: string): string => {
 export const administrateur: CompteDeRecette = {
   email: lire('E2E_ADMIN_EMAIL'),
   motDePasse: lire('E2E_ADMIN_PASSWORD'),
-  secretTotp: lire('E2E_ADMIN_TOTP_SECRET'),
+  // Facultatif : la recette active elle-même un second facteur sur les comptes
+  // qu'elle crée, quand un scénario en a besoin. Le compte d'administration n'a
+  // plus à en porter un, ce qui le laisse ouvrable au clavier seul.
+  secretTotp: process.env['E2E_ADMIN_TOTP_SECRET'] ?? '',
 };
 
 export const baseApi = process.env['E2E_BASE_URL'] ?? 'http://localhost:4200';

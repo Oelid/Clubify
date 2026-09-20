@@ -74,7 +74,8 @@
     "brandHelp": "Les couleurs du club servent d'accent et habillent ses documents ; elles ne remplacent pas la charte du produit.",
     "brandPrimary": "Couleur principale",
     "brandSecondary": "Couleur secondaire",
-    "brandUnset": "Non définie"
+    "brandUnset": "Non définie",
+    "brandApplied": "La couleur choisie s'applique dès l'enregistrement, en accent dans l'application et sur les documents du club."
   },
   "users": {
     "title": "Utilisateurs",

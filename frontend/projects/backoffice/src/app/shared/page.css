@@ -336,3 +336,29 @@
   border-style: dashed;
   cursor: not-allowed;
 }
+
+/* Sélecteur de couleur : le carré natif du navigateur, habillé pour rester
+   dans la ligne des autres champs. */
+.couleur__choix {
+  inline-size: 34px;
+  block-size: 24px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+}
+
+.couleur__choix:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.couleur__choix::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.couleur__choix::-webkit-color-swatch {
+  border: none;
+  border-radius: 2px;
+}

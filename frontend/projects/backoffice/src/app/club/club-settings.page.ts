@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Club, ClubApi, SettingDefinition, SettingValue } from 'api-client';
 import { firstValueFrom } from 'rxjs';
+import { ClubTheme } from 'ui';
 import { codeDErreur } from '../core/api-errors';
 import { SessionStore } from '../core/session.store';
 
@@ -15,6 +16,7 @@ import { SessionStore } from '../core/session.store';
 export class ClubSettingsPage {
   private readonly api = inject(ClubApi);
   private readonly session = inject(SessionStore);
+  private readonly theme = inject(ClubTheme);
 
   protected readonly erreur = signal<string | null>(null);
   protected readonly enregistre = signal(false);
@@ -22,6 +24,9 @@ export class ClubSettingsPage {
 
   /** Copie de travail : l'identité n'est envoyée qu'à l'enregistrement. */
   protected readonly saisie = signal<Club | null>(null);
+
+  /** Couleurs choisies mais pas encore enregistrées, par clé de règle. */
+  private readonly marqueChoisie = signal<Record<string, string>>({});
 
   protected readonly club = resource({
     loader: async () => {
@@ -68,7 +73,16 @@ export class ClubSettingsPage {
     return Array.isArray(valeur) ? valeur.join(', ') : String(valeur);
   }
 
+  private couleurParmi(valeurs: SettingValue[], cle: string): string | null {
+    const trouvee = valeurs.find((r) => r.key === cle)?.value;
+    return typeof trouvee === 'string' && trouvee.length > 0 ? trouvee : null;
+  }
+
   private reglage(cle: string): string | null {
+    const choisie = this.marqueChoisie()[cle];
+    if (choisie) {
+      return choisie;
+    }
     const trouvee = this.valeurs().find((r) => r.key === cle)?.value;
     return typeof trouvee === 'string' && trouvee.length > 0 ? trouvee : null;
   }
@@ -78,6 +92,11 @@ export class ClubSettingsPage {
     if (courant) {
       this.saisie.set({ ...courant, [nom]: valeur });
     }
+  }
+
+  /** Retient une couleur choisie ; elle part avec le reste à l'enregistrement. */
+  protected choisirLaMarque(cle: string, valeur: string): void {
+    this.marqueChoisie.set({ ...this.marqueChoisie(), [cle]: valeur });
   }
 
   protected async enregistrer(): Promise<void> {
@@ -108,6 +127,30 @@ export class ClubSettingsPage {
       );
       // Le backend a pu normaliser le téléphone : on affiche ce qu'il a retenu.
       this.saisie.set({ ...mis });
+
+      const couleurs = this.marqueChoisie();
+      if (Object.keys(couleurs).length > 0) {
+        // On applique ce que le backend vient de retenir, et non une relecture
+        // qui n'est pas encore arrivée : c'est ce qui rendait l'accent
+        // capricieux après l'enregistrement.
+        const retenues = await firstValueFrom(
+          this.api.updateClubSettings({
+            settingUpdate: Object.entries(couleurs).map(([key, value]) => ({ key, value })),
+          }),
+        );
+        this.reglages.set(retenues);
+        this.marqueChoisie.set({});
+
+        const principale = this.couleurParmi(retenues, 'club.brand.primary');
+        if (principale) {
+          this.theme.apply({
+            primary: principale,
+            secondary: this.couleurParmi(retenues, 'club.brand.secondary') ?? undefined,
+          });
+        } else {
+          this.theme.reset();
+        }
+      }
       this.enregistre.set(true);
     } catch (echec) {
       this.erreur.set(codeDErreur(echec));

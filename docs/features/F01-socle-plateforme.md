@@ -170,6 +170,7 @@ Clubs et personnes fictifs. « Club A » et « Club B » sont deux clubs distinc
 | C26 | 25 | Un fichier existe | Suppression | Le fichier n'est plus servi ; sa ligne reste, marquée supprimée |
 | C27 | 26, 27 | Club sans logo | La gérante dépose un logo | Le logo est un fichier privé du club, affiché dans le backoffice ; le même test passe sur l'implémentation disque et sur l'implémentation mémoire sans changement des appels, ce qui garantit qu'une implémentation S3 s'ajoutera sans refonte |
 | C28 | 28 | Club sans identité | La gérante renseigne nom, adresse, téléphone, courriel, forme juridique, ICE, IF, RC | Les valeurs sont enregistrées ; le téléphone est normalisé en E.164 ; un ICE mal formé est refusé |
+| C28b | 29 | Club sans couleur de marque | Le gérant choisit une couleur principale et enregistre | La couleur s'applique en accent sans recharger, survit au rechargement, et l'accueil ne peut pas la changer (décision 0025) |
 | C29 | 29 | Club au fuseau `Africa/Casablanca` | Une date est enregistrée à 10 h 00 heure locale | Stockée en UTC ; restituée à 10 h 00 dans le fuseau du club |
 | C30 | 30 | Paramètres de numérotation | La gérante fixe un préfixe de reçu et l'exercice de départ | Enregistré et audité ; aucun numéro n'est encore émis (F09) |
 | C31 | 31 | Registre des règles | Une feature de test déclare une règle avec une valeur par défaut | Sans saisie, la valeur par défaut est lue ; après saisie par la gérante, la valeur du club est lue ; le changement est audité |
@@ -506,6 +507,7 @@ Trois classes forment le harnais réutilisable exigé par le `CLAUDE.md` §6 : `
 | C26 | `FilesApiTest` | `c26_suppressionLogique` |
 | C27 | `FilesApiTest` | `c27_logoDuClub` |
 | C28 | `ClubApiTest` | `c28_identite` |
+| C28b | recette S19 | `S19` |
 | C29 | `ClubApiTest` | `c29_fuseauHoraire` |
 | C30 | `ClubApiTest` | `c30_numerotation` |
 | C31 | `ClubApiTest` | `c31_registreDesReglesConfigurables`, `c31_definitions` |

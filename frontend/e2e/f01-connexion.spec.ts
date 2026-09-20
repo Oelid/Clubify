@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { administrateur, configurationManquante, MOT_DE_PASSE_JETABLE } from './support/environnement';
 import { ApiDeRecette } from './support/api';
 import { marqueDuPassage } from './support/environnement';
-import { entrerCommeAdministrateur, franchirLeSecondFacteur, seConnecter } from './support/pages';
+import { entrerCommeAdministrateur, franchirAvec, seConnecter } from './support/pages';
 
 /**
  * Recette fonctionnelle de F01 — entrer dans l'application.
@@ -18,16 +18,14 @@ test.beforeAll(() => {
 
 test.describe('F01 — Connexion', () => {
   test("S01 — Première connexion de l'administrateur", async ({ page }) => {
-    await seConnecter(page, administrateur.email, administrateur.motDePasse);
+    // Depuis la décision 0031, rien ne bloque : le mot de passe suffit à entrer,
+    // et le second facteur se franchit si ce compte en a un.
+    await entrerCommeAdministrateur(page);
 
-    // Le second facteur est imposé au rôle, avant tout accès (décision 0027).
-    await expect(page.getByRole('heading', { name: /second facteur|vérification/i })).toBeVisible();
-
-    await franchirLeSecondFacteur(page);
-
-    await expect(page.getByRole('heading', { name: 'Paramètres du club' })).toBeVisible();
     // L'en-tête nomme la personne connectée : elle sait sous quel compte elle agit.
     await expect(page.locator('.shell__compte-nom')).not.toBeEmpty();
+    // Et la navigation lui ouvre ce que son rôle permet.
+    await expect(page.getByRole('link', { name: 'Utilisateurs' })).toBeVisible();
   });
 
   test('S02 — Mot de passe erroné', async ({ page }) => {
@@ -56,16 +54,22 @@ test.describe('F01 — Connexion', () => {
     await expect(page).toHaveURL(/connexion/);
   });
 
-  test('S04 — Connexion d\u2019un compte déjà inscrit au second facteur', async ({ page }) => {
-    await seConnecter(page, administrateur.email, administrateur.motDePasse);
+  test('S04 — Connexion d’un compte déjà inscrit au second facteur', async ({ page }) => {
+    const api = await ApiDeRecette.enTantQuAdministrateur();
+    const inscrit = await api.creerUtilisateurInscrit('MANAGER', marqueDuPassage());
+    await api.fermer();
+
+    await seConnecter(page, inscrit.email, MOT_DE_PASSE_JETABLE);
 
     // Ni QR ni nouveaux codes : le compte est déjà inscrit, on lui demande un code.
     await expect(page.getByTestId('qr-code')).toHaveCount(0);
     await expect(page.getByTestId('codes-de-secours')).toHaveCount(0);
     await expect(page.getByLabel('Code à six chiffres')).toBeVisible();
 
-    await franchirLeSecondFacteur(page);
+    await franchirAvec(page, inscrit.secret);
     await expect(page.getByRole('heading', { name: 'Paramètres du club' })).toBeVisible();
+    // Le rappel disparaît : ce compte est protégé.
+    await expect(page.getByTestId('rappel-second-facteur')).toHaveCount(0);
   });
 
   test('S10 — Se déconnecter', async ({ page }) => {

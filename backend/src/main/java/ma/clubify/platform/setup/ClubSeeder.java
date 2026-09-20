@@ -14,6 +14,7 @@ import ma.clubify.platform.repository.ClubRepository;
 import ma.clubify.platform.repository.MembershipRepository;
 import ma.clubify.platform.repository.SiteRepository;
 import ma.clubify.platform.repository.UserAccountRepository;
+import ma.clubify.platform.service.ClubSettingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -47,6 +48,10 @@ public class ClubSeeder implements ApplicationRunner {
 
     private static final String DECLENCHEUR = "seed-club";
     private static final String CLUB_PAR_DEFAUT = "Club de démonstration";
+
+    /** Bleu acier et orange du logo (décision 0025). */
+    private static final String MARQUE_PRINCIPALE = "#307890";
+    private static final String MARQUE_SECONDAIRE = "#F08840";
     private static final String ADMIN_PAR_DEFAUT = "admin@exemple.test";
 
     private final ClubRepository clubs;
@@ -54,6 +59,7 @@ public class ClubSeeder implements ApplicationRunner {
     private final UserAccountRepository comptes;
     private final MembershipRepository appartenances;
     private final PasswordEncoder motsDePasse;
+    private final ClubSettingService reglages;
     private final DomainEvents evenements;
     private final TenantContext contexte;
     private final TransactionTemplate transaction;
@@ -61,13 +67,14 @@ public class ClubSeeder implements ApplicationRunner {
 
     public ClubSeeder(ClubRepository clubs, SiteRepository sites, UserAccountRepository comptes,
                       MembershipRepository appartenances, PasswordEncoder motsDePasse,
-                      DomainEvents evenements, TenantContext contexte,
+                      ClubSettingService reglages, DomainEvents evenements, TenantContext contexte,
                       TransactionTemplate transaction, Clock horloge) {
         this.clubs = clubs;
         this.sites = sites;
         this.comptes = comptes;
         this.appartenances = appartenances;
         this.motsDePasse = motsDePasse;
+        this.reglages = reglages;
         this.evenements = evenements;
         this.contexte = contexte;
         this.transaction = transaction;
@@ -148,6 +155,12 @@ public class ClubSeeder implements ApplicationRunner {
         appartenance.setRole(Role.ACCOUNT_ADMIN);
         appartenance.setActive(true);
         appartenances.save(appartenance);
+
+        // Palette de référence du club pilote (décision 0025). Le registre des
+        // règles ne porte aucune couleur par défaut — un club nouveau est neutre —
+        // mais un club amorcé pour travailler a son identité dès le premier écran.
+        reglages.definir("club.brand.primary", MARQUE_PRINCIPALE);
+        reglages.definir("club.brand.secondary", MARQUE_SECONDAIRE);
 
         evenements.publish(DomainEvent.of(club.getId(), "club.created", "Club", club.getId()));
         evenements.publish(DomainEvent.of(club.getId(), "user.created", "UserAccount",
