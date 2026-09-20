@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/clubify
+    username: clubify
+    password: clubify
+  docker:
+    compose:
+      enabled: true
+      file: compose.yaml
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui
+  api-docs:
+    enabled: true
+clubify:
+  security:
+    jwt:
+      secret: dev-secret-a-remplacer-par-une-variable-d-environnement-32o
+  encryption:
+    key: ZGV2LWtleS0zMi1vY3RldHMtcG91ci1BRVMtR0NNLTEyMzQ1Ng==
+logging:
+  level:
+    ma.clubify: DEBUG

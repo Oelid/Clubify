@@ -1,0 +1,1057 @@
+openapi: 3.0.3
+
+# Contrat d'API de Clubify. Source de vérité entre le backend et les frontends.
+# Modifié en premier dans chaque feature (CLAUDE.md, contracts/README.md).
+#
+# Règles rappelées ici parce qu'elles se vérifient à la lecture :
+#   - aucun libellé : le contrat porte des codes, l'interface traduit ;
+#   - montants en centimes avec devise ; dates et instants en UTC ;
+#   - l'identifiant de club ne transite jamais : il vient du jeton.
+#
+# Couverture actuelle : F01 — socle plateforme (PLT-01, PLT-04, PLT-05,
+# SEC-01 à SEC-04, ADM-01, INT-03).
+
+info:
+  title: Clubify
+  version: 1.0.0
+  description: |
+    API unique du backoffice, de l'application coach et du portail parent.
+
+servers:
+  - url: /api/v1
+
+tags:
+  - name: auth
+    description: Authentification, second facteur, sessions
+  - name: profile
+    description: Actions de l'utilisateur sur son propre compte
+  - name: club
+    description: Paramètres du club
+  - name: users
+    description: Utilisateurs, rôles et permissions
+  - name: audit
+    description: Journal d'audit
+  - name: files
+    description: Fichiers privés
+  - name: exports
+    description: Exports de listes
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  # ----------------------------------------------------------------- auth
+  /auth/login:
+    post:
+      tags: [auth]
+      operationId: login
+      summary: Authentifie un membre du staff
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Jetons délivrés, ou défi de second facteur
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '423': { $ref: '#/components/responses/Locked' }
+
+  /auth/mfa/verify:
+    post:
+      tags: [auth]
+      operationId: verifyMfa
+      summary: Répond au défi de second facteur
+      description: Accepte un code TOTP ou un code de secours à usage unique.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MfaVerifyRequest' }
+      responses:
+        '200':
+          description: Jetons délivrés
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenPair' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      operationId: refreshToken
+      summary: Renouvelle le jeton d'accès
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RefreshRequest' }
+      responses:
+        '200':
+          description: Nouveau couple de jetons
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenPair' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      operationId: logout
+      summary: Révoque la session courante
+      responses:
+        '204': { description: Session révoquée }
+
+  /auth/me:
+    get:
+      tags: [auth]
+      operationId: getCurrentUser
+      summary: Décrit l'utilisateur connecté, son club et ses permissions
+      responses:
+        '200':
+          description: Utilisateur courant
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CurrentUser' }
+
+  # -------------------------------------------------------------- profile
+  /profile/mfa/setup:
+    post:
+      tags: [profile]
+      operationId: setupMfa
+      summary: Prépare l'activation du second facteur
+      description: Retourne l'URI otpauth à afficher en QR et les codes de secours.
+      responses:
+        '200':
+          description: Secret et codes de secours
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MfaSetupResponse' }
+
+  /profile/mfa/confirm:
+    post:
+      tags: [profile]
+      operationId: confirmMfa
+      summary: Confirme l'activation par un premier code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MfaConfirmRequest' }
+      responses:
+        '204': { description: Second facteur actif }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+
+  /profile/mfa/recovery-codes:
+    post:
+      tags: [profile]
+      operationId: regenerateRecoveryCodes
+      summary: Régénère les codes de secours et invalide les précédents
+      responses:
+        '200':
+          description: Nouveaux codes
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RecoveryCodes' }
+
+  /profile/devices:
+    get:
+      tags: [profile]
+      operationId: listTrustedDevices
+      summary: Liste mes appareils de confiance
+      responses:
+        '200':
+          description: Appareils
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TrustedDevice' }
+
+  /profile/devices/{deviceId}:
+    delete:
+      tags: [profile]
+      operationId: revokeTrustedDevice
+      summary: Révoque un appareil de confiance
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '204': { description: Appareil révoqué }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ----------------------------------------------------------------- club
+  /club:
+    get:
+      tags: [club]
+      operationId: getClub
+      summary: Lit l'identité du club
+      responses:
+        '200':
+          description: Club
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Club' }
+    put:
+      tags: [club]
+      operationId: updateClub
+      summary: Modifie l'identité du club
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ClubUpdateRequest' }
+      responses:
+        '200':
+          description: Club modifié
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Club' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+
+  /club/logo:
+    put:
+      tags: [club]
+      operationId: updateClubLogo
+      summary: Rattache un fichier déjà déposé comme logo du club
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fileId]
+              properties:
+                fileId: { type: string, format: uuid }
+      responses:
+        '204': { description: Logo rattaché }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /club/settings:
+    get:
+      tags: [club]
+      operationId: getClubSettings
+      summary: Lit les règles configurables du club, valeurs effectives
+      responses:
+        '200':
+          description: Valeurs effectives, défaut compris
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SettingValue' }
+    put:
+      tags: [club]
+      operationId: updateClubSettings
+      summary: Modifie des règles configurables
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { $ref: '#/components/schemas/SettingUpdate' }
+      responses:
+        '200':
+          description: Valeurs effectives après modification
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SettingValue' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+
+  /club/settings/definitions:
+    get:
+      tags: [club]
+      operationId: getSettingDefinitions
+      summary: Décrit le registre des règles configurables et leurs valeurs par défaut
+      responses:
+        '200':
+          description: Définitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SettingDefinition' }
+
+  # ---------------------------------------------------------------- users
+  /users:
+    get:
+      tags: [users]
+      operationId: listUsers
+      summary: Liste les utilisateurs du club
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: role
+          in: query
+          schema: { $ref: '#/components/schemas/Role' }
+        - name: active
+          in: query
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: Page d'utilisateurs
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserPage' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [users]
+      operationId: createUser
+      summary: Crée un utilisateur et son appartenance au club
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserCreateRequest' }
+      responses:
+        '201':
+          description: Utilisateur créé
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+
+  /users/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      tags: [users]
+      operationId: getUser
+      summary: Lit un utilisateur
+      responses:
+        '200':
+          description: Utilisateur
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [users]
+      operationId: updateUser
+      summary: Modifie un utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserUpdateRequest' }
+      responses:
+        '200':
+          description: Utilisateur modifié
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /users/{userId}/status:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    put:
+      tags: [users]
+      operationId: setUserStatus
+      summary: Active ou désactive un utilisateur
+      description: |
+        La désactivation révoque les sessions. Le dernier administrateur d'un club
+        ne peut pas être désactivé.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [active]
+              properties:
+                active: { type: boolean }
+      responses:
+        '204': { description: Statut modifié }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+
+  /users/{userId}/role:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    put:
+      tags: [users]
+      operationId: setUserRole
+      summary: Attribue un rôle
+      description: Le dernier administrateur d'un club ne peut pas être rétrogradé.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role: { $ref: '#/components/schemas/Role' }
+      responses:
+        '204': { description: Rôle attribué }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+
+  /users/{userId}/permissions:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      tags: [users]
+      operationId: getUserPermissions
+      summary: Lit les permissions effectives et les surcharges
+      responses:
+        '200':
+          description: Permissions
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserPermissions' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [users]
+      operationId: setUserPermissionOverrides
+      summary: Remplace les surcharges de permissions d'un utilisateur
+      description: Réservé à l'administrateur du compte, non délégable.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { $ref: '#/components/schemas/PermissionOverride' }
+      responses:
+        '200':
+          description: Permissions après modification
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserPermissions' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+
+  /users/{userId}/sessions:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    delete:
+      tags: [users]
+      operationId: revokeUserSessions
+      summary: Ferme les sessions d'un utilisateur sans le désactiver
+      responses:
+        '204': { description: Sessions fermées }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /users/{userId}/mfa:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    delete:
+      tags: [users]
+      operationId: resetUserMfa
+      summary: Réinitialise le second facteur d'un utilisateur
+      responses:
+        '204': { description: Second facteur réinitialisé }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /permissions:
+    get:
+      tags: [users]
+      operationId: listPermissions
+      summary: Décrit le catalogue des permissions et le jeu par défaut de chaque rôle
+      responses:
+        '200':
+          description: Catalogue
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PermissionDefinition' }
+
+  # ---------------------------------------------------------------- audit
+  /audit-entries:
+    get:
+      tags: [audit]
+      operationId: searchAuditEntries
+      summary: Recherche dans le journal d'audit
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: actorId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: action
+          in: query
+          schema: { type: string }
+        - name: entityType
+          in: query
+          schema: { type: string }
+        - name: entityId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        '200':
+          description: Page d'entrées
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuditEntryPage' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  # ---------------------------------------------------------------- files
+  /files:
+    post:
+      tags: [files]
+      operationId: uploadFile
+      summary: Dépose un fichier privé
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, purpose]
+              properties:
+                file: { type: string, format: binary }
+                purpose: { $ref: '#/components/schemas/FilePurpose' }
+      responses:
+        '201':
+          description: Fichier déposé
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoredFile' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+
+  /files/{fileId}/link:
+    parameters:
+      - $ref: '#/components/parameters/FileId'
+    get:
+      tags: [files]
+      operationId: createFileLink
+      summary: Délivre un lien signé et expirant vers le fichier
+      responses:
+        '200':
+          description: Lien temporaire
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FileLink' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /files/{fileId}:
+    parameters:
+      - $ref: '#/components/parameters/FileId'
+    delete:
+      tags: [files]
+      operationId: deleteFile
+      summary: Supprime logiquement un fichier
+      responses:
+        '204': { description: Fichier supprimé }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /files/download/{token}:
+    parameters:
+      - name: token
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [files]
+      operationId: downloadFile
+      summary: Sert le contenu d'un fichier à partir d'un lien signé
+      security: []
+      responses:
+        '200':
+          description: Contenu
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '410':
+          description: Lien expiré
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+
+  # -------------------------------------------------------------- exports
+  /exports:
+    post:
+      tags: [exports]
+      operationId: createExport
+      summary: Exporte une liste en CSV ou en Excel
+      description: |
+        Les colonnes sensibles au sens de SEC-03 — santé, CIN, pièces — ne figurent
+        dans aucun export, quel que soit le rôle.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExportRequest' }
+      responses:
+        '200':
+          description: Fichier produit
+          content:
+            text/csv:
+              schema: { type: string, format: binary }
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema: { type: string, format: binary }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 0, default: 0 }
+    Size:
+      name: size
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 200, default: 20 }
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    FileId:
+      name: fileId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    DeviceId:
+      name: deviceId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  responses:
+    Unauthorized:
+      description: Authentification requise ou refusée
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+    Forbidden:
+      description: Permission manquante
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+    NotFound:
+      description: Introuvable, y compris lorsque la donnée appartient à un autre club
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+    Conflict:
+      description: Conflit avec l'état courant
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+    UnprocessableEntity:
+      description: Règle métier non respectée
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+    Locked:
+      description: Compte verrouillé après des échecs répétés
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+    PayloadTooLarge:
+      description: Fichier plus grand que la taille autorisée par le club
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+    UnsupportedMediaType:
+      description: Type de fichier non autorisé par le club
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+
+  schemas:
+
+    # --- commun
+    ProblemDetail:
+      type: object
+      description: RFC 9457. Le champ `code` est stable ; l'interface le traduit.
+      required: [status, code]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        code:
+          type: string
+          example: user.email.alreadyUsed
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              code: { type: string }
+
+    PageMeta:
+      type: object
+      required: [page, size, totalElements, totalPages]
+      properties:
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+
+    Money:
+      type: object
+      description: Montant en centimes, jamais en unités.
+      required: [amountCents, currency]
+      properties:
+        amountCents: { type: integer, format: int64 }
+        currency: { type: string, minLength: 3, maxLength: 3, example: MAD }
+
+    Role:
+      type: string
+      description: |
+        ACCOUNT_ADMIN est l'administrateur du compte (décision 0028), à ne pas
+        confondre avec FRONT_DESK, l'accueil.
+      enum: [ACCOUNT_ADMIN, MANAGER, FRONT_DESK, COACH, ACCOUNTANT, PARENT]
+
+    # --- auth
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+        deviceToken:
+          type: string
+          description: Jeton d'appareil de confiance, s'il en existe un.
+
+    LoginResponse:
+      type: object
+      required: [outcome]
+      properties:
+        outcome:
+          type: string
+          enum: [AUTHENTICATED, MFA_REQUIRED, MFA_ENROLLMENT_REQUIRED]
+        tokens: { $ref: '#/components/schemas/TokenPair' }
+        mfaChallengeId:
+          type: string
+          format: uuid
+          description: Présent lorsque le second facteur est requis.
+
+    MfaVerifyRequest:
+      type: object
+      required: [mfaChallengeId, code]
+      properties:
+        mfaChallengeId: { type: string, format: uuid }
+        code: { type: string }
+        trustDevice: { type: boolean, default: false }
+        deviceLabel: { type: string }
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken: { type: string }
+
+    TokenPair:
+      type: object
+      required: [accessToken, refreshToken, expiresInSeconds]
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        expiresInSeconds: { type: integer }
+        deviceToken:
+          type: string
+          description: Délivré lorsque l'appareil vient d'être marqué de confiance.
+
+    CurrentUser:
+      type: object
+      required: [id, email, firstName, lastName, role, permissions, club]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        firstName: { type: string }
+        lastName: { type: string }
+        language: { type: string, example: fr }
+        role: { $ref: '#/components/schemas/Role' }
+        mfaEnabled: { type: boolean }
+        permissions:
+          type: array
+          items: { type: string }
+        club: { $ref: '#/components/schemas/ClubSummary' }
+
+    MfaSetupResponse:
+      type: object
+      required: [otpauthUri, recoveryCodes]
+      properties:
+        otpauthUri:
+          type: string
+          description: À rendre en QR côté interface ; le secret n'est jamais journalisé.
+        recoveryCodes:
+          type: array
+          items: { type: string }
+
+    MfaConfirmRequest:
+      type: object
+      required: [code]
+      properties:
+        code: { type: string }
+
+    RecoveryCodes:
+      type: object
+      required: [codes]
+      properties:
+        codes:
+          type: array
+          items: { type: string }
+
+    TrustedDevice:
+      type: object
+      required: [id, label, expiresAt]
+      properties:
+        id: { type: string, format: uuid }
+        label: { type: string }
+        lastUsedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+
+    # --- club
+    ClubSummary:
+      type: object
+      required: [id, name, timezone, currency]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        timezone: { type: string, example: Africa/Casablanca }
+        currency: { type: string, example: MAD }
+        logoFileId: { type: string, format: uuid }
+
+    Club:
+      allOf:
+        - $ref: '#/components/schemas/ClubSummary'
+        - type: object
+          properties:
+            legalForm: { type: string }
+            ice: { type: string }
+            taxId: { type: string }
+            tradeRegister: { type: string }
+            address: { type: string }
+            phone: { type: string, description: Format E.164. }
+            email: { type: string, format: email }
+            defaultLanguage: { type: string, example: fr }
+
+    ClubUpdateRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        legalForm: { type: string }
+        ice: { type: string }
+        taxId: { type: string }
+        tradeRegister: { type: string }
+        address: { type: string }
+        phone: { type: string }
+        email: { type: string, format: email }
+        timezone: { type: string }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        defaultLanguage: { type: string }
+
+    SettingDefinition:
+      type: object
+      required: [key, type, scope, defaultValue]
+      properties:
+        key: { type: string, example: files.max_size_mb }
+        type: { type: string, enum: [STRING, INTEGER, BOOLEAN, DECIMAL, JSON] }
+        scope: { type: string, enum: [CLUB, PLATFORM] }
+        defaultValue: {}
+        source: { type: string, description: Identifiant de backlog ou de règle à l'origine. }
+
+    SettingValue:
+      type: object
+      required: [key, value, overridden]
+      properties:
+        key: { type: string }
+        value: {}
+        overridden:
+          type: boolean
+          description: Vrai si le club a saisi une valeur, faux si le défaut s'applique.
+
+    SettingUpdate:
+      type: object
+      required: [key, value]
+      properties:
+        key: { type: string }
+        value: {}
+
+    # --- users
+    User:
+      type: object
+      required: [id, email, firstName, lastName, role, active]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        firstName: { type: string }
+        lastName: { type: string }
+        phone: { type: string }
+        language: { type: string }
+        role: { $ref: '#/components/schemas/Role' }
+        active: { type: boolean }
+        mfaEnabled: { type: boolean }
+        lastLoginAt: { type: string, format: date-time }
+
+    UserPage:
+      type: object
+      required: [content, page]
+      properties:
+        content:
+          type: array
+          items: { $ref: '#/components/schemas/User' }
+        page: { $ref: '#/components/schemas/PageMeta' }
+
+    UserCreateRequest:
+      type: object
+      required: [email, firstName, lastName, role]
+      properties:
+        email: { type: string, format: email }
+        firstName: { type: string, minLength: 1 }
+        lastName: { type: string, minLength: 1 }
+        phone: { type: string }
+        language: { type: string, default: fr }
+        role: { $ref: '#/components/schemas/Role' }
+        password: { type: string, format: password }
+
+    UserUpdateRequest:
+      type: object
+      required: [firstName, lastName]
+      properties:
+        firstName: { type: string, minLength: 1 }
+        lastName: { type: string, minLength: 1 }
+        phone: { type: string }
+        language: { type: string }
+
+    PermissionDefinition:
+      type: object
+      required: [code, parameterized, defaultRoles]
+      properties:
+        code: { type: string, example: club.settings.modifier }
+        parameterized:
+          type: boolean
+          description: Vrai lorsque la permission porte une valeur, tel un plafond.
+        defaultRoles:
+          type: array
+          items: { $ref: '#/components/schemas/Role' }
+
+    PermissionOverride:
+      type: object
+      required: [code, granted]
+      properties:
+        code: { type: string }
+        granted:
+          type: boolean
+          description: Vrai pour accorder en plus du rôle, faux pour retirer.
+        parameter: {}
+
+    UserPermissions:
+      type: object
+      required: [role, effective, overrides]
+      properties:
+        role: { $ref: '#/components/schemas/Role' }
+        effective:
+          type: array
+          items: { type: string }
+        overrides:
+          type: array
+          items: { $ref: '#/components/schemas/PermissionOverride' }
+
+    # --- audit
+    AuditEntry:
+      type: object
+      required: [id, occurredAt, actorType, action]
+      properties:
+        id: { type: string, format: uuid }
+        occurredAt: { type: string, format: date-time }
+        actorType:
+          type: string
+          enum: [USER, PARENT, SYSTEM]
+        actorId: { type: string, format: uuid }
+        actorLabel:
+          type: string
+          description: Nom de l'utilisateur, ou identifiant de la règle automatique.
+        action: { type: string, example: club.settings.updated }
+        entityType: { type: string }
+        entityId: { type: string, format: uuid }
+        before: {}
+        after: {}
+        reason: { type: string }
+        requestId: { type: string }
+
+    AuditEntryPage:
+      type: object
+      required: [content, page]
+      properties:
+        content:
+          type: array
+          items: { $ref: '#/components/schemas/AuditEntry' }
+        page: { $ref: '#/components/schemas/PageMeta' }
+
+    # --- files
+    FilePurpose:
+      type: string
+      description: Domaine propriétaire du fichier ; conditionne la permission exigée.
+      enum: [CLUB_LOGO, OTHER]
+
+    StoredFile:
+      type: object
+      required: [id, purpose, contentType, sizeBytes]
+      properties:
+        id: { type: string, format: uuid }
+        purpose: { $ref: '#/components/schemas/FilePurpose' }
+        filename: { type: string }
+        contentType: { type: string }
+        sizeBytes: { type: integer, format: int64 }
+        createdAt: { type: string, format: date-time }
+
+    FileLink:
+      type: object
+      required: [url, expiresAt]
+      properties:
+        url: { type: string }
+        expiresAt: { type: string, format: date-time }
+
+    # --- exports
+    ExportRequest:
+      type: object
+      required: [dataset, format]
+      properties:
+        dataset:
+          type: string
+          description: Liste à exporter, au format domaine.objet.
+          example: users
+        format:
+          type: string
+          enum: [CSV, XLSX]
+        filters:
+          type: object
+          additionalProperties: true

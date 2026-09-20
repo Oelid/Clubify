@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui

@@ -1,0 +1,18 @@
+# Les tests d'intégration utilisent Testcontainers PostgreSQL ; jamais H2.
+spring:
+  docker:
+    compose:
+      enabled: false
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+clubify:
+  security:
+    jwt:
+      secret: test-secret-de-signature-pour-les-tests-uniquement-32o
+  encryption:
+    key: dGVzdC1rZXktMzItb2N0ZXRzLXBvdXItQUVTLUdDTS0xMjM0NTY=
+  files:
+    storage: memory
