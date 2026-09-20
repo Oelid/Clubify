@@ -100,7 +100,7 @@ Bibliothèque `ui`. Construite avant le premier écran ; validée en FR et en RT
 
 - Vitest : composants et services, données fictives.
 - Storybook : chaque composant de `ui` et chaque page notable, en FR et en RTL ; c'est le support de validation des maquettes avec l'accueil et le gérant.
-- Playwright : parcours critiques seulement — inscription UC1, clôture de caisse UC11 — contre un backend de test.
+- Playwright : **la recette fonctionnelle**, décrite en langage métier dans `docs/suivi-tests.md` et suivie dans `docs/suivi-tests.xlsx`. C'est ce qui atteste qu'une feature marche de bout en bout ; les tests unitaires et d'intégration sont le filet du développement, pas la recette. Chaque scénario porte son identifiant (`S01`…) dans son titre, ce qui relie le classeur à un passage réel.
 - Aucun nom réel ni donnée issue des captures dans les stories, les tests ni les captures d'écran (`../CLAUDE.md` §7) : familles fictives partagées avec le backend.
 - Budget de performance vérifié en CI : taille du bundle initial de chaque application plafonnée dans `angular.json`.
 
@@ -123,7 +123,7 @@ Depuis `frontend/` :
 | `npm run build` | Construit le backoffice. |
 | `npm test` | Tests unitaires de tous les projets (Vitest). |
 | `npm run test:ci` | Idem, sans surveillance. |
-| `npm run e2e` | Parcours critiques (Playwright). Démarre le serveur si besoin. |
+| `npm run e2e` | **Recette fonctionnelle** (Playwright) : les scénarios de `docs/suivi-tests.md`, joués depuis les écrans contre un backend réel. Démarre le serveur d'interface si besoin ; le backend et un club amorcé doivent tourner. Exige `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD` et `E2E_ADMIN_TOTP_SECRET` ; sans elles, la suite s'arrête en le disant. Utilise le Chrome installé sur la machine, aucun navigateur à télécharger. |
 | `npm run storybook` | Catalogue des composants, en FR et en droite-à-gauche. |
 
 Le client d'API est généré, jamais écrit à la main : `projects/api-client/` est dans `.gitignore`.

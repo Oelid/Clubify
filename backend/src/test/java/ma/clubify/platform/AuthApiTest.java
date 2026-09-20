@@ -49,6 +49,50 @@ class AuthApiTest {
     }
 
     @Test
+    @DisplayName("C8d — renouveler un jeton n'est pas se connecter")
+    void c8d_renouvellementDiscret() throws Exception {
+        seeder.user(clubA, Fixtures.ADMIN_A_EMAIL, "ACCOUNT_ADMIN", Fixtures.VALID_PASSWORD);
+        auth.jetonDe(Fixtures.ADMIN_A_EMAIL);
+
+        long connexionsAvant = compterConnexions();
+        String derniereAvant = derniereConnexion();
+
+        String corps = api.loginRaw(Fixtures.ADMIN_A_EMAIL, Fixtures.VALID_PASSWORD)
+                .andReturn().getResponse().getContentAsString();
+        String defi = api.json().readTree(corps).path("mfaChallengeId").asString();
+        String verification = api.send(null, post("/api/v1/auth/mfa/verify"),
+                        Map.of("mfaChallengeId", defi,
+                                "code", auth.codeCourant(auth.secretDe(Fixtures.ADMIN_A_EMAIL))))
+                .andReturn().getResponse().getContentAsString();
+        String rafraichissement = api.json().readTree(verification).path("refreshToken").asString();
+
+        long connexionsApresConnexion = compterConnexions();
+        String derniereApresConnexion = derniereConnexion();
+
+        api.send(null, post("/api/v1/auth/refresh"),
+                        Map.of("refreshToken", rafraichissement))
+                .andExpect(status().isOk());
+
+        // Le renouvellement n'ajoute ni entrée au journal ni date de connexion :
+        // sinon le gérant lit « vu il y a une minute » d'un onglet resté ouvert.
+        assertThat(compterConnexions()).isEqualTo(connexionsApresConnexion);
+        assertThat(derniereConnexion()).isEqualTo(derniereApresConnexion);
+        assertThat(connexionsApresConnexion).isGreaterThan(connexionsAvant);
+    }
+
+    private long compterConnexions() {
+        Long nombre = jdbc.queryForObject(
+                "select count(*) from audit_log where action = 'auth.login.succeeded'", Long.class);
+        return nombre == null ? 0 : nombre;
+    }
+
+    private String derniereConnexion() {
+        return String.valueOf(jdbc.queryForObject(
+                "select last_login_at from user_account where email = ?",
+                Object.class, Fixtures.ADMIN_A_EMAIL));
+    }
+
+    @Test
     @DisplayName("C8c — le jeton de renouvellement n'est jamais lisible par le navigateur")
     void c8c_renouvellementEnCookie() throws Exception {
         var connexion = api.loginRaw(Fixtures.FRONT_DESK_A_EMAIL, Fixtures.VALID_PASSWORD)
@@ -140,6 +184,26 @@ class AuthApiTest {
         // Le jeton délivré à ce stade n'ouvre que l'activation du second facteur.
         api.getAs(token, "/club").andExpect(status().isForbidden());
         api.send(token, post("/api/v1/profile/mfa/setup"), null).andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("C6f — un compte déjà inscrit ne peut pas écraser son second facteur")
+    void c6f_pasDeReinscriptionSilencieuse() throws Exception {
+        seeder.user(clubA, Fixtures.ADMIN_A_EMAIL, "ACCOUNT_ADMIN", Fixtures.VALID_PASSWORD);
+        Auth.Activation activation = auth.activer(Fixtures.ADMIN_A_EMAIL);
+
+        // Préparer écrit le secret avant toute confirmation : l'autoriser ici
+        // laisserait dehors le téléphone qui fonctionne (décision 0030).
+        api.send(activation.jeton(), post("/api/v1/profile/mfa/setup"), null)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("auth.mfa.alreadyEnabled"));
+
+        // Le secret d'origine marche toujours.
+        String defi = auth.defiPour(Fixtures.ADMIN_A_EMAIL);
+        api.send(null, post("/api/v1/auth/mfa/verify"),
+                        Map.of("mfaChallengeId", defi,
+                                "code", auth.codeCourant(activation.secret())))
+                .andExpect(status().isOk());
     }
 
     @Test

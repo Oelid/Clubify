@@ -1,56 +1,76 @@
-# Suivi des tests — source
+# Suivi des tests fonctionnels — source
 
-Ce fichier est la **source manuelle** du classeur `docs/suivi-tests.xlsx`, qui est
-régénéré par `tools/generer-suivi-tests.py`. Le classeur n'est jamais modifié à
-la main : il serait écrasé.
+Ce fichier décrit, en langage métier, **ce qu'on vérifie depuis les écrans**. Il est
+la source du classeur `docs/suivi-tests.xlsx`, régénéré par
+`tools/generer-suivi-tests.py`. Le classeur ne se saisit pas : il serait écrasé.
 
-Le reste du classeur est extrait du code : chaque scénario y vient d'un
-`@DisplayName` (backend) ou d'un `it(...)` (frontend), et chaque résultat d'une
-exécution réelle (rapports JUnit). Ce fichier ne porte donc que ce que le code ne
-peut pas dire : ce qui reste à écrire, ce qui se vérifie à la main, et ce qui a
-été trouvé en défaut.
+Un scénario porte un identifiant (`S01`, `S02`…). Le test Playwright qui le joue
+reprend cet identifiant dans son titre : c'est ce qui relie la description
+ci-dessous à un résultat d'exécution réel. Un scénario sans test automatisé se
+déroule à la main et porte « Manuel ».
+
+**Ce fichier ne suit pas les tests techniques** — tests unitaires, tests
+d'intégration de l'API, tests d'architecture. Ils sont le filet du
+développement, pas la recette de la feature ; le classeur n'en donne que le
+compte, dans la feuille de synthèse.
+
+## Comment lancer la recette
+
+Les scénarios jouent l'application réelle : il faut donc un backend, une base et
+un club amorcé.
+
+1. `cd backend && ./mvnw spring-boot:run "-Dspring-boot.run.arguments=--seed-club --club=Club-de-recette --admin=recette@exemple.test --password=<mot de passe>"`
+2. Activer une fois le second facteur de ce compte et **noter son secret** (il
+   s'affiche dans l'URI du QR).
+3. Renseigner l'environnement, puis lancer :
+
+```
+E2E_ADMIN_EMAIL=recette@exemple.test
+E2E_ADMIN_PASSWORD=<mot de passe>
+E2E_ADMIN_TOTP_SECRET=<secret noté à l'activation>
+cd frontend && npm run e2e
+```
+
+Sans ces trois variables, la suite s'arrête en le disant, au lieu d'échouer sans
+raison lisible. Le secret ne vit que dans l'environnement de recette : aucun
+secret n'est versionné (`CLAUDE.md` §5).
 
 ## Rattachement des suites aux features
 
-Un chemin, une feature. Le premier motif qui correspond gagne ; ce qui ne
-correspond à rien est signalé au lieu d'être rattaché au hasard.
-
 | Motif de chemin | Feature |
 | --- | --- |
-| `backend/src/test/java/ma/clubify/architecture/` | F01 |
-| `backend/src/test/java/ma/clubify/platform/` | F01 |
-| `frontend/projects/ui/` | F01 |
-| `frontend/projects/backoffice/src/app/core/` | F01 |
-| `frontend/projects/backoffice/src/app/auth/` | F01 |
-| `frontend/projects/backoffice/src/app/app.spec.ts` | F01 |
-| `frontend/e2e/` | F01 |
+| `frontend/e2e/f01-` | F01 |
 
-## Tests à compléter
+## Scénarios fonctionnels
 
-Ce qui manque, et pourquoi. Une ligne par scénario attendu. « Quand » dit à quelle
-occasion il sera écrit : maintenant si c'est dans F01, ou la feature qui l'amènera.
+Une ligne par scénario. « Critères » renvoie aux critères d'acceptation de la
+fiche de feature, pour que la recette et la fiche ne divergent pas.
 
-| Feature | Scénario attendu | Niveau | Pourquoi il manque | Quand |
-| --- | --- | --- | --- | --- |
-| F01 | Première connexion de l'administrateur, de bout en bout dans un navigateur | Bout en bout | Le squelette Playwright existe mais n'est pas branché sur un backend de test | F01, avant la mise en service |
-| F01 | Chaque composant de `ui` rendu en FR et en droite-à-gauche | Story Storybook | Les composants de `ui` se limitent aux jetons et au thème ; les enveloppes PrimeNG arrivent avec le premier écran métier | F02 |
-| F01 | Création d'un utilisateur depuis l'écran | Composant | Le bouton est posé et protégé par droit ; l'action reste à écrire | F01, avant la mise en service |
-| F01 | Export d'une liste depuis l'écran | Composant | Même raison que la création d'utilisateur | F01, avant la mise en service |
-| F01 | Reprise de session après rechargement de la page | Composant | Vérifié à la main dans le navigateur, pas encore automatisé | F01, avant la mise en service |
-| F01 | Amorçage d'un club : transaction et trace d'audit | Intégration | Vérifié à la main en base après le défaut trouvé ; la commande n'existe qu'en `dev` et `demo` | F01, avant la mise en service |
-| F01 | Un club sans couleur de marque garde les jetons Clubify, de bout en bout | Bout en bout | Couvert côté magasin de session, pas encore à l'écran | F02 |
-
-## Recette manuelle
-
-Ce qui ne s'automatise pas, ou pas encore, et que quelqu'un déroule avant une
-mise en service. « Dernier passage » est saisi ici, à la main.
-
-| Feature | Scénario | Qui | Dernier passage | Résultat | Remarque |
+| ID | Feature | Scénario | Ce qu'on vérifie | Critères | Mode |
 | --- | --- | --- | --- | --- | --- |
-| F01 | Scanner le QR avec une vraie application d'authentification et se connecter | Omar | | | Aucun test automatisé ne peut scanner un QR |
-| F01 | Lire les écrans sur un téléphone, en portrait | Omar | | | Le backoffice vise l'écran du comptoir ; il doit rester utilisable ailleurs |
-| F01 | Imprimer la liste des utilisateurs | Accueil | | | Feuille de secours du comptoir |
-| F01 | Vérifier les libellés FR avec l'accueil et le gérant | Accueil, gérant | | | Validation des maquettes (`frontend/CLAUDE.md`) |
+| S01 | F01 | Première connexion de l'administrateur | Mot de passe accepté, second facteur imposé avec QR et codes de secours, arrivée dans l'application | C5, C6b | Automatisé |
+| S02 | F01 | Mot de passe erroné | Message lisible en français, aucun accès, aucune trace du mot de passe | C5, C36 | Automatisé |
+| S03 | F01 | Cinq échecs de suite verrouillent le compte | Le bon mot de passe est refusé pendant le verrouillage, avec un message qui le dit | C10b | Automatisé |
+| S04 | F01 | Connexion d'un compte déjà inscrit au second facteur | Le code est demandé ; ni QR ni nouveaux codes de secours ne sont produits | C6 | Automatisé |
+| S05 | F01 | Le gérant modifie l'identité du club | Le téléphone est normalisé en +212, la modification est visible au journal | C28, C37, C16 | Automatisé |
+| S06 | F01 | Nom du club laissé vide | Refus avec un message en français, rien n'est enregistré | C36 | Automatisé |
+| S07 | F01 | Consulter la liste des utilisateurs | Rôle, second facteur, statut et dernière connexion lisibles, dates au fuseau du club | C29 | Automatisé |
+| S08 | F01 | L'accueil consulte sans modifier, et n'atteint pas le journal | Champs en lecture seule, aucune action proposée, journal absent du menu et refusé par l'adresse directe | C11, C19, C32 | Automatisé |
+| S09 | F01 | Filtrer le journal d'audit | Le filtre par action réduit la liste ; la remise à zéro la rétablit | C19b | Automatisé |
+| S10 | F01 | Se déconnecter | Le retour en arrière ne rouvre pas la session | C8 | Automatisé |
+| S11 | F01 | Recharger la page | La session tient sans ressaisir le mot de passe, par le seul cookie | C8c | Automatisé |
+| S12 | F01 | Lire les règles configurables du club | Chaque règle affiche sa valeur, son origine et sa source documentée | C31 | Automatisé |
+| S13 | F01 | Scanner le QR avec une vraie application d'authentification | Le code produit par le téléphone est accepté | C6 | Manuel |
+| S14 | F01 | Lire les écrans sur un téléphone, en portrait | Rien n'est coupé, la navigation reste utilisable | — | Manuel |
+| S15 | F01 | Valider les libellés FR avec l'accueil et le gérant | Le vocabulaire est celui du club, pas celui du logiciel | — | Manuel |
+| S16 | F01 | Imprimer la liste des utilisateurs | La feuille imprimée est lisible et tient sur la page | — | Manuel |
+
+## Recette manuelle — passages
+
+Saisi ici, à la main, après chaque passage d'un scénario « Manuel ».
+
+| ID | Qui | Date | Résultat | Remarque |
+| --- | --- | --- | --- | --- |
 
 ## Anomalies trouvées
 
@@ -59,8 +79,19 @@ de revenir. Une anomalie sans test de non-régression n'est pas close.
 
 | Feature | Anomalie | Trouvée par | Conséquence si elle revenait | Test qui la ferme | État |
 | --- | --- | --- | --- | --- | --- |
-| F01 | L'écran de second facteur déduisait l'étape de l'existence d'un jeton, au lieu de suivre l'issue du backend | Parcours en navigateur | Le secret et les codes de secours d'un compte déjà inscrit régénérés en silence ; son téléphone cesse de fonctionner | `mfa.page.spec.ts` | Close |
-| F01 | Le journal d'audit n'attribuait aucun auteur aux connexions | Parcours en navigateur | La colonne que le gérant regarde en premier reste vide (SEC-04) | `AuditApiTest.c16c` | Close |
-| F01 | Tolérance d'une seconde sur la borne de révocation des jetons | Test C8b devenu instable | Un jeton survit à la fermeture des sessions demandée par le gérant | `UsersApiTest.c8b` | Close |
-| F01 | L'amorçage écrivait hors transaction : un club créé sans trace d'audit | Vérification en base | Une action sensible sans trace, contre la règle 17 | À écrire (voir « Tests à compléter ») | Ouverte |
-| F01 | Les contrôleurs manipulaient des entités JPA | `ArchitectureTest` | Relations paresseuses et cycle de vie transactionnel dans la couche web | `ArchitectureTest.controleurSansEntite` | Close |
+| F01 | L'écran de second facteur déduisait l'étape de l'existence d'un jeton, au lieu de suivre l'issue du backend | Parcours en navigateur | Le secret et les codes de secours d'un compte déjà inscrit régénérés en silence ; son téléphone cesse de fonctionner | S04 | Close |
+| F01 | Le journal d'audit n'attribuait aucun auteur aux connexions | Parcours en navigateur | La colonne que le gérant regarde en premier reste vide (SEC-04) | S05 | Close |
+| F01 | Tolérance d'une seconde sur la borne de révocation des jetons | Suite technique devenue instable | Un jeton survit à la fermeture des sessions demandée par le gérant | Test technique `UsersApiTest.c8b` | Close |
+| F01 | L'amorçage écrivait hors transaction : un club créé sans trace d'audit | Vérification en base | Une action sensible sans trace, contre la règle 17 | À écrire | Ouverte |
+| F01 | Les contrôleurs manipulaient des entités JPA | Test d'architecture | Relations paresseuses et cycle de vie transactionnel dans la couche web | Test technique `ArchitectureTest` | Close |
+| F01 | Quinze codes d'erreur du backend n'avaient aucune traduction : l'écran affichait « error.auth.mfa.codeInvalid » | Recette S01 | L'accueil lit un code technique au lieu d'une phrase, et ne sait pas quoi faire | Test technique `i18n.spec.ts`, qui compare les deux listes | Close |
+| F01 | Préparer une activation écrasait le second facteur d'un compte déjà inscrit, avant toute confirmation | Recette S01 | Le téléphone du gérant cesse de fonctionner sans qu'il ait rien fait | Test technique `AuthApiTest.c6f` | Close |
+| F01 | Un renouvellement de jeton se comportait comme une connexion : date de dernière connexion réécrite, entrée au journal | Recette S01 | Le gérant lit « connecté il y a une minute » d'un onglet resté ouvert, et le journal se noie | Test technique `AuthApiTest.c8d` | Close |
+| F01 | Deux sessions simultanées d'une même personne se heurtaient sur un verrou optimiste : erreur serveur à la connexion | Recette S01, S05 | Quelqu'un connecté au comptoir et sur son téléphone voit « L'action n'a pas pu aboutir » | S01 et S05, joués en parallèle | Close |
+| F01 | Les champs que l'accueil ne peut pas enregistrer avaient l'air modifiables | Recette S08 | On saisit dans une case qui n'enregistrera rien | S08 | Close |
+
+## Questions ouvertes
+
+| Feature | Question | Trouvée par | Pourquoi elle compte |
+| --- | --- | --- | --- |
+| F01 | L'accueil détient `users.exporter` sans détenir `users.consulter` : il peut exporter la liste du personnel sans pouvoir l'ouvrir. Est-ce voulu ? | Recette S08 | Un export est une sortie de données ; le droit d'exporter sans droit de consulter est incohérent, dans un sens comme dans l'autre (critère C33b) |

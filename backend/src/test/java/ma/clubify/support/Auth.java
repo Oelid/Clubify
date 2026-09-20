@@ -72,7 +72,7 @@ public class Auth {
                 .andReturn().getResponse().getContentAsString();
         var noeud = api.json().readTree(preparation);
 
-        String secret = secretDe(noeud.path("otpauthUri").asString());
+        String secret = secretDansUri(noeud.path("otpauthUri").asString());
         List<String> codesDeSecours = new ArrayList<>();
         noeud.path("recoveryCodes").forEach(code -> codesDeSecours.add(code.asString()));
 
@@ -96,7 +96,14 @@ public class Auth {
         return totp.codeCourant(secret);
     }
 
-    private static String secretDe(String otpauthUri) {
+    /** Secret d'un compte déjà activé par cette aide, pour répondre à un défi. */
+    public String secretDe(String email) {
+        String secret = secrets.get(email);
+        assertThat(secret).as("second facteur déjà activé pour %s", email).isNotNull();
+        return secret;
+    }
+
+    private static String secretDansUri(String otpauthUri) {
         Matcher trouve = SECRET.matcher(otpauthUri);
         assertThat(trouve.find()).as("secret dans %s", otpauthUri).isTrue();
         return trouve.group(1);

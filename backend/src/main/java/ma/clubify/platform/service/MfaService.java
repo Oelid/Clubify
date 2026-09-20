@@ -16,6 +16,7 @@ import ma.clubify.platform.model.entity.UserAccount;
 import ma.clubify.platform.repository.RecoveryCodeRepository;
 import ma.clubify.platform.repository.TrustedDeviceRepository;
 import ma.clubify.platform.repository.UserAccountRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,11 +58,22 @@ public class MfaService {
         this.horloge = horloge;
     }
 
-    /** Prépare l'activation : secret à scanner et codes de secours à conserver. */
+    /**
+     * Prépare l'activation : secret à scanner et codes de secours à conserver.
+     *
+     * <p>Refusée pour un compte déjà inscrit. Préparer écrit le nouveau secret
+     * avant toute confirmation : sur un compte actif, cela détruirait celui que
+     * son téléphone connaît, et le laisserait dehors. Repartir de zéro passe par
+     * une réinitialisation faite par l'administrateur (critère C6c).
+     */
     @Transactional
     public Preparation preparer() {
         AuthenticatedUser authentifie = PermissionChecker.requis();
         UserAccount compte = compte(authentifie.userId());
+
+        if (compte.isMfaEnabled()) {
+            throw new BusinessRuleException("auth.mfa.alreadyEnabled", HttpStatus.CONFLICT);
+        }
 
         String secret = totp.nouveauSecret();
         compte.setMfaSecret(secret);

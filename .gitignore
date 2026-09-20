@@ -27,3 +27,7 @@ reports/
 # Caches Python des outils
 __pycache__/
 *.pyc
+
+# Artefacts de la recette Playwright (captures, traces)
+frontend/test-results/
+frontend/playwright-report/

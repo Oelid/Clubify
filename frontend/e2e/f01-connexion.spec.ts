@@ -1,0 +1,92 @@
+import { expect, test } from '@playwright/test';
+import { administrateur, configurationManquante, MOT_DE_PASSE_JETABLE } from './support/environnement';
+import { ApiDeRecette } from './support/api';
+import { marqueDuPassage } from './support/environnement';
+import { entrerCommeAdministrateur, franchirLeSecondFacteur, seConnecter } from './support/pages';
+
+/**
+ * Recette fonctionnelle de F01 — entrer dans l'application.
+ *
+ * Tout passe par les écrans : ce qu'on vérifie, c'est ce que l'accueil et le
+ * gérant verront. Les identifiants des scénarios (S01…) renvoient à
+ * docs/suivi-tests.md, et de là au classeur de suivi.
+ */
+test.beforeAll(() => {
+  const manque = configurationManquante();
+  test.skip(manque !== null, manque ?? '');
+});
+
+test.describe('F01 — Connexion', () => {
+  test("S01 — Première connexion de l'administrateur", async ({ page }) => {
+    await seConnecter(page, administrateur.email, administrateur.motDePasse);
+
+    // Le second facteur est imposé au rôle, avant tout accès (décision 0027).
+    await expect(page.getByRole('heading', { name: /second facteur|vérification/i })).toBeVisible();
+
+    await franchirLeSecondFacteur(page);
+
+    await expect(page.getByRole('heading', { name: 'Paramètres du club' })).toBeVisible();
+    // L'en-tête nomme la personne connectée : elle sait sous quel compte elle agit.
+    await expect(page.locator('.shell__compte-nom')).not.toBeEmpty();
+  });
+
+  test('S02 — Mot de passe erroné', async ({ page }) => {
+    await seConnecter(page, administrateur.email, 'mot-de-passe-qui-ne-vaut-rien');
+
+    // Le message vient du code du backend, traduit : jamais un libellé en dur.
+    await expect(page.getByTestId('erreur')).toHaveText(/incorrect/i);
+    await expect(page).toHaveURL(/connexion/);
+    // Rien du mot de passe saisi ne doit rester à l'écran.
+    await expect(page.locator('body')).not.toContainText('mot-de-passe-qui-ne-vaut-rien');
+  });
+
+  test('S03 — Cinq échecs de suite verrouillent le compte', async ({ page }) => {
+    const api = await ApiDeRecette.enTantQuAdministrateur();
+    const victime = await api.creerUtilisateur('FRONT_DESK', marqueDuPassage());
+    await api.fermer();
+
+    for (let essai = 0; essai < 5; essai += 1) {
+      await seConnecter(page, victime, 'mauvais-mot-de-passe');
+      await expect(page.getByTestId('erreur')).toBeVisible();
+    }
+
+    // Le bon mot de passe ne rouvre rien tant que le verrou tient (C10b).
+    await seConnecter(page, victime, MOT_DE_PASSE_JETABLE);
+    await expect(page.getByTestId('erreur')).toHaveText(/bloqué|verrouill/i);
+    await expect(page).toHaveURL(/connexion/);
+  });
+
+  test('S04 — Connexion d\u2019un compte déjà inscrit au second facteur', async ({ page }) => {
+    await seConnecter(page, administrateur.email, administrateur.motDePasse);
+
+    // Ni QR ni nouveaux codes : le compte est déjà inscrit, on lui demande un code.
+    await expect(page.getByTestId('qr-code')).toHaveCount(0);
+    await expect(page.getByTestId('codes-de-secours')).toHaveCount(0);
+    await expect(page.getByLabel('Code à six chiffres')).toBeVisible();
+
+    await franchirLeSecondFacteur(page);
+    await expect(page.getByRole('heading', { name: 'Paramètres du club' })).toBeVisible();
+  });
+
+  test('S10 — Se déconnecter', async ({ page }) => {
+    await entrerCommeAdministrateur(page);
+
+    await page.getByRole('button', { name: 'Se déconnecter' }).click();
+    await expect(page).toHaveURL(/connexion/);
+
+    // Revenir en arrière ne rouvre pas une session fermée.
+    await page.goBack();
+    await expect(page).toHaveURL(/connexion/);
+    await expect(page.getByRole('heading', { name: 'Connexion' })).toBeVisible();
+  });
+
+  test('S11 — Recharger la page', async ({ page }) => {
+    await entrerCommeAdministrateur(page);
+
+    await page.reload();
+
+    // Le jeton d'accès n'a pas survécu ; le cookie de renouvellement, si.
+    await expect(page.getByRole('heading', { name: 'Paramètres du club' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Connexion' })).toHaveCount(0);
+  });
+});

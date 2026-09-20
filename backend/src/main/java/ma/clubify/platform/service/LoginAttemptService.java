@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -60,14 +59,17 @@ public class LoginAttemptService {
         comptes.save(compte);
     }
 
-    /** Connexion réussie : compteur remis à zéro. */
+    /**
+     * Mot de passe accepté : compteur d'échecs et verrou effacés.
+     *
+     * <p>La date de dernière connexion n'est pas posée ici : à ce stade, seul le
+     * mot de passe est passé. Le gérant lit cette date comme « s'est connecté »,
+     * pas « a saisi son mot de passe » ; elle est posée quand la session s'ouvre
+     * vraiment, second facteur compris.
+     */
     @Transactional
-    public void reussite(UUID userId, Instant maintenant) {
-        comptes.findById(userId).ifPresent(compte -> {
-            compte.setFailedAttempts(0);
-            compte.setLockedUntil(null);
-            compte.setLastLoginAt(maintenant);
-        });
+    public void motDePasseAccepte(UUID userId) {
+        comptes.effacerLesEchecs(userId);
     }
 
     /**

@@ -159,7 +159,13 @@ public class SessionService {
 
         // Rotation : l'ancien jeton ne resservira pas.
         session.setRevokedAt(maintenant);
-        return authentifier(compte, appartenance, maintenant, null).tokens();
+
+        // Un renouvellement n'est pas une connexion : il ne touche ni la date de
+        // dernière connexion, que le gérant lit comme « vu pour la dernière fois »,
+        // ni le journal, qu'il noierait sous des entrées sans action humaine.
+        // Il évite aussi d'écrire sur le compte, donc d'entrer en conflit avec une
+        // connexion simultanée — ce que la recette a mis au jour (scénario S01).
+        return emettre(compte, appartenance, maintenant, false, null);
     }
 
     @Transactional
@@ -172,7 +178,7 @@ public class SessionService {
 
     private AuthOutcome authentifier(UserAccount compte, Membership appartenance,
                                      Instant maintenant, String jetonAppareil) {
-        compte.setLastLoginAt(maintenant);
+        comptes.marquerLaConnexion(compte.getId(), maintenant);
         Tokens emis = emettre(compte, appartenance, maintenant, false, jetonAppareil);
         // Au moment où la connexion réussit, aucun jeton n'est encore posé :
         // l'auteur s'annonce, sinon le journal dirait « système » (SEC-04).

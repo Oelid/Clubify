@@ -123,12 +123,18 @@
   },
   "error": {
     "unexpected": "Une erreur inattendue s'est produite.",
+    "generic": "L'action n'a pas pu aboutir.",
+    "validation": {
+      "failed": "Certaines informations saisies ne sont pas valides."
+    },
     "network": {
       "unreachable": "Le serveur est injoignable."
     },
     "http": {
+      "401": "Votre session a expiré, reconnectez-vous.",
       "403": "Vous n'avez pas le droit d'effectuer cette action.",
       "404": "Introuvable.",
+      "409": "Cette action entre en conflit avec une donnée existante.",
       "500": "Le serveur a rencontré une erreur."
     },
     "auth": {
@@ -136,16 +142,22 @@
         "invalid": "Adresse électronique ou mot de passe incorrect."
       },
       "account": {
-        "locked": "Compte temporairement bloqué après plusieurs échecs."
+        "locked": "Compte bloqué après plusieurs échecs. Réessayez dans quelques minutes."
       },
       "mfa": {
-        "invalid": "Code incorrect ou expiré."
-      },
-      "challenge": {
-        "expired": "La vérification a expiré, reprenez la connexion."
+        "codeInvalid": "Code incorrect. Vérifiez l'heure de votre téléphone, puis réessayez.",
+        "challengeInvalid": "La vérification a expiré. Reprenez la connexion.",
+        "alreadyEnabled": "Le second facteur est déjà actif sur ce compte. Pour le remplacer, demandez à l'administrateur de le réinitialiser."
       },
       "refresh": {
-        "invalid": "Votre session a expiré."
+        "invalid": "Votre session a expiré, reconnectez-vous."
+      }
+    },
+    "security": {
+      "permission": {
+        "denied": "Vous n'avez pas le droit d'effectuer cette action.",
+        "limitExceeded": "Cette action dépasse le plafond qui vous est accordé.",
+        "notDelegable": "Ce droit ne peut être accordé à personne d'autre."
       }
     },
     "club": {
@@ -154,12 +166,14 @@
       },
       "ice": {
         "invalid": "L'ICE compte quinze chiffres."
-      }
+      },
+      "notFound": "Club introuvable."
     },
     "phone": {
       "invalid": "Numéro de téléphone invalide."
     },
     "user": {
+      "notFound": "Utilisateur introuvable.",
       "email": {
         "alreadyUsed": "Cette adresse est déjà utilisée."
       },
@@ -176,8 +190,32 @@
         "permissionsNotRestrictable": "Les droits de l'administrateur ne se restreignent pas."
       }
     },
+    "membership": {
+      "notFound": "Ce compte n'appartient pas à ce club."
+    },
+    "device": {
+      "notFound": "Appareil introuvable."
+    },
+    "file": {
+      "notFound": "Fichier introuvable.",
+      "size": {
+        "tooLarge": "Fichier trop volumineux."
+      },
+      "type": {
+        "notAllowed": "Ce type de fichier n'est pas accepté."
+      },
+      "link": {
+        "expired": "Ce lien a expiré. Demandez-en un nouveau.",
+        "notFound": "Ce lien n'est plus valable."
+      }
+    },
     "setting": {
       "notClubScoped": "Cette règle est fixée par Clubify."
+    },
+    "export": {
+      "dataset": {
+        "unknown": "Cette liste ne peut pas être exportée."
+      }
     }
   }
 }

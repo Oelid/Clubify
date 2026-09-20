@@ -78,7 +78,7 @@ public class AuthService {
 
         // Le club est établi : le contexte est posé, et tout ce qui suit est filtré.
         contexte.set(clubId);
-        tentatives.reussite(compte.getId(), maintenant);
+        tentatives.motDePasseAccepte(compte.getId());
 
         return sessions.poursuivre(compte.getId(), appartenance.getId(), jetonAppareil, maintenant);
     }
