@@ -1,6 +1,7 @@
 package ma.clubify.platform;
 
 import ma.clubify.support.Api;
+import ma.clubify.support.Auth;
 import ma.clubify.support.Fixtures;
 import ma.clubify.support.IntegrationTest;
 import ma.clubify.support.TestSeeder;
@@ -26,6 +27,8 @@ class ClubApiTest {
 
     @Autowired
     private Api api;
+    @Autowired
+    private Auth auth;
     @Autowired
     private TestSeeder seeder;
     @Autowired
@@ -155,6 +158,6 @@ class ClubApiTest {
     }
 
     private String adminToken() throws Exception {
-        return api.login(Fixtures.ADMIN_A_EMAIL, Fixtures.VALID_PASSWORD);
+        return auth.jetonDe(Fixtures.ADMIN_A_EMAIL);
     }
 }

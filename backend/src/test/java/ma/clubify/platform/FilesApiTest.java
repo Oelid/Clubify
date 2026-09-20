@@ -1,6 +1,7 @@
 package ma.clubify.platform;
 
 import ma.clubify.support.Api;
+import ma.clubify.support.Auth;
 import ma.clubify.support.Fixtures;
 import ma.clubify.support.IntegrationTest;
 import ma.clubify.support.TestSeeder;
@@ -34,6 +35,8 @@ class FilesApiTest {
 
     @Autowired
     private Api api;
+    @Autowired
+    private Auth auth;
     @Autowired
     private TestSeeder seeder;
     @Autowired
@@ -103,7 +106,7 @@ class FilesApiTest {
         seeder.user(clubB, Fixtures.ADMIN_B_EMAIL, "ACCOUNT_ADMIN", Fixtures.VALID_PASSWORD);
 
         UUID fichierA = deposerLogo(adminToken());
-        String jetonB = api.login(Fixtures.ADMIN_B_EMAIL, Fixtures.VALID_PASSWORD);
+        String jetonB = auth.jetonDe(Fixtures.ADMIN_B_EMAIL);
 
         api.getAs(jetonB, "/files/" + fichierA + "/link").andExpect(status().isNotFound());
     }
@@ -193,7 +196,7 @@ class FilesApiTest {
     }
 
     private String adminToken() throws Exception {
-        return api.login(Fixtures.ADMIN_A_EMAIL, Fixtures.VALID_PASSWORD);
+        return auth.jetonDe(Fixtures.ADMIN_A_EMAIL);
     }
 
     @SuppressWarnings("unused")

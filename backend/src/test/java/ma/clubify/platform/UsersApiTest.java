@@ -1,6 +1,7 @@
 package ma.clubify.platform;
 
 import ma.clubify.support.Api;
+import ma.clubify.support.Auth;
 import ma.clubify.support.Fixtures;
 import ma.clubify.support.IntegrationTest;
 import ma.clubify.support.TestSeeder;
@@ -31,6 +32,8 @@ class UsersApiTest {
 
     @Autowired
     private Api api;
+    @Autowired
+    private Auth auth;
     @Autowired
     private TestSeeder seeder;
     @Autowired
@@ -64,7 +67,7 @@ class UsersApiTest {
     @Test
     @DisplayName("C8b — l'administrateur ferme les sessions sans désactiver le compte")
     void c8b_fermetureDesSessions() throws Exception {
-        String jetonManager = api.login(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD);
+        String jetonManager = auth.jetonDe(Fixtures.MANAGER_A_EMAIL);
         long avant = seeder.auditCount();
 
         api.send(adminToken(), delete("/api/v1/users/" + manager + "/sessions"), null)
@@ -94,7 +97,7 @@ class UsersApiTest {
     @DisplayName("C11a — une permission retirée puis rendue au gérant, avec trace")
     void c11a_surchargeParUtilisateur() throws Exception {
         String admin_ = adminToken();
-        String gerant = api.login(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD);
+        String gerant = auth.jetonDe(Fixtures.MANAGER_A_EMAIL);
 
         // Par défaut, le gérant peut modifier les paramètres du club.
         api.send(gerant, put("/api/v1/club"), Map.of("name", "Club A Sport"))
@@ -107,13 +110,13 @@ class UsersApiTest {
                         org.hamcrest.Matchers.not(
                                 org.hamcrest.Matchers.hasItem("club.settings.modifier"))));
 
-        String gerant2 = api.login(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD);
+        String gerant2 = auth.jetonDe(Fixtures.MANAGER_A_EMAIL);
         api.send(gerant2, put("/api/v1/club"), Map.of("name", "Club A Gym"))
                 .andExpect(status().isForbidden());
 
         api.send(admin_, put("/api/v1/users/" + manager + "/permissions"), List.of())
                 .andExpect(status().isOk());
-        String gerant3 = api.login(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD);
+        String gerant3 = auth.jetonDe(Fixtures.MANAGER_A_EMAIL);
         api.send(gerant3, put("/api/v1/club"), Map.of("name", "Club A Gym"))
                 .andExpect(status().isOk());
 
@@ -132,7 +135,7 @@ class UsersApiTest {
                         Map.of("code", "test.plafond.appliquer", "granted", true, "parameter", 100)))
                 .andExpect(status().isOk());
 
-        String gerant = api.login(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD);
+        String gerant = auth.jetonDe(Fixtures.MANAGER_A_EMAIL);
         api.send(gerant, post("/api/v1/test/plafond"), Map.of("valeur", 80))
                 .andExpect(status().isOk());
         api.send(gerant, post("/api/v1/test/plafond"), Map.of("valeur", 120))
@@ -144,7 +147,7 @@ class UsersApiTest {
     @DisplayName("C12 — seul l'administrateur crée un utilisateur, sauf délégation au gérant")
     void c12_creationReservee() throws Exception {
         String accueil = api.login(Fixtures.FRONT_DESK_A_EMAIL, Fixtures.VALID_PASSWORD);
-        String gerant = api.login(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD);
+        String gerant = auth.jetonDe(Fixtures.MANAGER_A_EMAIL);
         Map<String, Object> nouveau = Map.of(
                 "email", "nouveau@example.test", "firstName", "Prenom", "lastName", "Nom",
                 "role", "COACH", "password", Fixtures.VALID_PASSWORD);
@@ -158,7 +161,7 @@ class UsersApiTest {
         // Après délégation de la gestion des utilisateurs, le gérant y parvient.
         api.send(admin_, put("/api/v1/users/" + manager + "/permissions"), List.of(
                 Map.of("code", "users.creer", "granted", true)));
-        String gerant2 = api.login(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD);
+        String gerant2 = auth.jetonDe(Fixtures.MANAGER_A_EMAIL);
         api.send(gerant2, post("/api/v1/users"), Map.of(
                         "email", "second@example.test", "firstName", "Prenom", "lastName", "Nom",
                         "role", "COACH", "password", Fixtures.VALID_PASSWORD))
@@ -210,6 +213,6 @@ class UsersApiTest {
     }
 
     private String adminToken() throws Exception {
-        return api.login(Fixtures.ADMIN_A_EMAIL, Fixtures.VALID_PASSWORD);
+        return auth.jetonDe(Fixtures.ADMIN_A_EMAIL);
     }
 }

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -31,6 +32,8 @@ class AuthApiTest {
     private TestSeeder seeder;
     @Autowired
     private JdbcTemplate jdbc;
+    @Autowired
+    private ma.clubify.common.security.TotpService totp;
 
     private UUID clubA;
 
@@ -78,7 +81,7 @@ class AuthApiTest {
     @Test
     @DisplayName("C6 — second facteur actif : le mot de passe seul ne suffit pas")
     void c6_defiSecondFacteur() throws Exception {
-        activerMfa(Fixtures.FRONT_DESK_A_EMAIL);
+        activer(Fixtures.FRONT_DESK_A_EMAIL);
 
         api.loginRaw(Fixtures.FRONT_DESK_A_EMAIL, Fixtures.VALID_PASSWORD)
                 .andExpect(status().isOk())
@@ -107,10 +110,11 @@ class AuthApiTest {
     @DisplayName("C6c — l'administrateur réinitialise le second facteur d'un utilisateur")
     void c6c_reinitialisation() throws Exception {
         UUID cible = seeder.user(clubA, Fixtures.MANAGER_A_EMAIL, "MANAGER", Fixtures.VALID_PASSWORD);
-        activerMfa(Fixtures.MANAGER_A_EMAIL);
+        activer(Fixtures.MANAGER_A_EMAIL);
+        String admin = adminToken();
         long avant = seeder.auditCount();
 
-        api.send(adminToken(), delete("/api/v1/users/" + cible + "/mfa"), null)
+        api.send(admin, delete("/api/v1/users/" + cible + "/mfa"), null)
                 .andExpect(status().isNoContent());
 
         Boolean actif = jdbc.queryForObject(
@@ -122,8 +126,16 @@ class AuthApiTest {
     @Test
     @DisplayName("C6d — appareil de confiance : plus de code, sauf après expiration")
     void c6d_appareilDeConfiance() throws Exception {
-        activerMfa(Fixtures.FRONT_DESK_A_EMAIL);
-        String deviceToken = premierPassageAvecConfiance();
+        Activation activation = activer(Fixtures.FRONT_DESK_A_EMAIL);
+
+        String corps = api.send(null, post("/api/v1/auth/mfa/verify"), Map.of(
+                        "mfaChallengeId", defiPour(Fixtures.FRONT_DESK_A_EMAIL),
+                        "code", totp.codeCourant(activation.secret()),
+                        "trustDevice", true, "deviceLabel", "PC accueil"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String deviceToken = api.json().readTree(corps).path("deviceToken").asString();
+        assertThat(deviceToken).isNotBlank();
 
         api.loginRaw(Fixtures.FRONT_DESK_A_EMAIL, Fixtures.VALID_PASSWORD, deviceToken)
                 .andExpect(status().isOk())
@@ -138,15 +150,15 @@ class AuthApiTest {
     @Test
     @DisplayName("C6e — un code de secours ne sert qu'une fois")
     void c6e_codesDeSecours() throws Exception {
-        activerMfa(Fixtures.FRONT_DESK_A_EMAIL);
-        String code = premierCodeDeSecours();
+        Activation activation = activer(Fixtures.FRONT_DESK_A_EMAIL);
+        String code = activation.codesDeSecours().getFirst();
 
-        api.send(null, post("/api/v1/auth/mfa/verify"),
-                        Map.of("mfaChallengeId", defiCourant(), "code", code))
+        api.send(null, post("/api/v1/auth/mfa/verify"), Map.of(
+                        "mfaChallengeId", defiPour(Fixtures.FRONT_DESK_A_EMAIL), "code", code))
                 .andExpect(status().isOk());
 
-        api.send(null, post("/api/v1/auth/mfa/verify"),
-                        Map.of("mfaChallengeId", defiCourant(), "code", code))
+        api.send(null, post("/api/v1/auth/mfa/verify"), Map.of(
+                        "mfaChallengeId", defiPour(Fixtures.FRONT_DESK_A_EMAIL), "code", code))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -223,38 +235,54 @@ class AuthApiTest {
 
     private String adminToken() throws Exception {
         seeder.user(clubA, Fixtures.ADMIN_A_EMAIL, "ACCOUNT_ADMIN", Fixtures.VALID_PASSWORD);
-        return api.login(Fixtures.ADMIN_A_EMAIL, Fixtures.VALID_PASSWORD);
-    }
-
-    private void activerMfa(String email) {
-        jdbc.update("update user_account set mfa_enabled = true where email = ?", email);
-    }
-
-    private String premierPassageAvecConfiance() throws Exception {
-        String body = api.send(null, post("/api/v1/auth/mfa/verify"), Map.of(
-                        "mfaChallengeId", defiCourant(), "code", codeTotpCourant(),
-                        "trustDevice", true, "deviceLabel", "PC accueil"))
-                .andReturn().getResponse().getContentAsString();
-        return api.json().readTree(body).path("deviceToken").asString();
-    }
-
-    private String defiCourant() throws Exception {
-        String body = api.loginRaw(Fixtures.FRONT_DESK_A_EMAIL, Fixtures.VALID_PASSWORD)
-                .andReturn().getResponse().getContentAsString();
-        return api.json().readTree(body).path("mfaChallengeId").asString();
+        // L'administrateur doit activer son second facteur avant tout accès (C6b).
+        return activer(Fixtures.ADMIN_A_EMAIL).jeton();
     }
 
     /**
-     * Le code attendu se calcule depuis le secret stocké. Une fonction utilitaire
-     * de test l'expose ; elle n'existe que dans les migrations de test.
+     * Active le second facteur par le parcours réel : le secret vient de l'URI
+     * otpauth que l'API retourne, et le code s'en calcule. Aucune fonction de
+     * test ne va le chercher en base.
      */
-    private String codeTotpCourant() {
-        return jdbc.queryForObject(
-                "select current_totp_for_test(?)", String.class, Fixtures.FRONT_DESK_A_EMAIL);
+    private Activation activer(String email) throws Exception {
+        String provisoire = jetonDe(api.loginRaw(email, Fixtures.VALID_PASSWORD));
+
+        String preparation = api.send(provisoire, post("/api/v1/profile/mfa/setup"), null)
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        var noeud = api.json().readTree(preparation);
+
+        String secret = secretDe(noeud.path("otpauthUri").asString());
+        List<String> codesDeSecours = new java.util.ArrayList<>();
+        noeud.path("recoveryCodes").forEach(code -> codesDeSecours.add(code.asString()));
+
+        api.send(provisoire, post("/api/v1/profile/mfa/confirm"),
+                        Map.of("code", totp.codeCourant(secret)))
+                .andExpect(status().isNoContent());
+
+        return new Activation(secret, codesDeSecours, provisoire);
     }
 
-    private String premierCodeDeSecours() {
-        return jdbc.queryForObject(
-                "select code_plain_for_test from recovery_code limit 1", String.class);
+    /** Le secret partagé, extrait de l'URI otpauth. */
+    private static String secretDe(String otpauthUri) {
+        var trouve = java.util.regex.Pattern.compile("secret=([^&]+)").matcher(otpauthUri);
+        assertThat(trouve.find()).as("secret dans %s", otpauthUri).isTrue();
+        return trouve.group(1);
+    }
+
+    private String jetonDe(org.springframework.test.web.servlet.ResultActions reponse)
+            throws Exception {
+        String corps = reponse.andReturn().getResponse().getContentAsString();
+        return api.json().readTree(corps).path("tokens").path("accessToken").asString();
+    }
+
+    private String defiPour(String email) throws Exception {
+        String corps = api.loginRaw(email, Fixtures.VALID_PASSWORD)
+                .andReturn().getResponse().getContentAsString();
+        return api.json().readTree(corps).path("mfaChallengeId").asString();
+    }
+
+    /** Ce qu'une activation de second facteur laisse entre les mains du test. */
+    private record Activation(String secret, List<String> codesDeSecours, String jeton) {
     }
 }

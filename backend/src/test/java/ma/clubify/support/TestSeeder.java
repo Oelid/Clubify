@@ -18,6 +18,7 @@ public class TestSeeder {
     /** Ordre de suppression : les enfants avant les parents. */
     private static final String[] TABLES = {
             "file_link", "outbox_event", "user_permission_override", "refresh_token",
+            "mfa_challenge",
             "trusted_device", "recovery_code", "club_setting", "membership",
             "stored_file", "site", "user_account", "club"
     };
@@ -77,12 +78,15 @@ public class TestSeeder {
      * tests, jamais accessible à l'application.
      */
     public void reset() {
-        for (String table : TABLES) {
-            jdbc.update("delete from " + table);
-        }
+        // Le journal part en premier : il référence le club, et comme il ne se
+        // supprime jamais, sa clé étrangère bloquerait la suite.
         jdbc.execute("alter table audit_log disable trigger user");
         jdbc.update("delete from audit_log");
         jdbc.execute("alter table audit_log enable trigger user");
+
+        for (String table : TABLES) {
+            jdbc.update("delete from " + table);
+        }
     }
 
     /** Le journal d'audit ne se vide jamais par l'application (règle 17). */

@@ -1,0 +1,84 @@
+package ma.clubify.platform.controller;
+
+import ma.clubify.generated.api.ProfileApi;
+import ma.clubify.generated.model.MfaConfirmRequest;
+import ma.clubify.generated.model.MfaSetupResponse;
+import ma.clubify.generated.model.RecoveryCodes;
+import ma.clubify.generated.model.TrustedDevice;
+import ma.clubify.platform.service.MfaService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Actions de l'utilisateur sur son propre compte.
+ *
+ * <p>Ces points restent ouverts à un jeton dont le second facteur est encore à
+ * activer : c'est justement là que l'activation se fait (critère C6b).
+ */
+@RestController
+public class ProfileController implements ProfileApi {
+
+    private final MfaService secondFacteur;
+
+    public ProfileController(MfaService secondFacteur) {
+        this.secondFacteur = secondFacteur;
+    }
+
+    @Override
+    @PreAuthorize("@perm.authentifie()")
+    public ResponseEntity<MfaSetupResponse> setupMfa() {
+        MfaService.Preparation preparation = secondFacteur.preparer();
+
+        MfaSetupResponse reponse = new MfaSetupResponse();
+        reponse.setOtpauthUri(preparation.otpauthUri());
+        reponse.setRecoveryCodes(preparation.recoveryCodes());
+        return ResponseEntity.ok(reponse);
+    }
+
+    @Override
+    @PreAuthorize("@perm.authentifie()")
+    public ResponseEntity<Void> confirmMfa(MfaConfirmRequest demande) {
+        secondFacteur.confirmer(demande.getCode());
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @PreAuthorize("@perm.authentifie()")
+    public ResponseEntity<RecoveryCodes> regenerateRecoveryCodes() {
+        RecoveryCodes reponse = new RecoveryCodes();
+        reponse.setCodes(secondFacteur.regenererCodesDeSecours());
+        return ResponseEntity.ok(reponse);
+    }
+
+    @Override
+    @PreAuthorize("@perm.authentifie()")
+    public ResponseEntity<List<TrustedDevice>> listTrustedDevices() {
+        List<TrustedDevice> appareils = secondFacteur.appareilsDeConfiance().stream()
+                .map(ProfileController::versContrat)
+                .toList();
+        return ResponseEntity.ok(appareils);
+    }
+
+    @Override
+    @PreAuthorize("@perm.authentifie()")
+    public ResponseEntity<Void> revokeTrustedDevice(UUID deviceId) {
+        secondFacteur.revoquerAppareil(deviceId);
+        return ResponseEntity.noContent().build();
+    }
+
+    private static TrustedDevice versContrat(
+            ma.clubify.platform.model.entity.TrustedDevice appareil) {
+        TrustedDevice contrat = new TrustedDevice();
+        contrat.setId(appareil.getId());
+        contrat.setLabel(appareil.getLabel());
+        contrat.setExpiresAt(appareil.getExpiresAt().atOffset(java.time.ZoneOffset.UTC));
+        if (appareil.getLastUsedAt() != null) {
+            contrat.setLastUsedAt(appareil.getLastUsedAt().atOffset(java.time.ZoneOffset.UTC));
+        }
+        return contrat;
+    }
+}

@@ -1,6 +1,7 @@
 package ma.clubify.platform;
 
 import ma.clubify.support.Api;
+import ma.clubify.support.Auth;
 import ma.clubify.support.Fixtures;
 import ma.clubify.support.IntegrationTest;
 import ma.clubify.support.TestSeeder;
@@ -29,6 +30,8 @@ class AuditApiTest {
 
     @Autowired
     private Api api;
+    @Autowired
+    private Auth auth;
     @Autowired
     private TestSeeder seeder;
     @Autowired
@@ -109,7 +112,7 @@ class AuditApiTest {
         seeder.user(clubA, Fixtures.MANAGER_A_EMAIL, "MANAGER", Fixtures.VALID_PASSWORD);
 
         api.getAs(adminToken(), "/audit-entries").andExpect(status().isOk());
-        api.getAs(api.login(Fixtures.MANAGER_A_EMAIL, Fixtures.VALID_PASSWORD), "/audit-entries")
+        api.getAs(auth.jetonDe(Fixtures.MANAGER_A_EMAIL), "/audit-entries")
                 .andExpect(status().isOk());
         api.getAs(api.login(Fixtures.FRONT_DESK_A_EMAIL, Fixtures.VALID_PASSWORD), "/audit-entries")
                 .andExpect(status().isForbidden());
@@ -137,6 +140,6 @@ class AuditApiTest {
     }
 
     private String adminToken() throws Exception {
-        return api.login(Fixtures.ADMIN_A_EMAIL, Fixtures.VALID_PASSWORD);
+        return auth.jetonDe(Fixtures.ADMIN_A_EMAIL);
     }
 }

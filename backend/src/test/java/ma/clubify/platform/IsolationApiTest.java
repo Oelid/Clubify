@@ -1,6 +1,7 @@
 package ma.clubify.platform;
 
 import ma.clubify.support.Api;
+import ma.clubify.support.Auth;
 import ma.clubify.support.Fixtures;
 import ma.clubify.support.IntegrationTest;
 import ma.clubify.support.TestSeeder;
@@ -28,6 +29,8 @@ class IsolationApiTest {
     @Autowired
     private Api api;
     @Autowired
+    private Auth auth;
+    @Autowired
     private TestSeeder seeder;
 
     private UUID clubA;
@@ -45,7 +48,7 @@ class IsolationApiTest {
     @Test
     @DisplayName("C1 — la liste des utilisateurs ne montre que ceux du club connecté")
     void c1_listeCloisonnee() throws Exception {
-        String token = api.login(Fixtures.ADMIN_A_EMAIL, Fixtures.VALID_PASSWORD);
+        String token = auth.jetonDe(Fixtures.ADMIN_A_EMAIL);
 
         api.getAs(token, "/users")
                 .andExpect(status().isOk())
@@ -57,7 +60,7 @@ class IsolationApiTest {
     @Test
     @DisplayName("C1 — un identifiant d'un autre club répond « introuvable », jamais « interdit »")
     void c1_pasDeFuiteParLeCodeDErreur() throws Exception {
-        String token = api.login(Fixtures.ADMIN_A_EMAIL, Fixtures.VALID_PASSWORD);
+        String token = auth.jetonDe(Fixtures.ADMIN_A_EMAIL);
 
         api.getAs(token, "/users/" + userB).andExpect(status().isNotFound());
     }
@@ -65,7 +68,7 @@ class IsolationApiTest {
     @Test
     @DisplayName("C2 — un club_id envoyé par le client est ignoré")
     void c2_clubIdDuClientIgnore() throws Exception {
-        String token = api.login(Fixtures.ADMIN_A_EMAIL, Fixtures.VALID_PASSWORD);
+        String token = auth.jetonDe(Fixtures.ADMIN_A_EMAIL);
 
         // Le contrat ne prévoit aucun paramètre de club : s'il en arrive un, il ne
         // doit rien changer. La réponse reste celle du club du jeton.
