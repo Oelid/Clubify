@@ -4,8 +4,10 @@ Workspace Angular unique pour les trois interfaces : backoffice de l'accueil et 
 
 ## Stack
 
-- Angular, version stable courante à l'initialisation ; TypeScript strict.
-- PrimeNG (mode thémable par jetons de design) + Tailwind CSS.
+- Angular 21 (21.2.x), TypeScript strict, Vitest intégré. Angular 22 exige Node ≥ 22.22.3 ;
+  la montée se fera par `ng update` quand Node sera à jour, en emmenant PrimeNG et
+  angularx-qrcode, qui s'alignent sur la même version majeure.
+- PrimeNG 21 (mode thémable par jetons de design) + `@primeuix/themes` + `@angular/cdk` + Tailwind CSS 4.
 - Transloco pour l'i18n. Lucide pour les icônes. Polices Inter et IBM Plex Sans Arabic, auto-hébergées. angularx-qrcode pour le QR du second facteur (décision 0029).
 - Client d'API généré par openapi-generator (typescript-angular) depuis `../contracts/openapi.yaml`.
 - Tests : Vitest, Storybook, Playwright.
@@ -110,4 +112,17 @@ Bibliothèque `ui`. Construite avant le premier écran ; validée en FR et en RT
 
 ## Commandes
 
-À compléter à l'initialisation du workspace (installation, génération du client d'API, lancement de chaque application, Storybook, tests, build).
+Depuis `frontend/` :
+
+| Commande | Effet |
+| --- | --- |
+| `npm install --legacy-peer-deps` | Installe les dépendances. **Le drapeau est nécessaire** : npm 10.9.4 échoue sur le graphe de dépendances pairs de Vitest 4 (`Cannot read properties of null (reading 'edgesOut')`). Il disparaîtra avec npm 11. |
+| `npm run api` | Régénère `projects/api-client/` depuis `../contracts/openapi.yaml`. À relancer après toute modification du contrat. Le dossier n'est jamais commité. |
+| `npm start` | Sert le backoffice sur `http://localhost:4200`. |
+| `npm run build` | Construit le backoffice. |
+| `npm test` | Tests unitaires de tous les projets (Vitest). |
+| `npm run test:ci` | Idem, sans surveillance. |
+| `npm run e2e` | Parcours critiques (Playwright). Démarre le serveur si besoin. |
+| `npm run storybook` | Catalogue des composants, en FR et en droite-à-gauche. |
+
+Le client d'API est généré, jamais écrit à la main : `projects/api-client/` est dans `.gitignore`.

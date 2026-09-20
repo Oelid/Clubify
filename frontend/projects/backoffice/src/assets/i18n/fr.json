@@ -1,0 +1,32 @@
+{
+  "auth": {
+    "login": {
+      "title": "Connexion",
+      "email": "Adresse électronique",
+      "password": "Mot de passe",
+      "submit": "Se connecter"
+    },
+    "mfa": {
+      "title": "Code de vérification",
+      "code": "Code à six chiffres",
+      "trustDevice": "Se souvenir de cet appareil",
+      "recoveryCode": "Utiliser un code de secours"
+    }
+  },
+  "club": {
+    "settings": { "title": "Paramètres du club" }
+  },
+  "users": {
+    "list": { "title": "Utilisateurs" }
+  },
+  "audit": {
+    "list": { "title": "Journal d'audit" }
+  },
+  "errors": {
+    "auth": { "account": { "locked": "Compte verrouillé. Réessayez dans quelques minutes." } },
+    "club": { "name": { "required": "Le nom du club est obligatoire." } },
+    "phone": { "invalid": "Numéro de téléphone invalide." },
+    "user": { "password": { "tooShort": "Le mot de passe doit comporter au moins 12 caractères." } },
+    "generic": "Une erreur est survenue."
+  }
+}

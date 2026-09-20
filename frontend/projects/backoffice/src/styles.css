@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+@import '../../ui/src/lib/styles/tokens.css';
+
+/*
+ * Le thème lit les jetons : aucune couleur en dur.
+ * Droite-à-gauche dès le premier jour : propriétés logiques uniquement.
+ */
+@theme inline {
+  --color-surface: var(--color-surface);
+  --color-brand: var(--brand-primary);
+  --font-sans: var(--font-sans);
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: var(--color-surface-sunken);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+}
